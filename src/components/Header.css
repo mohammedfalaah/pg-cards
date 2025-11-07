@@ -52,6 +52,7 @@
 }
 
 .nav-links a {
+    text-wrap-mode: nowrap;
     color: var(--text-white);
     text-decoration: none;
     font-size: 15px;
