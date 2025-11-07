@@ -1,0 +1,536 @@
+/* Hero Section */
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding-top: 100px;
+    padding-bottom: 80px;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+.diagonal-lines {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 20px,
+        rgba(212, 175, 55, 0.03) 20px,
+        rgba(212, 175, 55, 0.03) 40px
+    );
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.feature-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.lightning-icon {
+    color: var(--gold);
+}
+
+.hero-title {
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--text-white);
+    letter-spacing: -2px;
+}
+
+.hero-subtitle {
+    font-size: 20px;
+    color: var(--text-gray);
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+.btn-cta {
+    padding: 16px 40px;
+    background-color: var(--gold);
+    color: var(--bg-dark);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: fit-content;
+    font-family: inherit;
+}
+
+.btn-cta:hover {
+    background-color: var(--gold-light);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(212, 175, 55, 0.5);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stat-number {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-white);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-gray);
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Hero Visual */
+.hero-visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+}
+
+.card-container {
+    position: relative;
+    perspective: 1000px;
+}
+
+.nfc-card {
+    width: 400px;
+    height: 250px;
+    background: var(--bg-dark);
+    border: 2px solid var(--gold);
+    border-radius: 16px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transform: rotateY(-5deg) rotateX(5deg);
+    box-shadow: 0 20px 60px rgba(212, 175, 55, 0.3);
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.nfc-card:hover {
+    transform: rotateY(0deg) rotateX(0deg) scale(1.05);
+}
+
+.card-content {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    height: 100%;
+    align-items: stretch;
+}
+
+.card-left {
+    flex: 0 0 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.qr-code {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 150px;
+}
+
+.qr-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.qr-cell {
+    background-color: transparent;
+    border-radius: 1px;
+    transition: background-color 0.2s;
+}
+
+.qr-cell.filled {
+    background-color: var(--gold);
+    box-shadow: 0 0 2px rgba(212, 175, 55, 0.5);
+}
+
+.qr-corners {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.qr-corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--gold);
+}
+
+.qr-corner.top-left {
+    top: 8px;
+    left: 8px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.qr-corner.top-left::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    background-color: var(--gold);
+}
+
+.qr-corner.top-right {
+    top: 8px;
+    right: 8px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.qr-corner.top-right::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background-color: var(--gold);
+}
+
+.qr-corner.bottom-left {
+    bottom: 8px;
+    left: 8px;
+    border-right: none;
+    border-top: none;
+}
+
+.qr-corner.bottom-left::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    background-color: var(--gold);
+}
+
+.card-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.card-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.contact-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0;
+    letter-spacing: 1px;
+    font-family: 'Poppins', serif;
+}
+
+.contact-designation {
+    font-size: 14px;
+    color: var(--gold);
+    margin: 0;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.contact-phone {
+    font-size: 13px;
+    color: var(--gold);
+    margin: 0;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+.contact-email {
+    font-size: 12px;
+    color: var(--gold);
+    margin: 0;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+.card-footer-icon {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    align-self: flex-end;
+    padding: 4px 6px;
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    background-color: transparent;
+    min-width: 50px;
+}
+
+.nfc-signal-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    color: var(--gold);
+}
+
+.icon-divider {
+    width: 1px;
+    height: 16px;
+    background-color: var(--gold);
+    margin: 0 4px;
+    opacity: 0.6;
+}
+
+.qr-icon-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    color: var(--gold);
+}
+
+.card-footer-icon svg {
+    color: var(--gold);
+}
+
+.card-shadow {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: -20px;
+    bottom: -20px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
+    border-radius: 16px;
+    z-index: 1;
+}
+
+.scroll-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.scroll-line {
+    width: 2px;
+    height: 60px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+}
+
+.scroll-arrow {
+    color: var(--gold);
+    opacity: 0.6;
+    animation: bounce 2s infinite;
+}
+
+.scroll-arrow.down {
+    animation-delay: 1s;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(10px);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .hero-title {
+        font-size: 60px;
+    }
+    
+    .nfc-card {
+        width: 350px;
+        height: 220px;
+    }
+}
+
+@media (max-width: 968px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: 50px;
+        text-align: center;
+    }
+    
+    .hero-title {
+        font-size: 48px;
+    }
+    
+    .hero-subtitle {
+        max-width: 100%;
+    }
+    
+    .btn-cta {
+        margin: 0 auto;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    
+    .stat-number {
+        font-size: 28px;
+    }
+    
+    .hero-visual {
+        justify-content: center;
+    }
+    
+    .nfc-card {
+        width: 300px;
+        height: 190px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding-top: 80px;
+        padding-bottom: 60px;
+    }
+    
+    .hero-title {
+        font-size: 36px;
+    }
+    
+    .hero-subtitle {
+        font-size: 16px;
+    }
+    
+    .stats-grid {
+        gap: 15px;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .nfc-card {
+        width: 280px;
+        height: 175px;
+        padding: 20px;
+    }
+    
+    .contact-name {
+        font-size: 18px;
+    }
+    
+    .contact-designation {
+        font-size: 12px;
+    }
+    
+    .contact-phone {
+        font-size: 11px;
+    }
+    
+    .contact-email {
+        font-size: 10px;
+    }
+    
+    .card-content {
+        gap: 15px;
+    }
+    
+    .card-left {
+        flex: 0 0 40%;
+    }
+    
+    .qr-code {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 28px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .nfc-card {
+        width: 100%;
+        max-width: 260px;
+    }
+}
+

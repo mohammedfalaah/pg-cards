@@ -1,0 +1,64 @@
+/* Clients Section */
+.clients-section {
+    padding: 80px 0;
+    background-color: var(--bg-dark-secondary);
+}
+
+.clients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    align-items: center;
+}
+
+.client-logo {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-gray);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.client-logo:hover {
+    color: var(--gold);
+    transform: translateY(-5px) scale(1.05);
+}
+
+.client-logo.gold-border {
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.client-logo.medical {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.medical-icon {
+    font-size: 24px;
+}
+
+@media (max-width: 768px) {
+    .clients-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .clients-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

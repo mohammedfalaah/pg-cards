@@ -1,0 +1,68 @@
+.pg-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+}
+
+.logo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.logo-text-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.logo-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: #C0C0C0;
+    letter-spacing: 1px;
+    line-height: 1;
+    font-family: serif;
+}
+
+.logo-subtext {
+    font-size: 10px;
+    font-weight: 600;
+    color: #C0C0C0;
+    letter-spacing: 2px;
+    font-family: sans-serif;
+    text-transform: uppercase;
+}
+
+.pg-logo.variant-inline {
+    flex-direction: row;
+    align-items: center;
+}
+
+.pg-logo.variant-inline .logo-text-container {
+    display: none; /* Hide text in inline variant, show only SVG */
+}
+
+.pg-logo.variant-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.pg-logo.variant-card .logo-text {
+    font-size: 28px;
+}
+
+.pg-logo.variant-card .logo-subtext {
+    font-size: 9px;
+    letter-spacing: 3px;
+}
