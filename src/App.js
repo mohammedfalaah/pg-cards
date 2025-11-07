@@ -151,7 +151,7 @@ function App() {
           <Hero />
           <About />
           <WhyChooseUs />
-          <Clients />
+          {/* <Clients /> */}
           <Sustainability />
           <Footer />
         </>

@@ -106,25 +106,7 @@ const CreateQR = () => {
 
   return (
     <div className="create-qr-page">
-      <div className="create-qr-header">
-        <div className="container">
-          <div className="header-content">
-            <PGCardsLogo size={40} variant="inline" />
-            <div className="header-nav">
-              <a href="#home" onClick={(e) => { e.preventDefault(); handleBack(); }}>Home</a>
-              <a href="#about">About Us</a>
-              <a href="#shop">Shop</a>
-              <a href="#blog">Blog</a>
-              <a href="#contact">Contact Us</a>
-              <a href="#create" className="active">Create Free QR</a>
-            </div>
-            <div className="header-actions">
-              <button className="btn-try-demo">Try Demo Card</button>
-              <button className="btn-my-account">My Account</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       <div className="create-qr-content">
         <div className="container">
