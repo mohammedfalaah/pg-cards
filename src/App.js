@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import About from './components/About';
+import WhyChooseUs from './components/WhyChooseUs';
 import Clients from './components/Clients';
 import Sustainability from './components/Sustainability';
+import Blog from './components/Blog';
 import Footer from './components/Footer';
 import CardCustomization from './components/CardCustomization';
+import CreateQR from './components/CreateQR';
 import Dashboard from './components/Dashboard';
 import ResetPassword from './components/ResetPassword';
 import './App.css';
@@ -47,6 +50,10 @@ function App() {
         }
       } else if (path.startsWith('/reset-password')) {
         setActiveView('reset-password');
+      } else if (path.startsWith('/blog')) {
+        setActiveView('blog');
+      } else if (path.startsWith('/create-qrCode') || path.startsWith('/create-qr')) {
+        setActiveView('create-qr');
       } else {
         setActiveView('landing');
       }
@@ -104,6 +111,29 @@ function App() {
     );
   }
 
+  if (activeView === 'blog') {
+    return (
+      <div className="App">
+        <Header
+          user={auth.user}
+          onLoginSuccess={handleLoginSuccess}
+          onLogout={handleLogout}
+          isDashboard={false}
+        />
+        <Blog />
+        <Footer />
+      </div>
+    );
+  }
+
+  if (activeView === 'create-qr') {
+    return (
+      <div className="App">
+        <CreateQR />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       {activeView !== 'dashboard' && (
@@ -120,6 +150,7 @@ function App() {
         <>
           <Hero />
           <About />
+          <WhyChooseUs />
           <Clients />
           <Sustainability />
           <Footer />

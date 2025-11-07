@@ -34,6 +34,23 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
     if (isDashboard) {
       return;
     }
+    
+    // Handle blog navigation separately
+    if (targetId === '#blog') {
+      window.history.pushState({}, '', '/blog');
+      window.dispatchEvent(new Event('navigate'));
+      setIsMenuOpen(false);
+      return;
+    }
+    
+    // Handle create QR navigation separately
+    if (targetId === '#create') {
+      window.history.pushState({}, '', '/create-qrCode');
+      window.dispatchEvent(new Event('navigate'));
+      setIsMenuOpen(false);
+      return;
+    }
+    
     const target = document.querySelector(targetId);
     if (target) {
       const headerOffset = 80;
