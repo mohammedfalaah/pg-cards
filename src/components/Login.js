@@ -3,6 +3,7 @@ import PGCardsLogo from './PGCardsLogo';
 import './Login.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pg-cards.vercel.app';
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
 const Login = ({ onClose, onLogin }) => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,8 @@ const Login = ({ onClose, onLogin }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [extraData, setExtraData] = useState({ name: '', confirmPassword: '', phone: '' });
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -21,12 +24,68 @@ const Login = ({ onClose, onLogin }) => {
     };
   }, []);
 
+  // Google Identity Services loader
+  useEffect(() => {
+    if (window.google || !GOOGLE_CLIENT_ID) return;
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response) => {
+            if (!response?.credential) return;
+            setIsLoading(true);
+            setApiError('');
+            try {
+              const res = await fetch(`${API_BASE_URL}/user/googleAuth`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: response.credential }),
+              });
+              const result = await res.json();
+              if (!res.ok) throw new Error(result?.message || result?.msg || 'Google sign-in failed');
+              const userData = result?.data?.data || result?.data?.user || result?.user;
+              const token = result?.data?.token || result?.token;
+              if (!userData || !token) throw new Error('Invalid response from server.');
+              onLogin && onLogin({ user: userData, token });
+            } catch (err) {
+              console.error('Google auth error:', err);
+              setApiError(err.message || 'Google sign-in failed.');
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        });
+      } catch (e) {
+        console.error('Failed to init Google', e);
+      }
+    };
+    document.head.appendChild(script);
+  }, [GOOGLE_CLIENT_ID]);
+
+  const handleGoogleClick = () => {
+    if (!window.google || !GOOGLE_CLIENT_ID) {
+      setApiError('Google sign-in not available.');
+      return;
+    }
+    try {
+      window.google.accounts.id.prompt();
+    } catch (e) {
+      console.error('Google prompt error', e);
+      setApiError('Unable to open Google sign-in.');
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name in extraData) {
+      setExtraData(prev => ({ ...prev, [name]: value }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -50,6 +109,20 @@ const Login = ({ onClose, onLogin }) => {
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
+
+    if (mode === 'register') {
+      if (!extraData.name.trim()) {
+        newErrors.name = 'Name is required';
+      }
+      if (!extraData.confirmPassword) {
+        newErrors.confirmPassword = 'Confirm your password';
+      } else if (extraData.confirmPassword !== formData.password) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+      if (extraData.phone && !/^\+?\d{7,15}$/.test(extraData.phone.replace(/\s|-/g, ''))) {
+        newErrors.phone = 'Enter a valid phone number';
+      }
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -66,39 +139,53 @@ const Login = ({ onClose, onLogin }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/user/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email.trim(),
-          password: formData.password,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        const message = result?.msg || 'Unable to login. Please try again.';
-        throw new Error(message);
-      }
-
-      const userData = result?.data?.data;
-      const token = result?.data?.token;
-
-      if (!userData || !token) {
-        throw new Error('Invalid response from server.');
-      }
-
-      if (onLogin) {
-        onLogin({
-          user: userData,
-          token,
+      if (mode === 'login') {
+        // LOGIN
+        const response = await fetch(`${API_BASE_URL}/user/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email.trim(), password: formData.password }),
         });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result?.msg || 'Unable to login. Please try again.');
+        }
+        const userData = result?.data?.data;
+        const token = result?.data?.token;
+        if (!userData || !token) throw new Error('Invalid response from server.');
+        onLogin && onLogin({ user: userData, token });
+      } else {
+        // REGISTER
+        const registerRes = await fetch(`${API_BASE_URL}/user/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: extraData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password,
+            confirmPassword: extraData.confirmPassword,
+            phone: extraData.phone.trim(),
+          }),
+        });
+        const registerResult = await registerRes.json();
+        if (!registerRes.ok) {
+          throw new Error(registerResult?.message || registerResult?.msg || 'Registration failed.');
+        }
+        // Auto login after successful registration
+        const loginRes = await fetch(`${API_BASE_URL}/user/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email.trim(), password: formData.password }),
+        });
+        const loginResult = await loginRes.json();
+        if (!loginRes.ok) throw new Error(loginResult?.msg || 'Login after registration failed.');
+        const userData = loginResult?.data?.data;
+        const token = loginResult?.data?.token;
+        if (!userData || !token) throw new Error('Invalid response from server.');
+        onLogin && onLogin({ user: userData, token });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Auth error:', error);
       setApiError(error.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -117,11 +204,28 @@ const Login = ({ onClose, onLogin }) => {
 
         <div className="login-header">
           <PGCardsLogo size={50} variant="inline" />
-          <h2 className="login-title">Welcome Back</h2>
-          <p className="login-subtitle">Sign in to your PG CARDS account</p>
+          <h2 className="login-title">{mode === 'login' ? 'Welcome Back' : 'Create your account'}</h2>
+          <p className="login-subtitle">{mode === 'login' ? 'Sign in to your PG CARDS account' : 'Register to get your dashboard and insights'}</p>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
+          {mode === 'register' && (
+            <div className="form-group">
+              <label htmlFor="name">Full Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={extraData.name}
+                onChange={handleChange}
+                className={errors.name ? 'error' : ''}
+                placeholder="Enter your name"
+                autoComplete="name"
+              />
+              {errors.name && <span className="error-message">{errors.name}</span>}
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input
@@ -152,6 +256,39 @@ const Login = ({ onClose, onLogin }) => {
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
 
+          {mode === 'register' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={extraData.confirmPassword}
+                  onChange={handleChange}
+                  className={errors.confirmPassword ? 'error' : ''}
+                  placeholder="Re-enter your password"
+                  autoComplete="new-password"
+                />
+                {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+              </div>
+              <div className="form-group">
+                <label htmlFor="phone">Phone (optional)</label>
+                <input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  value={extraData.phone}
+                  onChange={handleChange}
+                  className={errors.phone ? 'error' : ''}
+                  placeholder="e.g. +971000000000"
+                  autoComplete="tel"
+                />
+                {errors.phone && <span className="error-message">{errors.phone}</span>}
+              </div>
+            </>
+          )}
+
           <div className="form-options">
             <label className="checkbox-label">
               <input type="checkbox" />
@@ -161,7 +298,7 @@ const Login = ({ onClose, onLogin }) => {
           </div>
 
           <button type="submit" className="login-submit" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign In' : 'Create Account')}
           </button>
 
           {apiError && <div className="api-error">{apiError}</div>}
@@ -171,7 +308,7 @@ const Login = ({ onClose, onLogin }) => {
           </div>
 
           <div className="social-login">
-            <button type="button" className="social-btn google">
+            <button type="button" className="social-btn google" onClick={handleGoogleClick}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -180,16 +317,15 @@ const Login = ({ onClose, onLogin }) => {
               </svg>
               Continue with Google
             </button>
-            <button type="button" className="social-btn github">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-              </svg>
-              Continue with GitHub
-            </button>
+           
           </div>
 
           <div className="login-footer">
-            <p>Don't have an account? <a href="#signup">Sign up</a></p>
+            {mode === 'login' ? (
+              <p>Don't have an account? <button type="button" className="link-button" onClick={() => setMode('register')}>Sign up</button></p>
+            ) : (
+              <p>Already have an account? <button type="button" className="link-button" onClick={() => setMode('login')}>Sign in</button></p>
+            )}
           </div>
         </form>
       </div>

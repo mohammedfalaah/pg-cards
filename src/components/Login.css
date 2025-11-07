@@ -182,6 +182,19 @@
     text-decoration: underline;
 }
 
+.link-button {
+    background: none;
+    border: none;
+    color: var(--gold);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+}
+.link-button:hover {
+    color: var(--gold-light);
+    text-decoration: underline;
+}
+
 .login-submit {
     padding: 16px;
     background-color: var(--gold);

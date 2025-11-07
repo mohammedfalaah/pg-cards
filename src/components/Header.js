@@ -97,6 +97,17 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             ) : (
               <button className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
             )}
+            {user && !isDashboard && (
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  window.history.pushState({}, '', '/dashboard');
+                  window.dispatchEvent(new Event('navigate'));
+                }}
+              >
+                My Account
+              </button>
+            )}
             {user ? (
               <div className="user-auth">
                 <div className="user-greeting">
