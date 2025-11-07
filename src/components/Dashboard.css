@@ -1,13 +1,16 @@
 .dashboard {
-    padding-top: 120px;
+    padding-top: 0;
     min-height: 100vh;
     background: #060606;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .dashboard-layout {
     display: grid;
     grid-template-columns: 260px 1fr;
-    min-height: calc(100vh - 90px);
+    min-height: 100vh;
+    width: 100%;
 }
 
 .dashboard-sidebar {
@@ -73,6 +76,9 @@
 .dashboard-main {
     padding: 40px;
     background: linear-gradient(180deg, rgba(10,10,10,0.95) 0%, rgba(0,0,0,0.98) 60%, #000 100%);
+    width: 100%;
+    overflow-x: hidden;
+    min-height: 100vh;
 }
 
 .dashboard-main-header {
@@ -81,6 +87,7 @@
     align-items: flex-start;
     gap: 24px;
     margin-bottom: 30px;
+    flex-wrap: wrap;
 }
 
 .dashboard-main-header h1 {
@@ -99,6 +106,7 @@
 .dashboard-header-actions {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .dashboard-btn {
@@ -406,28 +414,48 @@
 @media (max-width: 1024px) {
     .dashboard-layout {
         grid-template-columns: 220px 1fr;
+        min-height: 100vh;
     }
 
     .dashboard-main {
-        padding: 32px;
+        padding: 32px 24px;
+        min-height: 100vh;
+    }
+
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .data-grid {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 900px) {
     .dashboard-layout {
         grid-template-columns: 1fr;
+        min-height: 100vh;
     }
 
     .dashboard-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
         flex-direction: row;
         overflow-x: auto;
         gap: 12px;
         padding: 16px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        max-height: 70px;
     }
 
     .sidebar-header {
         border-bottom: none;
         padding-bottom: 0;
+        display: none;
     }
 
     .sidebar-nav {
@@ -437,22 +465,37 @@
 
     .nav-item {
         white-space: nowrap;
+        padding: 10px 14px;
+        font-size: 13px;
     }
 
     .sidebar-logout {
         margin-top: 0;
         white-space: nowrap;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .dashboard-main {
+        padding-top: 90px;
+        min-height: 100vh;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     .dashboard-main {
         padding: 24px 16px 40px;
+        padding-top: 90px;
     }
 
     .dashboard-main-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 16px;
+    }
+
+    .dashboard-main-header h1 {
+        font-size: 28px;
     }
 
     .dashboard-header-actions {
@@ -463,6 +506,90 @@
     .dashboard-btn {
         width: 100%;
         text-align: center;
+    }
+
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .stat-box {
+        padding: 16px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+    }
+
+    .data-card {
+        min-height: 140px;
+    }
+
+    .data-card.large {
+        min-height: 200px;
+    }
+
+    .card-row {
+        grid-template-columns: 32px 1fr;
+        gap: 12px;
+    }
+
+    .card-progress {
+        grid-column: span 2;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-sidebar {
+        top: 0;
+        max-height: 60px;
+        padding: 12px;
+    }
+
+    .nav-item {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .sidebar-logout {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .dashboard-main {
+        padding: 20px 12px 40px;
+        padding-top: 80px;
+    }
+
+    .dashboard-main-header h1 {
+        font-size: 24px;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+    }
+
+    .data-card {
+        padding: 14px 16px;
+        min-height: 120px;
+    }
+
+    .data-card.large {
+        min-height: 180px;
+    }
+
+    .dashboard-panel.full {
+        padding: 16px 18px;
+    }
+
+    .panel-header h2 {
+        font-size: 16px;
     }
 }
 

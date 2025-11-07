@@ -231,6 +231,39 @@
     text-align: center;
 }
 
+.forgot-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+    gap: 20px;
+}
+
+.forgot-success svg {
+    color: #4ade80;
+    margin-bottom: 10px;
+}
+
+.forgot-success h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-white);
+    margin: 0;
+}
+
+.forgot-success p {
+    font-size: 15px;
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.forgot-success strong {
+    color: var(--text-white);
+    font-weight: 600;
+}
+
 .login-divider {
     display: flex;
     align-items: center;

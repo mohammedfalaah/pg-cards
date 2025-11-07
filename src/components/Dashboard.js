@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pg-cards.vercel.app';
+
 const fallbackInsights = {
   totalScans: 90533,
   contactShares: 2223,
@@ -17,15 +19,60 @@ const fallbackInsights = {
   ],
 };
 
-const Dashboard = ({ user, token }) => {
+const Dashboard = ({ user, token, onLogout }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [insights, setInsights] = useState(fallbackInsights);
 
   useEffect(() => {
-    // UI-only mode: use fallback sample data and mark as loaded
-    setInsights(fallbackInsights);
-    setIsLoading(false);
+    const controller = new AbortController();
+
+    const fetchInsights = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/card/insights`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Unable to load insights data. Showing sample data instead.');
+        }
+
+        const result = await response.json();
+        const data = result?.data;
+        if (data) {
+          setInsights({
+            totalScans: data.totalScans ?? fallbackInsights.totalScans,
+            contactShares: data.contactShares ?? fallbackInsights.contactShares,
+            feedbacks: data.feedbacks ?? fallbackInsights.feedbacks,
+            topCards: data.topCards?.length ? data.topCards : fallbackInsights.topCards,
+            recentActivity: data.recentActivity?.length ? data.recentActivity : fallbackInsights.recentActivity,
+          });
+        }
+      } catch (err) {
+        console.error('Dashboard insights error:', err);
+        setError(err.message || 'Unable to load insights at the moment.');
+        setInsights(fallbackInsights);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInsights();
+
+    return () => controller.abort();
   }, [token]);
 
   return (
@@ -44,8 +91,18 @@ const Dashboard = ({ user, token }) => {
             <button className="nav-item">Address Book</button>
             <button className="nav-item">PG Statistics</button>
             <button className="nav-item">Settings</button>
+            <button 
+            className="sidebar-logout" 
+            onClick={() => {
+              if (onLogout) {
+                onLogout();
+              }
+            }}
+          >
+            Logout
+          </button>
           </nav>
-          <button className="sidebar-logout" onClick={() => window.dispatchEvent(new CustomEvent('pgcards-request-logout'))}>Logout</button>
+          
         </aside>
 
         <main className="dashboard-main">

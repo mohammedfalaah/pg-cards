@@ -7,6 +7,7 @@ import Sustainability from './components/Sustainability';
 import Footer from './components/Footer';
 import CardCustomization from './components/CardCustomization';
 import Dashboard from './components/Dashboard';
+import ResetPassword from './components/ResetPassword';
 import './App.css';
 
 function App() {
@@ -44,6 +45,8 @@ function App() {
           setActiveView('landing');
           window.history.replaceState({}, '', '/');
         }
+      } else if (path.startsWith('/reset-password')) {
+        setActiveView('reset-password');
       } else {
         setActiveView('landing');
       }
@@ -93,16 +96,26 @@ function App() {
     );
   }
 
+  if (activeView === 'reset-password') {
+    return (
+      <div className="App">
+        <ResetPassword />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
-      <Header
-        user={auth.user}
-        onLoginSuccess={handleLoginSuccess}
-        onLogout={handleLogout}
-        isDashboard={activeView === 'dashboard'}
-      />
+      {activeView !== 'dashboard' && (
+        <Header
+          user={auth.user}
+          onLoginSuccess={handleLoginSuccess}
+          onLogout={handleLogout}
+          isDashboard={false}
+        />
+      )}
       {activeView === 'dashboard' ? (
-        <Dashboard user={auth.user} token={auth.token} />
+        <Dashboard user={auth.user} token={auth.token} onLogout={handleLogout} />
       ) : (
         <>
           <Hero />

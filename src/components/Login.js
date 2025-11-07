@@ -13,8 +13,10 @@ const Login = ({ onClose, onLogin }) => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
   const [extraData, setExtraData] = useState({ name: '', confirmPassword: '', phone: '' });
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -128,6 +130,50 @@ const Login = ({ onClose, onLogin }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setApiError('');
+    setForgotSuccess(false);
+
+    if (!forgotEmail.trim()) {
+      setApiError('Please enter your email address');
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(forgotEmail)) {
+      setApiError('Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/forgotPassword`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: forgotEmail.trim(),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.message || result?.msg || 'Unable to send reset link. Please try again.');
+      }
+
+      setForgotSuccess(true);
+      setApiError('');
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      setApiError(error.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -204,11 +250,82 @@ const Login = ({ onClose, onLogin }) => {
 
         <div className="login-header">
           <PGCardsLogo size={50} variant="inline" />
-          <h2 className="login-title">{mode === 'login' ? 'Welcome Back' : 'Create your account'}</h2>
-          <p className="login-subtitle">{mode === 'login' ? 'Sign in to your PG CARDS account' : 'Register to get your dashboard and insights'}</p>
+          <h2 className="login-title">
+            {mode === 'login' ? 'Welcome Back' : mode === 'register' ? 'Create your account' : 'Reset Password'}
+          </h2>
+          <p className="login-subtitle">
+            {mode === 'login' ? 'Sign in to your PG CARDS account' : 
+             mode === 'register' ? 'Register to get your dashboard and insights' : 
+             'Enter your email and we\'ll send you a reset link'}
+          </p>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
+        {mode === 'forgot' ? (
+          <form className="login-form" onSubmit={handleForgotPassword}>
+            {forgotSuccess ? (
+              <div className="forgot-success">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3>Check your email</h3>
+                <p>We've sent a password reset link to <strong>{forgotEmail}</strong></p>
+                <button 
+                  type="button" 
+                  className="login-submit" 
+                  onClick={() => {
+                    setMode('login');
+                    setForgotEmail('');
+                    setForgotSuccess(false);
+                    setApiError('');
+                  }}
+                >
+                  Back to Login
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label htmlFor="forgot-email">Email Address</label>
+                  <input
+                    type="email"
+                    id="forgot-email"
+                    name="forgot-email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+
+                {apiError && <div className="api-error">{apiError}</div>}
+
+                <button type="submit" className="login-submit" disabled={isLoading}>
+                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+
+                <div className="login-footer">
+                  <p>
+                    Remember your password?{' '}
+                    <button 
+                      type="button" 
+                      className="link-button" 
+                      onClick={() => {
+                        setMode('login');
+                        setForgotEmail('');
+                        setApiError('');
+                      }}
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </div>
+              </>
+            )}
+          </form>
+        ) : (
+          <form className="login-form" onSubmit={handleSubmit}>
           {mode === 'register' && (
             <div className="form-group">
               <label htmlFor="name">Full Name</label>
@@ -289,13 +406,25 @@ const Login = ({ onClose, onLogin }) => {
             </>
           )}
 
-          <div className="form-options">
-            <label className="checkbox-label">
-              <input type="checkbox" />
-              <span>Remember me</span>
-            </label>
-            <a href="#forgot" className="forgot-link">Forgot Password?</a>
-          </div>
+          {mode === 'login' && (
+            <div className="form-options">
+              <label className="checkbox-label">
+                <input type="checkbox" />
+                <span>Remember me</span>
+              </label>
+              <button 
+                type="button" 
+                className="forgot-link" 
+                onClick={() => {
+                  setMode('forgot');
+                  setApiError('');
+                  setForgotEmail(formData.email);
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
 
           <button type="submit" className="login-submit" disabled={isLoading}>
             {isLoading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign In' : 'Create Account')}
@@ -328,6 +457,7 @@ const Login = ({ onClose, onLogin }) => {
             )}
           </div>
         </form>
+        )}
       </div>
     </div>
   );
