@@ -8,6 +8,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [logoSize, setLogoSize] = useState(120);
+  
 
   useEffect(() => {
     const handleScroll = () => {
@@ -97,12 +98,12 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             </ul>
           )}
           
-          <div className="header-actions">
+          <div style={{display:'contents'}} className="header-actions">
            
             {isDashboard ? (
               <button className="btn-secondary" onClick={handleViewSite}>View Website</button>
             ) : (
-              <button className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
+              <button style={{textWrap:'nowrap'}} className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
             )}
             {user && !isDashboard && (
               <button
