@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PGCardsLogo from './PGCardsLogo';
 import './Login.css';
 
-const API_BASE_URL = 'https://pg-cards.vercel.app';
-const GOOGLE_CLIENT_ID = 340844493737-ldev50489jene365c0smg0ttgm2siba5.apps.googleusercontent.com || '';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pg-cards.vercel.app';
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
 const Login = ({ onClose, onLogin }) => {
   const [formData, setFormData] = useState({
