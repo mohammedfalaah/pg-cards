@@ -12,6 +12,12 @@ const CardCustomization = () => {
     iconText: '#FFFFFF',
     text: '#FFFFFF'
   });
+  const [personalInfo, setPersonalInfo] = useState({
+    name: '',
+    designation: '',
+    phone: '',
+    email: ''
+  });
 
   const themes = [
     { id: 'standard', name: 'Standard', preview: 'standard' },
@@ -23,6 +29,13 @@ const CardCustomization = () => {
     setColors(prev => ({
       ...prev,
       [colorType]: value
+    }));
+  };
+
+  const handlePersonalInfoChange = (field, value) => {
+    setPersonalInfo(prev => ({
+      ...prev,
+      [field]: value
     }));
   };
 
@@ -227,19 +240,39 @@ const CardCustomization = () => {
                     <h3 className="section-title">Personal Information</h3>
                     <div className="form-group">
                       <label>Name</label>
-                      <input type="text" placeholder="Enter your name" />
+                      <input 
+                        type="text" 
+                        placeholder="Enter your name" 
+                        value={personalInfo.name}
+                        onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
+                      />
                     </div>
                     <div className="form-group">
                       <label>Designation</label>
-                      <input type="text" placeholder="Enter your designation" />
+                      <input 
+                        type="text" 
+                        placeholder="Enter your designation" 
+                        value={personalInfo.designation}
+                        onChange={(e) => handlePersonalInfoChange('designation', e.target.value)}
+                      />
                     </div>
                     <div className="form-group">
                       <label>Phone</label>
-                      <input type="tel" placeholder="+971 000 000 000" />
+                      <input 
+                        type="tel" 
+                        placeholder="+971 000 000 000" 
+                        value={personalInfo.phone}
+                        onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
+                      />
                     </div>
                     <div className="form-group">
                       <label>Email</label>
-                      <input type="email" placeholder="your.email@example.com" />
+                      <input 
+                        type="email" 
+                        placeholder="your.email@example.com" 
+                        value={personalInfo.email}
+                        onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -296,8 +329,12 @@ const CardCustomization = () => {
                       <>
                         <div className="preview-header" style={{ color: colors.primary }}>INNOVATIVE</div>
                         <div className="preview-avatar"></div>
-                        <div className="preview-name" style={{ color: colors.text }}>Name</div>
-                        <div className="preview-designation" style={{ color: colors.text }}>Designation</div>
+                        <div className="preview-name" style={{ color: colors.text }}>
+                          {personalInfo.name || 'Name'}
+                        </div>
+                        <div className="preview-designation" style={{ color: colors.text }}>
+                          {personalInfo.designation || 'Designation'}
+                        </div>
                       </>
                     )}
 
@@ -305,8 +342,12 @@ const CardCustomization = () => {
                       <>
                         <div className="preview-header-classic" style={{ color: colors.primary }}>LOGO</div>
                         <div className="preview-avatar"></div>
-                        <div className="preview-name" style={{ color: colors.text }}>Name</div>
-                        <div className="preview-designation" style={{ color: colors.text }}>Designation</div>
+                        <div className="preview-name" style={{ color: colors.text }}>
+                          {personalInfo.name || 'Name'}
+                        </div>
+                        <div className="preview-designation" style={{ color: colors.text }}>
+                          {personalInfo.designation || 'Designation'}
+                        </div>
                         <div className="preview-icons-row" style={{ backgroundColor: colors.background }}>
                           <span style={{ color: colors.iconText }}>📧</span>
                           <span style={{ color: colors.iconText }}>📅</span>
@@ -317,8 +358,12 @@ const CardCustomization = () => {
                           Contact Me
                         </button>
                         <div className="preview-contact">
-                          <div style={{ color: colors.text }}>Phone: +123 456 7890</div>
-                          <div style={{ color: colors.text }}>Email: your@email.com</div>
+                          <div style={{ color: colors.text }}>
+                            Phone: {personalInfo.phone || '+123 456 7890'}
+                          </div>
+                          <div style={{ color: colors.text }}>
+                            Email: {personalInfo.email || 'your@email.com'}
+                          </div>
                         </div>
                       </>
                     )}
@@ -327,8 +372,12 @@ const CardCustomization = () => {
                       <>
                         <div className="preview-header-modern" style={{ backgroundColor: colors.primary }}></div>
                         <div className="preview-avatar"></div>
-                        <div className="preview-name" style={{ color: colors.text }}>Name</div>
-                        <div className="preview-designation" style={{ color: colors.text }}>Designation</div>
+                        <div className="preview-name" style={{ color: colors.text }}>
+                          {personalInfo.name || 'Name'}
+                        </div>
+                        <div className="preview-designation" style={{ color: colors.text }}>
+                          {personalInfo.designation || 'Designation'}
+                        </div>
                         <div className="preview-social-icons">
                           <span style={{ color: colors.icon }}>📧</span>
                           <span style={{ color: colors.icon }}>📅</span>
@@ -349,4 +398,3 @@ const CardCustomization = () => {
 };
 
 export default CardCustomization;
-
