@@ -11,6 +11,11 @@
     transition: all 0.3s ease;
 }
 
+.header.dashboard {
+    border-bottom: none;
+    background-color: rgba(10, 10, 10, 0.98);
+}
+
 .header.scrolled {
     background-color: rgba(0, 0, 0, 0.98);
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
@@ -79,6 +84,50 @@
     flex-shrink: 0;
 }
 
+.header.dashboard .header-actions {
+    gap: 16px;
+}
+
+.user-auth {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-greeting {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--text-white);
+    font-size: 14px;
+}
+
+.user-email {
+    font-size: 12px;
+    color: var(--text-gray);
+}
+
+.btn-logout {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    background-color: var(--gold);
+    color: var(--bg-dark);
+}
+
 .utility-icons {
     display: flex;
     align-items: center;
@@ -127,6 +176,16 @@
     background-color: transparent;
     color: var(--gold);
     border: 1px solid var(--gold);
+}
+
+.header.dashboard .btn-secondary {
+    border-color: rgba(212, 175, 55, 0.3);
+    color: var(--text-white);
+}
+
+.header.dashboard .btn-secondary:hover {
+    background-color: rgba(212, 175, 55, 0.15);
+    color: var(--gold-light);
 }
 
 .btn-secondary:hover {
@@ -209,10 +268,6 @@
         gap: 8px;
     }
     
-    .header-actions .btn-secondary {
-        display: none;
-    }
-    
     .utility-icons {
         gap: 8px;
     }
@@ -239,7 +294,7 @@
     }
     
     .header-actions {
-        gap: 6px;
+        gap: 10px;
     }
     
     .utility-icons {
@@ -255,7 +310,8 @@
         font-size: 16px;
     }
     
-    .btn-primary {
+    .btn-primary,
+    .btn-logout {
         padding: 6px 12px;
         font-size: 11px;
     }

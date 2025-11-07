@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PGCardsLogo from './PGCardsLogo';
 import './Login.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pg-cards.vercel.app';
+
 const Login = ({ onClose, onLogin }) => {
   const [formData, setFormData] = useState({
     email: '',
@@ -9,6 +11,7 @@ const Login = ({ onClose, onLogin }) => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -59,17 +62,47 @@ const Login = ({ onClose, onLogin }) => {
       return;
     }
 
+    setApiError('');
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      if (onLogin) {
-        onLogin(formData);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const message = result?.msg || 'Unable to login. Please try again.';
+        throw new Error(message);
       }
-      // You can add actual authentication logic here
-      console.log('Login attempt:', formData);
-    }, 1000);
+
+      const userData = result?.data?.data;
+      const token = result?.data?.token;
+
+      if (!userData || !token) {
+        throw new Error('Invalid response from server.');
+      }
+
+      if (onLogin) {
+        onLogin({
+          user: userData,
+          token,
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setApiError(error.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -130,6 +163,8 @@ const Login = ({ onClose, onLogin }) => {
           <button type="submit" className="login-submit" disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
+
+          {apiError && <div className="api-error">{apiError}</div>}
 
           <div className="login-divider">
             <span>or</span>

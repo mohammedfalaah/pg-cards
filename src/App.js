@@ -6,16 +6,47 @@ import Clients from './components/Clients';
 import Sustainability from './components/Sustainability';
 import Footer from './components/Footer';
 import CardCustomization from './components/CardCustomization';
+import Dashboard from './components/Dashboard';
 import './App.css';
 
 function App() {
-  const [showCustomization, setShowCustomization] = useState(false);
+  const [activeView, setActiveView] = useState('landing');
+  const [auth, setAuth] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { user: null, token: null };
+    }
+
+    try {
+      const stored = localStorage.getItem('pgcards-auth');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return {
+          user: parsed.user || null,
+          token: parsed.token || null,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to parse auth from storage:', error);
+    }
+    return { user: null, token: null };
+  });
 
   useEffect(() => {
     // Check initial route
     const checkRoute = () => {
       const path = window.location.pathname;
-      setShowCustomization(path === '/customize' || path === '/customize/');
+      if (path.startsWith('/customize')) {
+        setActiveView('customize');
+      } else if (path.startsWith('/dashboard')) {
+        if (auth?.user && auth?.token) {
+          setActiveView('dashboard');
+        } else {
+          setActiveView('landing');
+          window.history.replaceState({}, '', '/');
+        }
+      } else {
+        setActiveView('landing');
+      }
     };
 
     checkRoute();
@@ -32,9 +63,29 @@ function App() {
       window.removeEventListener('popstate', handleNavigation);
       window.removeEventListener('navigate', handleNavigation);
     };
-  }, []);
+  }, [auth?.user, auth?.token]);
 
-  if (showCustomization) {
+  useEffect(() => {
+    if (auth?.user && auth?.token) {
+      localStorage.setItem('pgcards-auth', JSON.stringify(auth));
+    } else {
+      localStorage.removeItem('pgcards-auth');
+    }
+  }, [auth]);
+
+  const handleLoginSuccess = ({ user, token }) => {
+    setAuth({ user, token });
+    setActiveView('dashboard');
+    window.history.pushState({}, '', '/dashboard');
+  };
+
+  const handleLogout = () => {
+    setAuth({ user: null, token: null });
+    setActiveView('landing');
+    window.history.pushState({}, '', '/');
+  };
+
+  if (activeView === 'customize') {
     return (
       <div className="App">
         <CardCustomization />
@@ -44,12 +95,23 @@ function App() {
 
   return (
     <div className="App">
-      <Header />
-      <Hero />
-      <About />
-      <Clients />
-      <Sustainability />
-      <Footer />
+      <Header
+        user={auth.user}
+        onLoginSuccess={handleLoginSuccess}
+        onLogout={handleLogout}
+        isDashboard={activeView === 'dashboard'}
+      />
+      {activeView === 'dashboard' ? (
+        <Dashboard user={auth.user} token={auth.token} />
+      ) : (
+        <>
+          <Hero />
+          <About />
+          <Clients />
+          <Sustainability />
+          <Footer />
+        </>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import PGCardsLogo from './PGCardsLogo';
 import Login from './Login';
 import './Header.css';
 
-const Header = () => {
+const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -31,6 +31,9 @@ const Header = () => {
 
   const handleSmoothScroll = (e, targetId) => {
     e.preventDefault();
+    if (isDashboard) {
+      return;
+    }
     const target = document.querySelector(targetId);
     if (target) {
       const headerOffset = 80;
@@ -50,22 +53,32 @@ const Header = () => {
     window.dispatchEvent(new Event('navigate'));
   };
 
+  const handleViewSite = () => {
+    window.history.pushState({}, '', '/');
+    window.dispatchEvent(new Event('navigate'));
+  };
+
   return (
-    <header className={`header ${scrolled ? 'scrolled' : ''}`}>
+    <header className={`header ${scrolled ? 'scrolled' : ''} ${isDashboard ? 'dashboard' : ''}`}>
       <div className="container">
         <nav className="navbar">
           <div className="logo-section">
             <PGCardsLogo size={logoSize} />
           </div>
           
-          <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
-            <li><a href="#home" onClick={(e) => handleSmoothScroll(e, '#home')}>Home</a></li>
-            <li><a href="#about" onClick={(e) => handleSmoothScroll(e, '#about')}>About Us</a></li>
-            <li><a href="#shop" onClick={(e) => handleSmoothScroll(e, '#shop')}>Shop</a></li>
-            <li><a href="#blog" onClick={(e) => handleSmoothScroll(e, '#blog')}>Blog</a></li>
-            <li><a href="#contact" onClick={(e) => handleSmoothScroll(e, '#contact')}>Contact Us</a></li>
-            <li><a href="#create" className="create-link" onClick={(e) => handleSmoothScroll(e, '#create')}>Create Free QR</a></li>
-          </ul>
+          {!isDashboard && (
+            <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
+              <li><a href="#home" onClick={(e) => handleSmoothScroll(e, '#home')}>Home</a></li>
+              <li><a href="#about" onClick={(e) => handleSmoothScroll(e, '#about')}>About Us</a></li>
+              <li><a href="#shop" onClick={(e) => handleSmoothScroll(e, '#shop')}>Shop</a></li>
+              <li><a href="#blog" onClick={(e) => handleSmoothScroll(e, '#blog')}>Blog</a></li>
+              <li><a href="#contact" onClick={(e) => handleSmoothScroll(e, '#contact')}>Contact Us</a></li>
+              <li><a href="#create" className="create-link" onClick={(e) => handleSmoothScroll(e, '#create')}>Create Free QR</a></li>
+              {user && (
+                <li><a href="#dashboard" onClick={(e) => handleSmoothScroll(e, '#dashboard')}>Dashboard</a></li>
+              )}
+            </ul>
+          )}
           
           <div className="header-actions">
             <div className="utility-icons">
@@ -79,28 +92,45 @@ const Header = () => {
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </div>
-            <button className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
-            <button className="btn-primary" onClick={() => setShowLogin(true)}>Login</button>
+            {isDashboard ? (
+              <button className="btn-secondary" onClick={handleViewSite}>View Website</button>
+            ) : (
+              <button className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
+            )}
+            {user ? (
+              <div className="user-auth">
+                <div className="user-greeting">
+                  <span className="user-name">{user.name || 'User'}</span>
+                  <span className="user-email">{user.email}</span>
+                </div>
+                <button className="btn-logout" onClick={onLogout}>Logout</button>
+              </div>
+            ) : (
+              <button className="btn-primary" onClick={() => setShowLogin(true)}>Login</button>
+            )}
           </div>
           
-          <button 
-            className={`mobile-menu-toggle ${isMenuOpen ? 'active' : ''}`}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+          {!isDashboard && (
+            <button 
+              className={`mobile-menu-toggle ${isMenuOpen ? 'active' : ''}`}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          )}
         </nav>
       </div>
       {showLogin && (
         <Login 
           onClose={() => setShowLogin(false)} 
-          onLogin={(data) => {
-            console.log('Login successful:', data);
+          onLogin={(authData) => {
             setShowLogin(false);
-            // Add your login logic here
+            if (onLoginSuccess) {
+              onLoginSuccess(authData);
+            }
           }}
         />
       )}
