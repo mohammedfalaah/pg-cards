@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import PGCardsLogo from './PGCardsLogo';
 import './Login.css';
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pg-cards.vercel.app';
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+// const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '340844493737-ldev50489jene365c0smg0ttgm2siba5.apps.googleusercontent.com';
 
 const Login = ({ onClose, onLogin }) => {
   const [formData, setFormData] = useState({
@@ -27,59 +29,99 @@ const Login = ({ onClose, onLogin }) => {
   }, []);
 
   // Google Identity Services loader
-  useEffect(() => {
-    if (window.google || !GOOGLE_CLIENT_ID) return;
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            if (!response?.credential) return;
-            setIsLoading(true);
-            setApiError('');
-            try {
-              const res = await fetch(`${API_BASE_URL}/user/googleAuth`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: response.credential }),
-              });
-              const result = await res.json();
-              if (!res.ok) throw new Error(result?.message || result?.msg || 'Google sign-in failed');
-              const userData = result?.data?.data || result?.data?.user || result?.user;
-              const token = result?.data?.token || result?.token;
-              if (!userData || !token) throw new Error('Invalid response from server.');
-              onLogin && onLogin({ user: userData, token });
-            } catch (err) {
-              console.error('Google auth error:', err);
-              setApiError(err.message || 'Google sign-in failed.');
-            } finally {
-              setIsLoading(false);
-            }
-          },
-        });
-      } catch (e) {
-        console.error('Failed to init Google', e);
-      }
-    };
-    document.head.appendChild(script);
-  }, [GOOGLE_CLIENT_ID]);
+  // useEffect(() => {
+  //   if (window.google || !GOOGLE_CLIENT_ID) return;
+  //   const script = document.createElement('script');
+  //   script.src = 'https://accounts.google.com/gsi/client';
+  //   script.async = true;
+  //   script.defer = true;
+  //   script.onload = () => {
+  //     try {
+  //       window.google.accounts.id.initialize({
+  //         client_id: GOOGLE_CLIENT_ID,
+  //         callback: async (response) => {
+  //           if (!response?.credential) return;
+  //           setIsLoading(true);
+  //           setApiError('');
+  //           try {
+  //             const res = await fetch(`${API_BASE_URL}/user/googleAuth`, {
+  //               method: 'POST',
+  //               headers: { 'Content-Type': 'application/json' },
+  //               body: JSON.stringify({ token: response.credential }),
+  //             });
+  //             console.log("res",res);
+              
+  //             const result = await res.json();
+  //             if (!res.ok) throw new Error(result?.message || result?.msg || 'Google sign-in failed');
+  //             const userData = result?.data?.data || result?.data?.user || result?.user;
+  //             const token = result?.data?.token || result?.token;
+  //             if (!userData || !token) throw new Error('Invalid response from server.');
+  //             onLogin && onLogin({ user: userData, token });
+  //           } catch (err) {
+  //             console.error('Google auth error:', err);
+  //             setApiError(err.message || 'Google sign-in failed.');
+  //           } finally {
+  //             setIsLoading(false);
+  //           }
+  //         },
+  //       });
+  //     } catch (e) {
+  //       console.error('Failed to init Google', e);
+  //     }
+  //   };
+  //   document.head.appendChild(script);
+  // }, [GOOGLE_CLIENT_ID]);
 
-  const handleGoogleClick = () => {
-    if (!window.google || !GOOGLE_CLIENT_ID) {
-      setApiError('Google sign-in not available.');
-      return;
-    }
-    try {
-      window.google.accounts.id.prompt();
-    } catch (e) {
-      console.error('Google prompt error', e);
-      setApiError('Unable to open Google sign-in.');
-    }
-  };
+  // const handleGoogleClick = () => {
+  //   if (!GOOGLE_CLIENT_ID) {  
+  //     setApiError('Google sign-in not available.');
+  //     return;
+  //   }
+  //   try {
+  //     window.google.accounts.id.prompt();
+  //     console.log(window.google.accounts.id.prompt());
+      
+  //   } catch (e) {
+  //     console.error('Google prompt error', e);
+  //     setApiError('Unable to open Google sign-in.');
+  //   }
+  // };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    if (!credentialResponse?.credential) return;
+
+    setIsLoading(true);
+    setApiError("");
+
+    const token = credentialResponse.credential;
+
+    const decoded = jwtDecode(token);
+    console.log("Decoded Google user:", decoded);
+
+    const res = await fetch(`${API_BASE_URL}/user/googleAuth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    const result = await res.json();
+    if (!res.ok)
+      throw new Error(result?.message || result?.msg || "Google sign-in failed");
+
+    const userData = result?.data?.data || result?.data?.user || result?.user;
+    const appToken = result?.data?.token || result?.token;
+    if (!userData || !appToken)
+      throw new Error("Invalid response from server.");
+
+    onLogin && onLogin({ user: userData, token: appToken });
+  } catch (err) {
+    console.error("Google auth error:", err);
+    setApiError(err.message || "Google sign-in failed.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -436,8 +478,9 @@ const Login = ({ onClose, onLogin }) => {
             <span>or</span>
           </div>
 
-          <div className="social-login">
+          {/* <div className="social-login">
             <button type="button" className="social-btn google" onClick={handleGoogleClick}>
+            
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -447,7 +490,15 @@ const Login = ({ onClose, onLogin }) => {
               Continue with Google
             </button>
            
+          </div> */}
+
+          <div className="social-login">
+          <GoogleLogin
+           onSuccess={handleGoogleSuccess}
+          onError={() => setApiError("Google Sign-In Failed")}
+         />
           </div>
+
 
           <div className="login-footer">
             {mode === 'login' ? (
