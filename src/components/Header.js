@@ -7,6 +7,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [logoSize, setLogoSize] = useState(120);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,8 +15,18 @@ const Header = () => {
       setScrolled(isScrolled);
     };
 
+    const handleResize = () => {
+      setLogoSize(window.innerWidth <= 768 ? 80 : 120);
+    };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Set initial size
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const handleSmoothScroll = (e, targetId) => {
@@ -44,7 +55,7 @@ const Header = () => {
       <div className="container">
         <nav className="navbar">
           <div className="logo-section">
-            <PGCardsLogo size={120} />
+            <PGCardsLogo size={logoSize} />
           </div>
           
           <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>

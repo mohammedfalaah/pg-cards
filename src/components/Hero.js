@@ -112,11 +112,13 @@ const Hero = () => {
               <svg className="lightning-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
               </svg>
-              <span>Best NFC & QR Solutions</span>
+              <span style={{marginTop:'10px'}}>Best NFC & QR Solutions</span>
             </div>
             
-            <h1 className="hero-title">NFC Business Card</h1>
-            <p className="hero-subtitle">Instantly share your contact info with a tap using NFC business cards.</p>
+            <h5 className="hero-title">Fast,Simple&Easy
+            Way to Share Your info</h5>
+            <p className="hero-subtitle">Our Smart NFC business card makes connecting easy and modern. One
+            tap is all it takes to share your information instantly and digitally.</p>
             
             <button className="btn-cta" onClick={handleShopNow}>Shop Now</button>
             
@@ -139,52 +141,11 @@ const Hero = () => {
           <div className="hero-visual">
             <div className="card-container">
               <div className="nfc-card" ref={nfcCardRef}>
-                <div className="card-content">
-                  <div className="card-left">
-                    <div className="qr-code">
-                      <div className="qr-grid">
-                        {Array.from({ length: 25 }).map((_, i) => {
-                          const row = Math.floor(i / 5);
-                          const col = i % 5;
-                          const isCorner = (row < 2 && col < 2) || (row < 2 && col > 2) || (row > 2 && col < 2);
-                          const shouldFill = isCorner || (row === 2 || col === 2) || (row + col) % 3 === 0;
-                          return (
-                            <div key={i} className={`qr-cell ${shouldFill ? 'filled' : ''}`}></div>
-                          );
-                        })}
-                      </div>
-                      <div className="qr-corners">
-                        <div className="qr-corner top-left"></div>
-                        <div className="qr-corner top-right"></div>
-                        <div className="qr-corner bottom-left"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card-right">
-                    <div className="card-contact">
-                      <h3 className="contact-name">YOUR NAME</h3>
-                      <p className="contact-designation">DESIGNATION</p>
-                      <p className="contact-phone">+971 000 000 000</p>
-                      <p className="contact-email">email address</p>
-                    </div>
-                    <div className="card-footer-icon">
-                      <div className="nfc-signal-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M2 12c0-5.5 4.5-10 10-10s10 4.5 10 10" strokeLinecap="round"/>
-                          <path d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6" strokeLinecap="round"/>
-                          <path d="M10 12c0-1.1.9-2 2-2s2 .9 2 2" strokeLinecap="round"/>
-                        </svg>
-                      </div>
-                      <div className="icon-divider"></div>
-                      <div className="qr-icon-small">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                          <rect x="3" y="3" width="18" height="18" rx="1"/>
-                          <rect x="7" y="7" width="10" height="10"/>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <img 
+                  src="/assets/images/golf-front.png" 
+                  alt="NFC Business Card" 
+                  className="nfc-card-image"
+                />
               </div>
               <div className="card-shadow"></div>
             </div>

@@ -36,6 +36,18 @@ code {
     padding: 0 40px;
 }
 
+@media (max-width: 768px) {
+    .container {
+        padding: 0 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 15px;
+    }
+}
+
 /* Smooth Scrolling */
 html {
     scroll-behavior: smooth;

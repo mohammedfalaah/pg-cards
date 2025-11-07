@@ -63,7 +63,7 @@
 }
 
 .hero-title {
-    font-size: 72px;
+    font-size: 50px;
     font-weight: 900;
     line-height: 1.1;
     color: var(--text-white);
@@ -143,22 +143,30 @@
 .nfc-card {
     width: 400px;
     height: 250px;
-    background: var(--bg-dark);
-    border: 2px solid var(--gold);
+    background: transparent;
+    border: none;
     border-radius: 16px;
-    padding: 30px;
+    padding: 0;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
     transform: rotateY(-5deg) rotateX(5deg);
     box-shadow: 0 20px 60px rgba(212, 175, 55, 0.3);
     transition: transform 0.3s ease;
     position: relative;
     z-index: 2;
+    overflow: hidden;
 }
 
 .nfc-card:hover {
     transform: rotateY(0deg) rotateX(0deg) scale(1.05);
+}
+
+.nfc-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
 }
 
 .card-content {
@@ -518,18 +526,133 @@
 }
 
 @media (max-width: 480px) {
+    .hero {
+        padding-top: 70px;
+        padding-bottom: 50px;
+        min-height: auto;
+    }
+    
+    .hero-content {
+        gap: 40px;
+    }
+    
+    .hero-text {
+        gap: 20px;
+    }
+    
     .hero-title {
-        font-size: 28px;
+        font-size: 32px;
+        letter-spacing: -1px;
+        line-height: 1.2;
+    }
+    
+    .hero-subtitle {
+        font-size: 15px;
+        line-height: 1.5;
+    }
+    
+    .btn-cta {
+        padding: 14px 32px;
+        font-size: 14px;
+        width: 100%;
+        max-width: 280px;
     }
     
     .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-        text-align: center;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+    }
+    
+    .stat-item {
+        gap: 4px;
+    }
+    
+    .stat-number {
+        font-size: 20px;
+    }
+    
+    .stat-label {
+        font-size: 9px;
+        letter-spacing: 0.5px;
     }
     
     .nfc-card {
         width: 100%;
+        max-width: 280px;
+        height: 180px;
+        padding: 18px;
+    }
+    
+    .card-content {
+        gap: 12px;
+    }
+    
+    .card-left {
+        flex: 0 0 38%;
+    }
+    
+    .qr-code {
+        max-width: 100px;
+    }
+    
+    .contact-name {
+        font-size: 16px;
+    }
+    
+    .contact-designation {
+        font-size: 11px;
+    }
+    
+    .contact-phone {
+        font-size: 10px;
+    }
+    
+    .contact-email {
+        font-size: 9px;
+    }
+    
+    .feature-badge {
+        font-size: 12px;
+        gap: 6px;
+    }
+    
+    .lightning-icon {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+@media (max-width: 375px) {
+    .hero-title {
+        font-size: 28px;
+    }
+    
+    .hero-subtitle {
+        font-size: 14px;
+    }
+    
+    .stats-grid {
+        gap: 10px;
+    }
+    
+    .stat-number {
+        font-size: 18px;
+    }
+    
+    .stat-label {
+        font-size: 8px;
+    }
+    
+    .nfc-card {
+        max-width: 260px;
+        height: 165px;
+        padding: 15px;
+    }
+    
+    .btn-cta {
+        padding: 12px 28px;
+        font-size: 13px;
         max-width: 260px;
     }
 }
