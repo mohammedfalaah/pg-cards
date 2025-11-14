@@ -1,8 +1,13 @@
-.customization-page {
+/* Add to the top of your CardCustomization.css file */
+
+
+/* /////////// */
+
+/* .customization-page {
     min-height: 100vh;
     background-color: var(--bg-dark);
     padding-top: 80px;
-}
+} */
 
 .customization-header {
     position: fixed;

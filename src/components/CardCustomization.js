@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
-import PGCardsLogo from './PGCardsLogo';
-import './CardCustomization.css';
+import React, { useState, useEffect } from 'react';
 
 const CardCustomization = () => {
-  const [activeTab, setActiveTab] = useState('appearance');
+  useEffect(() => {
+    const metaViewport = document.querySelector('meta[name="viewport"]');
+    if (metaViewport) {
+      metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.head.appendChild(meta);
+    }
+  }, []);
+
+  const [activeTab, setActiveTab] = useState('personal-info');
   const [selectedTheme, setSelectedTheme] = useState('classic-custom');
   const [colors, setColors] = useState({
     primary: '#FFFFFF',
@@ -20,9 +30,9 @@ const CardCustomization = () => {
   });
 
   const themes = [
-    { id: 'standard', name: 'Standard', preview: 'standard' },
-    { id: 'classic-custom', name: 'Classic Custom', preview: 'classic-custom' },
-    { id: 'modern', name: 'Modern', preview: 'modern' }
+    { id: 'standard', name: 'Standard' },
+    { id: 'classic-custom', name: 'Classic Custom' },
+    { id: 'modern', name: 'Modern' }
   ];
 
   const handleColorChange = (colorType, value) => {
@@ -39,362 +49,591 @@ const CardCustomization = () => {
     }));
   };
 
-  const handleBack = () => {
-    window.history.pushState({}, '', '/');
-    window.dispatchEvent(new Event('navigate'));
-  };
-
   return (
-    <div className="customization-page">
-      <div className="customization-header">
-        <div className="container">
-          <div className="header-content">
-            <PGCardsLogo size={40} variant="inline" />
-            <div className="header-actions-custom">
-              <button className="btn-cancel" onClick={handleBack}>Cancel</button>
-              <button className="btn-clear">Clear All</button>
-              <button className="btn-trial">Free Trial</button>
-              <button className="btn-buy">Buy Now</button>
-            </div>
+    <div style={styles.customizationPage}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div style={styles.headerContent}>
+          <div style={styles.logo}>PG Cards</div>
+          <div style={styles.headerActions}>
+            <button style={{...styles.btn, ...styles.btnCancel}}>Cancel</button>
+            <button style={{...styles.btn, ...styles.btnClear}}>Clear All</button>
+            <button style={{...styles.btn, ...styles.btnTrial}}>Free Trial</button>
+            <button style={{...styles.btn, ...styles.btnBuy}}>Buy Now</button>
           </div>
         </div>
       </div>
 
-      <div className="customization-content">
-        <div className="container">
-          <div className="customization-layout">
-            {/* Left Side - Controls */}
-            <div className="customization-controls">
-              <div className="tabs">
-                <button 
-                  className={`tab ${activeTab === 'appearance' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('appearance')}
-                >
-                  APPEARANCE
-                </button>
-                <button 
-                  className={`tab ${activeTab === 'personal-info' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('personal-info')}
-                >
-                  PERSONAL INFO
-                </button>
-                <button 
-                  className={`tab ${activeTab === 'links' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('links')}
-                >
-                  LINKS
-                </button>
-                <button 
-                  className={`tab ${activeTab === 'data' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('data')}
-                >
-                  DATA
-                </button>
+      {/* Content */}
+      <div style={styles.content}>
+        {/* Tabs */}
+        <div style={styles.tabs}>
+          <button 
+            style={{...styles.tab, ...(activeTab === 'appearance' ? styles.tabActive : {})}}
+            onClick={() => setActiveTab('appearance')}
+          >
+            APPEARANCE
+          </button>
+          <button 
+            style={{...styles.tab, ...(activeTab === 'personal-info' ? styles.tabActive : {})}}
+            onClick={() => setActiveTab('personal-info')}
+          >
+            PERSONAL INFO
+          </button>
+          
+        </div>
+
+        {/* Tab Content */}
+        <div style={styles.tabContent}>
+          {activeTab === 'appearance' && (
+            <>
+              <div style={styles.section}>
+                <h3 style={styles.sectionTitle}>Select your theme</h3>
+                <div style={styles.themesGrid}>
+                  {themes.map(theme => (
+                    <div
+                      key={theme.id}
+                      style={{
+                        ...styles.themeCard,
+                        ...(selectedTheme === theme.id ? styles.themeCardSelected : {})
+                      }}
+                      onClick={() => setSelectedTheme(theme.id)}
+                    >
+                      <div style={styles.themePreview}>
+                        {theme.id === 'standard' && (
+                          <>
+                            <div style={styles.themeHeaderStandard}>INNOVATIVE</div>
+                            <div style={styles.themeAvatar}></div>
+                          </>
+                        )}
+                        {theme.id === 'classic-custom' && (
+                          <>
+                            <div style={styles.themeHeaderClassic}>LOGO</div>
+                            <div style={styles.themeAvatar}></div>
+                            <div style={styles.themeName}>Samuel</div>
+                            <div style={styles.themeButton}>Contact</div>
+                          </>
+                        )}
+                        {theme.id === 'modern' && (
+                          <>
+                            <div style={styles.themeHeaderModern}></div>
+                            <div style={styles.themeAvatar}></div>
+                            <div style={styles.themeSocialIcons}>
+                              <span>📧</span>
+                              <span>📞</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <p style={styles.themeLabel}>{theme.name}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {activeTab === 'appearance' && (
-                <div className="tab-content">
-                  <div className="section">
-                    <h3 className="section-title">Select your theme</h3>
-                    <div className="themes-grid">
-                      {themes.map(theme => (
-                        <div
-                          key={theme.id}
-                          className={`theme-card ${selectedTheme === theme.id ? 'selected' : ''}`}
-                          onClick={() => setSelectedTheme(theme.id)}
-                        >
-                          <div className={`theme-preview theme-${theme.preview}`}>
-                            {theme.preview === 'standard' && (
-                              <>
-                                <div className="theme-header-standard">INNOVATIVE</div>
-                                <div className="theme-avatar"></div>
-                              </>
-                            )}
-                            {theme.preview === 'classic-custom' && (
-                              <>
-                                <div className="theme-header-classic">LOGO</div>
-                                <div className="theme-avatar"></div>
-                                <div className="theme-name">Samuel</div>
-                                <div className="theme-button">Contact Me</div>
-                              </>
-                            )}
-                            {theme.preview === 'modern' && (
-                              <>
-                                <div className="theme-header-modern"></div>
-                                <div className="theme-avatar"></div>
-                                <div className="theme-social-icons">
-                                  <span>📧</span>
-                                  <span>📅</span>
-                                  <span>📞</span>
-                                  <span>💬</span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <p className="theme-name-label">{theme.name}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="section">
-                    <h3 className="section-title">CUSTOMIZE COLOUR</h3>
-                    <div className="color-controls">
-                      <div className="color-control">
-                        <label>Primary Color</label>
-                        <div className="color-input-group">
-                          <input
-                            type="color"
-                            value={colors.primary}
-                            onChange={(e) => handleColorChange('primary', e.target.value)}
-                            className="color-picker"
-                          />
-                          <input
-                            type="text"
-                            value={colors.primary}
-                            onChange={(e) => handleColorChange('primary', e.target.value)}
-                            className="color-input"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="color-control">
-                        <label>Background Color</label>
-                        <div className="color-input-group">
-                          <input
-                            type="color"
-                            value={colors.background}
-                            onChange={(e) => handleColorChange('background', e.target.value)}
-                            className="color-picker"
-                          />
-                          <input
-                            type="text"
-                            value={colors.background}
-                            onChange={(e) => handleColorChange('background', e.target.value)}
-                            className="color-input"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="color-control">
-                        <label>Icon Color</label>
-                        <div className="color-input-group">
-                          <input
-                            type="color"
-                            value={colors.icon}
-                            onChange={(e) => handleColorChange('icon', e.target.value)}
-                            className="color-picker"
-                          />
-                          <input
-                            type="text"
-                            value={colors.icon}
-                            onChange={(e) => handleColorChange('icon', e.target.value)}
-                            className="color-input"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="color-control">
-                        <label>Icon Text Color</label>
-                        <div className="color-input-group">
-                          <input
-                            type="color"
-                            value={colors.iconText}
-                            onChange={(e) => handleColorChange('iconText', e.target.value)}
-                            className="color-picker"
-                          />
-                          <input
-                            type="text"
-                            value={colors.iconText}
-                            onChange={(e) => handleColorChange('iconText', e.target.value)}
-                            className="color-input"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="color-control">
-                        <label>Text Color</label>
-                        <div className="color-input-group">
-                          <input
-                            type="color"
-                            value={colors.text}
-                            onChange={(e) => handleColorChange('text', e.target.value)}
-                            className="color-picker"
-                          />
-                          <input
-                            type="text"
-                            value={colors.text}
-                            onChange={(e) => handleColorChange('text', e.target.value)}
-                            className="color-input"
-                          />
-                        </div>
+              <div style={styles.section}>
+                <h3 style={styles.sectionTitle}>CUSTOMIZE COLOUR</h3>
+                <div style={styles.colorControls}>
+                  {[
+                    { key: 'primary', label: 'Primary Color' },
+                    { key: 'background', label: 'Background Color' },
+                    { key: 'icon', label: 'Icon Color' },
+                    { key: 'iconText', label: 'Icon Text Color' },
+                    { key: 'text', label: 'Text Color' }
+                  ].map(({ key, label }) => (
+                    <div key={key} style={styles.colorControl}>
+                      <label style={styles.label}>{label}</label>
+                      <div style={styles.colorInputGroup}>
+                        <input
+                          type="color"
+                          value={colors[key]}
+                          onChange={(e) => handleColorChange(key, e.target.value)}
+                          style={styles.colorPicker}
+                        />
+                        <input
+                          type="text"
+                          value={colors[key]}
+                          onChange={(e) => handleColorChange(key, e.target.value)}
+                          style={styles.colorInput}
+                        />
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            </>
+          )}
 
-              {activeTab === 'personal-info' && (
-                <div className="tab-content">
-                  <div className="section">
-                    <h3 className="section-title">Personal Information</h3>
-                    <div className="form-group">
-                      <label>Name</label>
-                      <input 
-                        type="text" 
-                        placeholder="Enter your name" 
-                        value={personalInfo.name}
-                        onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Designation</label>
-                      <input 
-                        type="text" 
-                        placeholder="Enter your designation" 
-                        value={personalInfo.designation}
-                        onChange={(e) => handlePersonalInfoChange('designation', e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Phone</label>
-                      <input 
-                        type="tel" 
-                        placeholder="+971 000 000 000" 
-                        value={personalInfo.phone}
-                        onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Email</label>
-                      <input 
-                        type="email" 
-                        placeholder="your.email@example.com" 
-                        value={personalInfo.email}
-                        onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+          {activeTab === 'personal-info' && (
+            <div style={styles.section}>
+              <h3 style={styles.sectionTitle}>Personal Information</h3>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Name</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter your name" 
+                  value={personalInfo.name}
+                  onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Designation</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter your designation" 
+                  value={personalInfo.designation}
+                  onChange={(e) => handlePersonalInfoChange('designation', e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Phone</label>
+                <input 
+                  type="tel" 
+                  placeholder="+971 000 000 000" 
+                  value={personalInfo.phone}
+                  onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Email</label>
+                <input 
+                  type="email" 
+                  placeholder="your.email@example.com" 
+                  value={personalInfo.email}
+                  onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
+                  style={styles.input}
+                />
+              </div>
 
-              {activeTab === 'links' && (
-                <div className="tab-content">
-                  <div className="section">
-                    <h3 className="section-title">Social Links</h3>
-                    <div className="form-group">
-                      <label>Website</label>
-                      <input type="url" placeholder="https://yourwebsite.com" />
-                    </div>
-                    <div className="form-group">
-                      <label>LinkedIn</label>
-                      <input type="url" placeholder="https://linkedin.com/in/yourprofile" />
-                    </div>
-                    <div className="form-group">
-                      <label>Twitter</label>
-                      <input type="url" placeholder="https://twitter.com/yourhandle" />
-                    </div>
-                  </div>
-                </div>
-              )}
+              <h3 style={{...styles.sectionTitle, marginTop: '32px'}}>Social Links</h3>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Website</label>
+                <input type="url" placeholder="https://yourwebsite.com" style={styles.input} />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>LinkedIn</label>
+                <input type="url" placeholder="https://linkedin.com/in/yourprofile" style={styles.input} />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Twitter</label>
+                <input type="url" placeholder="https://twitter.com/yourhandle" style={styles.input} />
+              </div>
 
-              {activeTab === 'data' && (
-                <div className="tab-content">
-                  <div className="section">
-                    <h3 className="section-title">Additional Data</h3>
-                    <div className="form-group">
-                      <label>Company</label>
-                      <input type="text" placeholder="Your company name" />
-                    </div>
-                    <div className="form-group">
-                      <label>Address</label>
-                      <textarea placeholder="Enter your address" rows="3"></textarea>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <h3 style={{...styles.sectionTitle, marginTop: '32px'}}>Additional Data</h3>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Company</label>
+                <input type="text" placeholder="Your company name" style={styles.input} />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Address</label>
+                <textarea placeholder="Enter your address" rows="3" style={{...styles.input, minHeight: '80px'}}></textarea>
+              </div>
             </div>
+          )}
 
-            {/* Right Side - Preview */}
-            <div className="card-preview-container">
-              <div className="phone-frame">
-                <div className="phone-screen">
-                  <div 
-                    className={`card-preview theme-${selectedTheme}`}
-                    style={{
-                      backgroundColor: colors.background,
-                      color: colors.text
-                }}>
-                    {selectedTheme === 'standard' && (
-                      <>
-                        <div className="preview-header" style={{ color: colors.primary }}>INNOVATIVE</div>
-                        <div className="preview-avatar"></div>
-                        <div className="preview-name" style={{ color: colors.text }}>
-                          {personalInfo.name || 'Name'}
-                        </div>
-                        <div className="preview-designation" style={{ color: colors.text }}>
-                          {personalInfo.designation || 'Designation'}
-                        </div>
-                      </>
-                    )}
+          
 
-                    {selectedTheme === 'classic-custom' && (
-                      <>
-                        <div className="preview-header-classic" style={{ color: colors.primary }}>LOGO</div>
-                        <div className="preview-avatar"></div>
-                        <div className="preview-name" style={{ color: colors.text }}>
-                          {personalInfo.name || 'Name'}
-                        </div>
-                        <div className="preview-designation" style={{ color: colors.text }}>
-                          {personalInfo.designation || 'Designation'}
-                        </div>
-                        <div className="preview-icons-row" style={{ backgroundColor: colors.background }}>
-                          <span style={{ color: colors.iconText }}>📧</span>
-                          <span style={{ color: colors.iconText }}>📅</span>
-                          <span style={{ color: colors.iconText }}>📞</span>
-                          <span style={{ color: colors.iconText }}>💬</span>
-                        </div>
-                        <button className="preview-button" style={{ backgroundColor: colors.primary, color: colors.background }}>
-                          Contact Me
-                        </button>
-                        <div className="preview-contact">
-                          <div style={{ color: colors.text }}>
-                            Phone: {personalInfo.phone || '+123 456 7890'}
-                          </div>
-                          <div style={{ color: colors.text }}>
-                            Email: {personalInfo.email || 'your@email.com'}
-                          </div>
-                        </div>
-                      </>
-                    )}
+         
+        </div>
 
-                    {selectedTheme === 'modern' && (
-                      <>
-                        <div className="preview-header-modern" style={{ backgroundColor: colors.primary }}></div>
-                        <div className="preview-avatar"></div>
-                        <div className="preview-name" style={{ color: colors.text }}>
-                          {personalInfo.name || 'Name'}
-                        </div>
-                        <div className="preview-designation" style={{ color: colors.text }}>
-                          {personalInfo.designation || 'Designation'}
-                        </div>
-                        <div className="preview-social-icons">
-                          <span style={{ color: colors.icon }}>📧</span>
-                          <span style={{ color: colors.icon }}>📅</span>
-                          <span style={{ color: colors.icon }}>📞</span>
-                          <span style={{ color: colors.icon }}>💬</span>
-                        </div>
-                      </>
-                    )}
+        {/* Preview Card */}
+        <div style={styles.previewContainer}>
+          <div style={styles.phoneFrame}>
+            <div 
+              style={{
+                ...styles.cardPreview,
+                backgroundColor: colors.background,
+                color: colors.text
+              }}
+            >
+              {selectedTheme === 'standard' && (
+                <>
+                  <div style={{...styles.previewHeader, color: colors.primary}}>INNOVATIVE</div>
+                  <div style={styles.previewAvatar}></div>
+                  <div style={{...styles.previewName, color: colors.text}}>
+                    {personalInfo.name || 'Your Name'}
                   </div>
-                </div>
-              </div>
+                  <div style={{...styles.previewDesignation, color: colors.text}}>
+                    {personalInfo.designation || 'Your Designation'}
+                  </div>
+                </>
+              )}
+
+              {selectedTheme === 'classic-custom' && (
+                <>
+                  <div style={{...styles.previewHeader, color: colors.primary}}>LOGO</div>
+                  <div style={styles.previewAvatar}></div>
+                  <div style={{...styles.previewName, color: colors.text}}>
+                    {personalInfo.name || 'Your Name'}
+                  </div>
+                  <div style={{...styles.previewDesignation, color: colors.text}}>
+                    {personalInfo.designation || 'Your Designation'}
+                  </div>
+                  <div style={styles.previewIcons}>
+                    <span style={{color: colors.iconText}}>📧</span>
+                    <span style={{color: colors.iconText}}>📅</span>
+                    <span style={{color: colors.iconText}}>📞</span>
+                    <span style={{color: colors.iconText}}>💬</span>
+                  </div>
+                  <button style={{
+                    ...styles.previewButton,
+                    backgroundColor: colors.primary,
+                    color: colors.background
+                  }}>
+                    Contact Me
+                  </button>
+                  <div style={styles.previewContact}>
+                    <div style={{color: colors.text, fontSize: '11px'}}>
+                      Phone: {personalInfo.phone || '+123 456 7890'}
+                    </div>
+                    <div style={{color: colors.text, fontSize: '11px'}}>
+                      Email: {personalInfo.email || 'your@email.com'}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selectedTheme === 'modern' && (
+                <>
+                  <div style={{
+                    ...styles.previewHeaderModernFull,
+                    backgroundColor: colors.primary
+                  }}></div>
+                  <div style={styles.previewAvatar}></div>
+                  <div style={{...styles.previewName, color: colors.text}}>
+                    {personalInfo.name || 'Your Name'}
+                  </div>
+                  <div style={{...styles.previewDesignation, color: colors.text}}>
+                    {personalInfo.designation || 'Your Designation'}
+                  </div>
+                  <div style={styles.previewIconsModern}>
+                    <span style={{color: colors.icon}}>📧</span>
+                    <span style={{color: colors.icon}}>📅</span>
+                    <span style={{color: colors.icon}}>📞</span>
+                    <span style={{color: colors.icon}}>💬</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
   );
+};
+
+const styles = {
+  customizationPage: {
+    width: '100vw',
+    minHeight: '100vh',
+    backgroundColor: '#000',
+    color: '#fff',
+    fontFamily: 'Arial, sans-serif',
+    overflow: 'auto',
+  },
+  header: {
+    backgroundColor: '#1a1a1a',
+    padding: '12px 16px',
+    borderBottom: '1px solid #333',
+  },
+  headerContent: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '10px',
+  },
+  logo: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerActions: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
+  },
+  btn: {
+    padding: '6px 12px',
+    fontSize: '12px',
+    border: '1px solid',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500',
+  },
+  btnCancel: {
+    backgroundColor: 'transparent',
+    borderColor: '#666',
+    color: '#fff',
+  },
+  btnClear: {
+    backgroundColor: 'transparent',
+    borderColor: '#666',
+    color: '#fff',
+  },
+  btnTrial: {
+    backgroundColor: 'transparent',
+    borderColor: '#FFD700',
+    color: '#FFD700',
+  },
+  btnBuy: {
+    backgroundColor: '#FFD700',
+    borderColor: '#FFD700',
+    color: '#000',
+  },
+  content: {
+    padding: '16px',
+    maxWidth: '100%',
+  },
+  tabs: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '20px',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+  },
+  tab: {
+    padding: '10px 16px',
+    fontSize: '12px',
+    fontWeight: '600',
+    backgroundColor: 'transparent',
+    border: 'none',
+    color: '#999',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    borderBottom: '2px solid transparent',
+  },
+  tabActive: {
+    color: '#fff',
+    borderBottom: '2px solid #FFD700',
+  },
+  tabContent: {
+    marginBottom: '20px',
+  },
+  section: {
+    marginBottom: '24px',
+  },
+  sectionTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    marginBottom: '16px',
+    color: '#fff',
+  },
+  themesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '12px',
+  },
+  themeCard: {
+    cursor: 'pointer',
+    border: '2px solid #333',
+    borderRadius: '8px',
+    padding: '8px',
+    transition: 'all 0.3s',
+    backgroundColor: '#1a1a1a',
+  },
+  themeCardSelected: {
+    borderColor: '#FFD700',
+    backgroundColor: '#2a2a2a',
+  },
+  themePreview: {
+    backgroundColor: '#8B0000',
+    borderRadius: '6px',
+    height: '100px',
+    marginBottom: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '8px',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  themeHeaderStandard: {
+    fontSize: '8px',
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: '4px',
+  },
+  themeHeaderClassic: {
+    fontSize: '8px',
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: '4px',
+  },
+  themeHeaderModern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '20px',
+    backgroundColor: '#fff',
+  },
+  themeAvatar: {
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    backgroundColor: '#fff',
+    marginBottom: '4px',
+  },
+  themeName: {
+    fontSize: '7px',
+    color: '#fff',
+    marginBottom: '2px',
+  },
+  themeButton: {
+    fontSize: '6px',
+    padding: '2px 6px',
+    backgroundColor: '#fff',
+    color: '#8B0000',
+    borderRadius: '8px',
+    fontWeight: 'bold',
+  },
+  themeSocialIcons: {
+    display: 'flex',
+    gap: '6px',
+    fontSize: '10px',
+    marginTop: '4px',
+  },
+  themeLabel: {
+    fontSize: '11px',
+    textAlign: 'center',
+    color: '#ccc',
+    margin: 0,
+  },
+  colorControls: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  colorControl: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  label: {
+    fontSize: '13px',
+    color: '#ccc',
+    fontWeight: '500',
+  },
+  colorInputGroup: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center',
+  },
+  colorPicker: {
+    width: '50px',
+    height: '40px',
+    border: '1px solid #444',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
+  colorInput: {
+    flex: 1,
+    padding: '10px',
+    fontSize: '16px',
+    backgroundColor: '#1a1a1a',
+    border: '1px solid #444',
+    borderRadius: '4px',
+    color: '#fff',
+  },
+  formGroup: {
+    marginBottom: '16px',
+  },
+  input: {
+    width: '100%',
+    padding: '10px',
+    fontSize: '16px',
+    backgroundColor: '#1a1a1a',
+    border: '1px solid #444',
+    borderRadius: '4px',
+    color: '#fff',
+    marginTop: '6px',
+    boxSizing: 'border-box',
+  },
+  previewContainer: {
+    marginTop: '30px',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  phoneFrame: {
+    width: '280px',
+    backgroundColor: '#222',
+    borderRadius: '20px',
+    padding: '16px',
+    boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+  },
+  cardPreview: {
+    borderRadius: '12px',
+    padding: '24px 16px',
+    minHeight: '400px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+    position: 'relative',
+  },
+  previewHeader: {
+    fontSize: '14px',
+    fontWeight: 'bold',
+    marginBottom: '8px',
+  },
+  previewHeaderModernFull: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '60px',
+    borderTopLeftRadius: '12px',
+    borderTopRightRadius: '12px',
+  },
+  previewAvatar: {
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    backgroundColor: '#fff',
+    marginTop: '40px',
+    marginBottom: '8px',
+  },
+  previewName: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+  },
+  previewDesignation: {
+    fontSize: '12px',
+    opacity: 0.8,
+  },
+  previewIcons: {
+    display: 'flex',
+    gap: '16px',
+    fontSize: '20px',
+    margin: '12px 0',
+  },
+  previewIconsModern: {
+    display: 'flex',
+    gap: '20px',
+    fontSize: '24px',
+    margin: '16px 0',
+  },
+  previewButton: {
+    padding: '10px 24px',
+    borderRadius: '20px',
+    border: 'none',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    margin: '12px 0',
+  },
+  previewContact: {
+    marginTop: '16px',
+    textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
 };
 
 export default CardCustomization;
