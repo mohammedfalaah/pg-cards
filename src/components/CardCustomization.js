@@ -68,18 +68,19 @@ const CardCustomization = () => {
       <div style={styles.content}>
         {/* Tabs */}
         <div style={styles.tabs}>
+           <button 
+            style={{...styles.tab, ...(activeTab === 'personal-info' ? styles.tabActive : {})}}
+            onClick={() => setActiveTab('personal-info')}
+          >
+            PERSONAL INFO
+          </button>
           <button 
             style={{...styles.tab, ...(activeTab === 'appearance' ? styles.tabActive : {})}}
             onClick={() => setActiveTab('appearance')}
           >
             APPEARANCE
           </button>
-          <button 
-            style={{...styles.tab, ...(activeTab === 'personal-info' ? styles.tabActive : {})}}
-            onClick={() => setActiveTab('personal-info')}
-          >
-            PERSONAL INFO
-          </button>
+         
           
         </div>
 
