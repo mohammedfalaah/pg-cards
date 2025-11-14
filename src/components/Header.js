@@ -51,6 +51,13 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       setIsMenuOpen(false);
       return;
     }
+
+      if (targetId === '#contact') {
+      window.history.pushState({}, '', '/contact');
+      window.dispatchEvent(new Event('navigate'));
+      setIsMenuOpen(false);
+      return;
+    }
     
     const target = document.querySelector(targetId);
     if (target) {
@@ -91,7 +98,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
               <li><a href="#shop" onClick={(e) => handleSmoothScroll(e, '#shop')}>Shop</a></li>
               <li><a href="#blog" onClick={(e) => handleSmoothScroll(e, '#blog')}>Blog</a></li>
               <li><a href="#contact" onClick={(e) => handleSmoothScroll(e, '#contact')}>Contact Us</a></li>
-              <li><a href="#create" className="create-link" onClick={(e) => handleSmoothScroll(e, '#create')}>Create Free QR</a></li>
+              {/* <li><a href="#create" className="create-link" onClick={(e) => handleSmoothScroll(e, '#create')}>Create Free QR</a></li> */}
               {user && (
                 <li><a href="#dashboard" onClick={(e) => handleSmoothScroll(e, '#dashboard')}>Dashboard</a></li>
               )}

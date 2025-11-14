@@ -12,6 +12,7 @@ import CreateQR from './components/CreateQR';
 import Dashboard from './components/Dashboard';
 import ResetPassword from './components/ResetPassword';
 import './App.css';
+import ContactUs from './components/ContactUs';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
@@ -52,7 +53,10 @@ function App() {
         setActiveView('reset-password');
       } else if (path.startsWith('/blog')) {
         setActiveView('blog');
-      } else if (path.startsWith('/create-qrCode') || path.startsWith('/create-qr')) {
+      } else if (path.startsWith('/contact')){
+        setActiveView('contact');
+      }
+       else if (path.startsWith('/create-qrCode') || path.startsWith('/create-qr')) {
         setActiveView('create-qr');
       } else {
         setActiveView('landing');
@@ -122,6 +126,20 @@ function App() {
         />
         <Blog />
         <Footer />
+      </div>
+    );
+  }
+  if (activeView === 'contact') {
+    return (
+      <div className="App">
+        <Header
+          user={auth.user}
+          onLoginSuccess={handleLoginSuccess}
+          onLogout={handleLogout}
+          isDashboard={false}
+        />
+        <ContactUs />
+          <Footer />
       </div>
     );
   }
