@@ -13,6 +13,7 @@ import Dashboard from './components/Dashboard';
 import ResetPassword from './components/ResetPassword';
 import './App.css';
 import ContactUs from './components/ContactUs';
+import WhatsappChat from './components/WhatsappChat';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
@@ -139,6 +140,7 @@ function App() {
           isDashboard={false}
         />
         <ContactUs />
+        <WhatsappChat />
           <Footer />
       </div>
     );
@@ -167,6 +169,7 @@ function App() {
       ) : (
         <>
           <Hero />
+          <WhatsappChat />
           <About />
           <WhyChooseUs />
           {/* <Clients /> */}
