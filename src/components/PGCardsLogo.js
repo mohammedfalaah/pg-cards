@@ -9,7 +9,7 @@ const PGCardsLogo = ({ size = 50, showText = true, variant = 'default' }) => {
           src="/assets/images/logo.png" 
           alt="DC CARDS IU Logo" 
           className="logo-image"
-          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          style={{ width: '90%', height: '90%', objectFit: 'contain' }}
         />
       </div>
     </div>
