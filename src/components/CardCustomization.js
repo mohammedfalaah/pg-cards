@@ -1,4 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+
+const baseUrl = 'zeeqr.info/profile-view/';
+
+const socialPlatforms = [
+  'Instagram',
+  'Facebook',
+  'Whatsapp',
+  'Linkedin',
+  'Twitter',
+  'Youtube',
+  'Skype',
+  'Snapchat',
+  'Tiktok',
+  'Company Profile'
+];
+
+const premiumThemes = [
+  {
+    id: 'obsidian',
+    name: 'Black Obsidian',
+    description: 'Matte black with premium gold accents',
+    background: 'linear-gradient(135deg, #050505 0%, #0A0A10 100%)',
+    accent: '#E3BB6B',
+    qrAccent: '#E8C987'
+  },
+  {
+    id: 'midnight',
+    name: 'Midnight Violet',
+    description: 'Deep violet gradient for luxury brands',
+    background: 'linear-gradient(135deg, #1c1b33 0%, #21102E 100%)',
+    accent: '#D4B27B',
+    qrAccent: '#e3c59b'
+  },
+  {
+    id: 'polar',
+    name: 'Arctic Frost',
+    description: 'Bright whites with champagne gold',
+    background: 'linear-gradient(135deg, #f4f4f7 0%, #e4e4ed 100%)',
+    accent: '#c9a260',
+    qrAccent: '#e7cfa4'
+  }
+];
 
 const CardCustomization = () => {
   useEffect(() => {
@@ -13,311 +55,534 @@ const CardCustomization = () => {
     }
   }, []);
 
-  const [activeTab, setActiveTab] = useState('personal-info');
-  const [selectedTheme, setSelectedTheme] = useState('classic-custom');
-  const [colors, setColors] = useState({
-    primary: '#FFFFFF',
-    background: '#8B0000',
-    icon: '#000000',
-    iconText: '#FFFFFF',
-    text: '#FFFFFF'
-  });
+  const [activeTab, setActiveTab] = useState('appearance');
+  const [selectedTheme, setSelectedTheme] = useState(premiumThemes[0].id);
+  const [customUrlEnabled, setCustomUrlEnabled] = useState(false);
+  const [customSlug, setCustomSlug] = useState('');
   const [personalInfo, setPersonalInfo] = useState({
     name: '',
     designation: '',
     phone: '',
-    email: ''
+    email: '',
+    company: '',
+    address: '',
+    website: '',
+    tagline: '',
+    about: ''
+  });
+  const [socialForm, setSocialForm] = useState({ platform: '', link: '' });
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [phoneNumbers, setPhoneNumbers] = useState(['']);
+  const [emails, setEmails] = useState(['']);
+  const [contactDetails, setContactDetails] = useState([{ label: 'Website', value: '' }]);
+  const [accordionOpen, setAccordionOpen] = useState({
+    phones: true,
+    emails: false,
+    contact: false
   });
 
-  const themes = [
-    { id: 'standard', name: 'Standard' },
-    { id: 'classic-custom', name: 'Classic Custom' },
-    { id: 'modern', name: 'Modern' }
-  ];
+  const generatedSlug = useMemo(() => Math.random().toString(36).substring(2, 12), []);
+  const finalSlug = customUrlEnabled && customSlug ? customSlug : generatedSlug;
+  const finalUrl = `${baseUrl}${finalSlug}`;
 
-  const handleColorChange = (colorType, value) => {
-    setColors(prev => ({
-      ...prev,
-      [colorType]: value
-    }));
+  const theme = premiumThemes.find((t) => t.id === selectedTheme) ?? premiumThemes[0];
+
+  const handleInputChange = (field, value) => {
+    setPersonalInfo((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePersonalInfoChange = (field, value) => {
-    setPersonalInfo(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleSocialFormChange = (field, value) => {
+    setSocialForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  return (
-    <div style={styles.customizationPage}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.headerContent}>
-          <div style={styles.logo}>PG Cards</div>
-          <div style={styles.headerActions}>
-            <button style={{...styles.btn, ...styles.btnCancel}}>Cancel</button>
-            <button style={{...styles.btn, ...styles.btnClear}}>Clear All</button>
-            <button style={{...styles.btn, ...styles.btnTrial}}>Free Trial</button>
-            <button style={{...styles.btn, ...styles.btnBuy}}>Buy Now</button>
+  const handleAddSocialLink = () => {
+    if (!socialForm.platform || !socialForm.link) return;
+    setSocialLinks((prev) => [...prev, { ...socialForm }]);
+    setSocialForm({ platform: '', link: '' });
+  };
+
+  const handleRemoveSocial = (index) => {
+    setSocialLinks((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const toggleAccordion = (section) => {
+    setAccordionOpen((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const handlePhoneChange = (index, value) => {
+    setPhoneNumbers((prev) => prev.map((phone, idx) => (idx === index ? value : phone)));
+  };
+
+  const handleEmailChange = (index, value) => {
+    setEmails((prev) => prev.map((email, idx) => (idx === index ? value : email)));
+  };
+
+  const handleContactDetailChange = (index, field, value) => {
+    setContactDetails((prev) =>
+      prev.map((detail, idx) => (idx === index ? { ...detail, [field]: value } : detail))
+    );
+  };
+
+  const addPhoneField = () => setPhoneNumbers((prev) => [...prev, '']);
+  const removePhoneField = (index) =>
+    setPhoneNumbers((prev) => {
+      const next = prev.filter((_, idx) => idx !== index);
+      return next.length ? next : [''];
+    });
+
+  const addEmailField = () => setEmails((prev) => [...prev, '']);
+  const removeEmailField = (index) =>
+    setEmails((prev) => {
+      const next = prev.filter((_, idx) => idx !== index);
+      return next.length ? next : [''];
+    });
+
+  const addContactDetailField = () => setContactDetails((prev) => [...prev, { label: '', value: '' }]);
+  const removeContactDetailField = (index) =>
+    setContactDetails((prev) => {
+      const next = prev.filter((_, idx) => idx !== index);
+      return next.length ? next : [{ label: '', value: '' }];
+    });
+
+  const renderAppearanceTab = () => (
+    <>
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Your page URL</h3>
+        <div style={styles.urlCard}>
+          <label style={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={customUrlEnabled}
+              onChange={(e) => setCustomUrlEnabled(e.target.checked)}
+            />
+            <span>Customize URL</span>
+          </label>
+          <div style={styles.urlInputRow}>
+            <div style={styles.urlInputGroup}>
+              <span style={styles.urlPrefix}>{baseUrl}</span>
+              <input
+                type="text"
+                placeholder={generatedSlug}
+                value={customSlug}
+                onChange={(e) => setCustomSlug(e.target.value.replace(/\s/g, '-').toLowerCase())}
+                disabled={!customUrlEnabled}
+                style={{
+                  ...styles.urlInput,
+                  ...(customUrlEnabled ? {} : styles.urlInputDisabled)
+                }}
+              />
+            </div>
           </div>
+          <div style={styles.finalUrlRow}>
+            <span>Final URL</span>
+            <a href={`https://${finalUrl}`} target="_blank" rel="noreferrer">
+              {finalUrl}
+            </a>
+          </div>
+          <p style={styles.urlNote}>Note: Once saved, the URL cannot be changed later.</p>
         </div>
       </div>
 
-      {/* Content */}
-      <div style={styles.content}>
-        {/* Tabs */}
-        <div style={styles.tabs}>
-           <button 
-            style={{...styles.tab, ...(activeTab === 'personal-info' ? styles.tabActive : {})}}
-            onClick={() => setActiveTab('personal-info')}
-          >
-            PERSONAL INFO
-          </button>
-          <button 
-            style={{...styles.tab, ...(activeTab === 'appearance' ? styles.tabActive : {})}}
-            onClick={() => setActiveTab('appearance')}
-          >
-            APPEARANCE
-          </button>
-         
-          
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Themes</h3>
+        <div style={styles.themesGrid}>
+          {premiumThemes.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                ...styles.themeTile,
+                borderColor: selectedTheme === item.id ? item.accent : 'rgba(255,255,255,0.1)',
+                boxShadow: selectedTheme === item.id ? `0 10px 30px rgba(227,187,107,0.3)` : 'none'
+              }}
+              onClick={() => setSelectedTheme(item.id)}
+            >
+              <div
+                style={{
+                  ...styles.themePreview,
+                  background: item.background
+                }}
+              >
+                <div style={{ ...styles.themeLogo, color: item.accent }}>PG</div>
+                <div style={{ ...styles.themeDesc, color: '#fff' }}>{item.description}</div>
+              </div>
+              <p style={styles.themeName}>{item.name}</p>
+            </div>
+          ))}
         </div>
+      </div>
+    </>
+  );
 
-        {/* Tab Content */}
-        <div style={styles.tabContent}>
-          {activeTab === 'appearance' && (
-            <>
-              <div style={styles.section}>
-                <h3 style={styles.sectionTitle}>Select your theme</h3>
-                <div style={styles.themesGrid}>
-                  {themes.map(theme => (
-                    <div
-                      key={theme.id}
-                      style={{
-                        ...styles.themeCard,
-                        ...(selectedTheme === theme.id ? styles.themeCardSelected : {})
-                      }}
-                      onClick={() => setSelectedTheme(theme.id)}
-                    >
-                      <div style={styles.themePreview}>
-                        {theme.id === 'standard' && (
-                          <>
-                            <div style={styles.themeHeaderStandard}>INNOVATIVE</div>
-                            <div style={styles.themeAvatar}></div>
-                          </>
-                        )}
-                        {theme.id === 'classic-custom' && (
-                          <>
-                            <div style={styles.themeHeaderClassic}>LOGO</div>
-                            <div style={styles.themeAvatar}></div>
-                            <div style={styles.themeName}>Samuel</div>
-                            <div style={styles.themeButton}>Contact</div>
-                          </>
-                        )}
-                        {theme.id === 'modern' && (
-                          <>
-                            <div style={styles.themeHeaderModern}></div>
-                            <div style={styles.themeAvatar}></div>
-                            <div style={styles.themeSocialIcons}>
-                              <span>📧</span>
-                              <span>📞</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      <p style={styles.themeLabel}>{theme.name}</p>
-                    </div>
-                  ))}
+  const renderPersonalTab = () => (
+    <>
+      <div style={styles.formGridTwo}>
+        <div style={styles.formField}>
+          <label>Full Name</label>
+          <input
+            style={styles.textInput}
+            placeholder="Full Name"
+            value={personalInfo.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+          />
+        </div>
+        <div style={styles.formField}>
+          <label>Company Designation</label>
+          <input
+            style={styles.textInput}
+            placeholder="Company Designation"
+            value={personalInfo.designation}
+            onChange={(e) => handleInputChange('designation', e.target.value)}
+          />
+        </div>
+        <div style={styles.formField}>
+          <label>Company Name</label>
+          <input
+            style={styles.textInput}
+            placeholder="Company Name"
+            value={personalInfo.company}
+            onChange={(e) => handleInputChange('company', e.target.value)}
+          />
+        </div>
+        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
+          <label>About (optional)</label>
+          <textarea
+            style={styles.textarea}
+            placeholder="About You"
+            rows={4}
+            value={personalInfo.about}
+            onChange={(e) => handleInputChange('about', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div style={styles.accordionWrapper}>
+        <div style={styles.accordionSection}>
+          <button style={styles.accordionHeader} onClick={() => toggleAccordion('phones')}>
+            <span>Phone Numbers</span>
+            <span>{accordionOpen.phones ? '−' : '+'}</span>
+          </button>
+          {accordionOpen.phones && (
+            <div style={styles.accordionBody}>
+              {phoneNumbers.map((phone, idx) => (
+                <div key={`phone-${idx}`} style={styles.listRow}>
+                  <input
+                    style={styles.textInput}
+                    placeholder="+971 000 000 000"
+                    value={phone}
+                    onChange={(e) => handlePhoneChange(idx, e.target.value)}
+                  />
+                  <button style={styles.removeRowBtn} onClick={() => removePhoneField(idx)}>
+                    ×
+                  </button>
                 </div>
-              </div>
-
-              <div style={styles.section}>
-                <h3 style={styles.sectionTitle}>CUSTOMIZE COLOUR</h3>
-                <div style={styles.colorControls}>
-                  {[
-                    { key: 'primary', label: 'Primary Color' },
-                    { key: 'background', label: 'Background Color' },
-                    { key: 'icon', label: 'Icon Color' },
-                    { key: 'iconText', label: 'Icon Text Color' },
-                    { key: 'text', label: 'Text Color' }
-                  ].map(({ key, label }) => (
-                    <div key={key} style={styles.colorControl}>
-                      <label style={styles.label}>{label}</label>
-                      <div style={styles.colorInputGroup}>
-                        <input
-                          type="color"
-                          value={colors[key]}
-                          onChange={(e) => handleColorChange(key, e.target.value)}
-                          style={styles.colorPicker}
-                        />
-                        <input
-                          type="text"
-                          value={colors[key]}
-                          onChange={(e) => handleColorChange(key, e.target.value)}
-                          style={styles.colorInput}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'personal-info' && (
-            <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>Personal Information</h3>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Name</label>
-                <input 
-                  type="text" 
-                  placeholder="Enter your name" 
-                  value={personalInfo.name}
-                  onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Designation</label>
-                <input 
-                  type="text" 
-                  placeholder="Enter your designation" 
-                  value={personalInfo.designation}
-                  onChange={(e) => handlePersonalInfoChange('designation', e.target.value)}
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Phone</label>
-                <input 
-                  type="tel" 
-                  placeholder="+971 000 000 000" 
-                  value={personalInfo.phone}
-                  onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Email</label>
-                <input 
-                  type="email" 
-                  placeholder="your.email@example.com" 
-                  value={personalInfo.email}
-                  onChange={(e) => handlePersonalInfoChange('email', e.target.value)}
-                  style={styles.input}
-                />
-              </div>
-
-              <h3 style={{...styles.sectionTitle, marginTop: '32px'}}>Social Links</h3>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Website</label>
-                <input type="url" placeholder="https://yourwebsite.com" style={styles.input} />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>LinkedIn</label>
-                <input type="url" placeholder="https://linkedin.com/in/yourprofile" style={styles.input} />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Twitter</label>
-                <input type="url" placeholder="https://twitter.com/yourhandle" style={styles.input} />
-              </div>
-
-              <h3 style={{...styles.sectionTitle, marginTop: '32px'}}>Additional Data</h3>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Company</label>
-                <input type="text" placeholder="Your company name" style={styles.input} />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Address</label>
-                <textarea placeholder="Enter your address" rows="3" style={{...styles.input, minHeight: '80px'}}></textarea>
-              </div>
+              ))}
+              <button style={styles.addRowBtn} onClick={addPhoneField}>
+                + Add Phone
+              </button>
             </div>
           )}
-
-          
-
-         
         </div>
 
-        {/* Preview Card */}
-        <div style={styles.previewContainer}>
-          <div style={styles.phoneFrame}>
-            <div 
-              style={{
-                ...styles.cardPreview,
-                backgroundColor: colors.background,
-                color: colors.text
-              }}
-            >
-              {selectedTheme === 'standard' && (
-                <>
-                  <div style={{...styles.previewHeader, color: colors.primary}}>INNOVATIVE</div>
-                  <div style={styles.previewAvatar}></div>
-                  <div style={{...styles.previewName, color: colors.text}}>
-                    {personalInfo.name || 'Your Name'}
-                  </div>
-                  <div style={{...styles.previewDesignation, color: colors.text}}>
-                    {personalInfo.designation || 'Your Designation'}
-                  </div>
-                </>
-              )}
-
-              {selectedTheme === 'classic-custom' && (
-                <>
-                  <div style={{...styles.previewHeader, color: colors.primary}}>LOGO</div>
-                  <div style={styles.previewAvatar}></div>
-                  <div style={{...styles.previewName, color: colors.text}}>
-                    {personalInfo.name || 'Your Name'}
-                  </div>
-                  <div style={{...styles.previewDesignation, color: colors.text}}>
-                    {personalInfo.designation || 'Your Designation'}
-                  </div>
-                  <div style={styles.previewIcons}>
-                    <span style={{color: colors.iconText}}>📧</span>
-                    <span style={{color: colors.iconText}}>📅</span>
-                    <span style={{color: colors.iconText}}>📞</span>
-                    <span style={{color: colors.iconText}}>💬</span>
-                  </div>
-                  <button style={{
-                    ...styles.previewButton,
-                    backgroundColor: colors.primary,
-                    color: colors.background
-                  }}>
-                    Contact Me
+        <div style={styles.accordionSection}>
+          <button style={styles.accordionHeader} onClick={() => toggleAccordion('emails')}>
+            <span>Emails</span>
+            <span>{accordionOpen.emails ? '−' : '+'}</span>
+          </button>
+          {accordionOpen.emails && (
+            <div style={styles.accordionBody}>
+              {emails.map((email, idx) => (
+                <div key={`email-${idx}`} style={styles.listRow}>
+                  <input
+                    style={styles.textInput}
+                    placeholder="name@email.com"
+                    value={email}
+                    onChange={(e) => handleEmailChange(idx, e.target.value)}
+                  />
+                  <button style={styles.removeRowBtn} onClick={() => removeEmailField(idx)}>
+                    ×
                   </button>
-                  <div style={styles.previewContact}>
-                    <div style={{color: colors.text, fontSize: '11px'}}>
-                      Phone: {personalInfo.phone || '+123 456 7890'}
-                    </div>
-                    <div style={{color: colors.text, fontSize: '11px'}}>
-                      Email: {personalInfo.email || 'your@email.com'}
-                    </div>
-                  </div>
-                </>
-              )}
+                </div>
+              ))}
+              <button style={styles.addRowBtn} onClick={addEmailField}>
+                + Add Email
+              </button>
+            </div>
+          )}
+        </div>
 
-              {selectedTheme === 'modern' && (
-                <>
-                  <div style={{
-                    ...styles.previewHeaderModernFull,
-                    backgroundColor: colors.primary
-                  }}></div>
-                  <div style={styles.previewAvatar}></div>
-                  <div style={{...styles.previewName, color: colors.text}}>
-                    {personalInfo.name || 'Your Name'}
+        <div style={styles.accordionSection}>
+          <button style={styles.accordionHeader} onClick={() => toggleAccordion('contact')}>
+            <span>Contact Details</span>
+            <span>{accordionOpen.contact ? '−' : '+'}</span>
+          </button>
+          {accordionOpen.contact && (
+            <div style={styles.accordionBody}>
+              {contactDetails.map((detail, idx) => (
+                <div key={`contact-${idx}`} style={styles.contactRow}>
+                  <input
+                    style={styles.textInput}
+                    placeholder="Label (e.g. Website)"
+                    value={detail.label}
+                    onChange={(e) => handleContactDetailChange(idx, 'label', e.target.value)}
+                  />
+                  <input
+                    style={styles.textInput}
+                    placeholder="Detail"
+                    value={detail.value}
+                    onChange={(e) => handleContactDetailChange(idx, 'value', e.target.value)}
+                  />
+                  <button style={styles.removeRowBtn} onClick={() => removeContactDetailField(idx)}>
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button style={styles.addRowBtn} onClick={addContactDetailField}>
+                + Add Detail
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+
+  const renderLinksTab = () => (
+    <>
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Social Media</h3>
+        <div style={styles.socialRow}>
+          <select
+            style={styles.select}
+            value={socialForm.platform}
+            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
+          >
+            <option value="">Select Platform</option>
+            {socialPlatforms.map((platform) => (
+              <option key={platform} value={platform}>
+                {platform}
+              </option>
+            ))}
+          </select>
+          <input
+            style={styles.textInput}
+            placeholder="Enter a valid link"
+            value={socialForm.link}
+            onChange={(e) => handleSocialFormChange('link', e.target.value)}
+          />
+          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
+            +
+          </button>
+        </div>
+        {socialLinks.length > 0 && (
+          <div style={styles.socialChips}>
+            {socialLinks.map((item, idx) => (
+              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
+                <span>{item.platform}</span>
+                <a href={item.link} target="_blank" rel="noreferrer">
+                  {item.link}
+                </a>
+                <button onClick={() => handleRemoveSocial(idx)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  const renderDataTab = () => (
+    <div style={styles.section}>
+      <h3 style={styles.sectionTitle}>Additional Data</h3>
+      <div style={styles.formField}>
+        <label>About Company</label>
+        <textarea
+          rows={4}
+          style={styles.textarea}
+          placeholder="Describe your business, services or offerings."
+        />
+      </div>
+      <div style={styles.formField}>
+        <label>Custom CTA Button</label>
+        <input style={styles.textInput} placeholder="Add to contacts link" />
+      </div>
+    </div>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'appearance':
+        return renderAppearanceTab();
+      case 'personal':
+        return renderPersonalTab();
+      case 'links':
+        return renderLinksTab();
+      case 'data':
+        return renderDataTab();
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={styles.page}>
+      <header style={styles.header}>
+        <div style={styles.logoMark}>
+          <div style={styles.logoIcon}>PG</div>
+          <div>
+            <p style={styles.logoTitle}>PG Cards</p>
+            <small style={styles.logoSubtitle}>Renovating the future</small>
+          </div>
+        </div>
+        <div style={styles.headerButtons}>
+          <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Cancel</button>
+          <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Clear All</button>
+          <button style={{ ...styles.headerBtn, ...styles.btnOutline }}>Free Trial</button>
+          <button style={{ ...styles.headerBtn, ...styles.btnSolid }}>Buy Now</button>
+        </div>
+      </header>
+
+      <div style={styles.wrapper}>
+        <div style={styles.panel}>
+          <div style={styles.tabsRow}>
+            {[
+              { id: 'appearance', label: 'Appearance' },
+              { id: 'personal', label: 'Personal Info' },
+              { id: 'links', label: 'Links' },
+              { id: 'data', label: 'Data' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  ...styles.tabButton,
+                  ...(activeTab === tab.id ? styles.tabButtonActive : {})
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={styles.tabCard}>{renderTabContent()}</div>
+        </div>
+
+        <div style={styles.preview}>
+          <div style={styles.previewHeader}>
+            <div>
+              <p style={styles.previewTitle}>Live Preview</p>
+              <small style={styles.previewSubtitle}>View your premium NFC card</small>
+            </div>
+          </div>
+
+          <div style={styles.cardPreviewWrapper}>
+            <div style={{ ...styles.cardSide, background: theme.background }}>
+              <div style={styles.cardBackContent}>
+                <div style={styles.qrPlaceholder}>
+                  <div style={{ ...styles.qrInner, borderColor: theme.qrAccent }} />
+                  <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent }} />
+                  <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, top: 'auto', bottom: 16 }} />
+                  <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, left: 'auto', right: 16 }} />
+                  <div
+                    style={{
+                      ...styles.qrCorner,
+                      borderColor: theme.qrAccent,
+                      top: 'auto',
+                      bottom: 16,
+                      left: 'auto',
+                      right: 16
+                    }}
+                  />
+                </div>
+                <div style={styles.cardDetails}>
+                  <h4 style={{ ...styles.cardName, color: theme.accent }}>
+                    {personalInfo.name || 'YOUR NAME'}
+                  </h4>
+                  <p style={{ ...styles.cardDesignation, color: theme.accent }}>
+                    {personalInfo.designation || 'DESIGNATION'}
+                  </p>
+                  {(phoneNumbers.filter(Boolean).length > 0 || emails.filter(Boolean).length > 0) && (
+                    <div style={styles.cardContactList}>
+                      {phoneNumbers.filter(Boolean).map((phone) => (
+                        <p key={phone} style={styles.cardContact}>
+                          {phone}
+                        </p>
+                      ))}
+                      {emails.filter(Boolean).map((email) => (
+                        <p key={email} style={styles.cardContact}>
+                          {email}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  <div style={styles.cardActionBtn}>
+                    <span role="img" aria-label="nfc">
+                      📶
+                    </span>
+                    <span role="img" aria-label="qr">
+                      🔳
+                    </span>
                   </div>
-                  <div style={{...styles.previewDesignation, color: colors.text}}>
-                    {personalInfo.designation || 'Your Designation'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={styles.previewDevice}>
+            <div style={styles.previewPhone}>
+              <div style={styles.previewScreen}>
+                <div style={styles.previewBrandRow}>
+                  <div style={styles.previewBrandIcon}>🪄</div>
+                  <div>
+                    <p style={styles.previewBrandName}>{personalInfo.company || 'ZEEQR'}</p>
+                    <small style={{ color: '#d9b871', letterSpacing: 1 }}>
+                      {personalInfo.designation || 'Renovating the future'}
+                    </small>
                   </div>
-                  <div style={styles.previewIconsModern}>
-                    <span style={{color: colors.icon}}>📧</span>
-                    <span style={{color: colors.icon}}>📅</span>
-                    <span style={{color: colors.icon}}>📞</span>
-                    <span style={{color: colors.icon}}>💬</span>
+                </div>
+                <div style={styles.previewContactCard}>
+                  <div style={styles.previewAvatar} />
+                  <div>
+                    <p style={{ fontWeight: 600 }}>{personalInfo.name || 'Name'}</p>
+                    <small>{personalInfo.designation || 'Designation'}</small>
+                    <small>{personalInfo.company || 'Company Name'}</small>
                   </div>
-                </>
-              )}
+                </div>
+                <button style={styles.previewCta}>Add to contacts</button>
+                <div style={styles.previewInfoBlock}>
+                  <p style={styles.previewSectionLabel}>Contact Info</p>
+                  {phoneNumbers.filter(Boolean).map((phone, idx) => (
+                    <div key={`preview-phone-${idx}`} style={styles.previewInfoRow}>
+                      <span>📞</span>
+                      <span>{phone}</span>
+                    </div>
+                  ))}
+                  {emails.filter(Boolean).map((email, idx) => (
+                    <div key={`preview-email-${idx}`} style={styles.previewInfoRow}>
+                      <span>✉️</span>
+                      <span>{email}</span>
+                    </div>
+                  ))}
+                </div>
+                {contactDetails.filter(({ label, value }) => label || value).length > 0 && (
+                  <div style={styles.previewInfoBlock}>
+                    <p style={styles.previewSectionLabel}>Contact Details</p>
+                    {contactDetails
+                      .filter(({ label, value }) => label || value)
+                      .map((detail, idx) => (
+                        <div key={`preview-contact-${idx}`} style={styles.previewInfoRow}>
+                          <span style={styles.previewInfoLabel}>{detail.label || 'Detail'}</span>
+                          <span>{detail.value || '-'}</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                {personalInfo.about && (
+                  <div style={styles.previewInfoBlock}>
+                    <p style={styles.previewSectionLabel}>About</p>
+                    <p style={styles.previewParagraph}>{personalInfo.about}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -327,314 +592,552 @@ const CardCustomization = () => {
 };
 
 const styles = {
-  customizationPage: {
-    width: '100vw',
+  page: {
     minHeight: '100vh',
-    backgroundColor: '#000',
+    width: '100%',
+    background: 'linear-gradient(135deg, #080808 0%, #150b1f 100%)',
     color: '#fff',
-    fontFamily: 'Arial, sans-serif',
-    overflow: 'auto',
+    fontFamily: "'Inter', sans-serif",
+    paddingBottom: 60
   },
   header: {
-    backgroundColor: '#1a1a1a',
-    padding: '12px 16px',
-    borderBottom: '1px solid #333',
-  },
-  headerContent: {
     display: 'flex',
     justifyContent: 'space-between',
+    padding: '20px 4vw',
+    alignItems: 'center'
+  },
+  logoMark: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center'
+  },
+  logoIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    background: 'linear-gradient(135deg, #f7d27c, #ba8c38)',
+    color: '#050505',
+    display: 'flex',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '10px',
+    justifyContent: 'center',
+    fontWeight: 700,
+    fontSize: 18
   },
-  logo: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#fff',
+  logoTitle: {
+    margin: 0,
+    fontWeight: 600,
+    fontSize: 16
   },
-  headerActions: {
+  logoSubtitle: {
+    color: '#c0a870',
+    margin: 0,
+    fontSize: 12
+  },
+  headerButtons: {
     display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap',
+    gap: 10,
+    flexWrap: 'wrap'
   },
-  btn: {
-    padding: '6px 12px',
-    fontSize: '12px',
-    border: '1px solid',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontWeight: '500',
-  },
-  btnCancel: {
-    backgroundColor: 'transparent',
-    borderColor: '#666',
+  headerBtn: {
+    borderRadius: 22,
+    padding: '8px 18px',
+    fontWeight: 600,
+    border: '1px solid transparent',
+    background: 'transparent',
     color: '#fff',
+    cursor: 'pointer'
   },
-  btnClear: {
-    backgroundColor: 'transparent',
-    borderColor: '#666',
-    color: '#fff',
+  btnGhost: {
+    borderColor: 'rgba(255,255,255,0.2)'
   },
-  btnTrial: {
-    backgroundColor: 'transparent',
-    borderColor: '#FFD700',
-    color: '#FFD700',
+  btnOutline: {
+    borderColor: '#d7b05a',
+    color: '#d7b05a'
   },
-  btnBuy: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
-    color: '#000',
+  btnSolid: {
+    background: 'linear-gradient(135deg,#f7d27c,#ba8c38)',
+    color: '#050505'
   },
-  content: {
-    padding: '16px',
-    maxWidth: '100%',
-  },
-  tabs: {
+  wrapper: {
     display: 'flex',
-    gap: '8px',
-    marginBottom: '20px',
-    overflowX: 'auto',
-    WebkitOverflowScrolling: 'touch',
+    gap: 32,
+    padding: '0 4vw 60px',
+    flexWrap: 'wrap'
   },
-  tab: {
-    padding: '10px 16px',
-    fontSize: '12px',
-    fontWeight: '600',
-    backgroundColor: 'transparent',
-    border: 'none',
-    color: '#999',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    borderBottom: '2px solid transparent',
+  panel: {
+    flex: 1,
+    minWidth: 320
   },
-  tabActive: {
-    color: '#fff',
-    borderBottom: '2px solid #FFD700',
+  preview: {
+    flex: 1,
+    minWidth: 320,
+    background: 'rgba(255,255,255,0.02)',
+    borderRadius: 24,
+    padding: 24,
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 25px 60px rgba(0,0,0,0.45)'
   },
-  tabContent: {
-    marginBottom: '20px',
+  tabsRow: {
+    display: 'flex',
+    gap: 12,
+    marginBottom: 20,
+    flexWrap: 'wrap'
+  },
+  tabButton: {
+    padding: '10px 18px',
+    borderRadius: 999,
+    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'transparent',
+    color: '#d9d9d9',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  tabButtonActive: {
+    background: 'linear-gradient(135deg,#f7d27c,#ba8c38)',
+    color: '#050505',
+    borderColor: 'transparent'
+  },
+  tabCard: {
+    background: 'rgba(255,255,255,0.02)',
+    borderRadius: 24,
+    padding: 24,
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)'
   },
   section: {
-    marginBottom: '24px',
+    marginBottom: 32
   },
   sectionTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    marginBottom: '16px',
-    color: '#fff',
+    marginBottom: 16,
+    fontSize: 16,
+    fontWeight: 600,
+    letterSpacing: 0.2
+  },
+  urlCard: {
+    background: '#0d0d12',
+    borderRadius: 16,
+    padding: 18,
+    border: '1px solid rgba(255,255,255,0.05)'
+  },
+  checkboxLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontSize: 14,
+    marginBottom: 14
+  },
+  urlInputRow: {
+    display: 'flex',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 12
+  },
+  urlInputGroup: {
+    display: 'flex',
+    flex: 1,
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    overflow: 'hidden'
+  },
+  urlPrefix: {
+    background: 'rgba(255,255,255,0.05)',
+    padding: '10px 12px',
+    color: '#d2d2d2',
+    fontSize: 13
+  },
+  urlInput: {
+    flex: 1,
+    background: 'transparent',
+    border: 'none',
+    padding: '10px 12px',
+    color: '#fff'
+  },
+  urlInputDisabled: {
+    color: '#666'
+  },
+  finalUrlRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: 13,
+    color: '#c7c7c7',
+    marginBottom: 6
+  },
+  urlNote: {
+    margin: 0,
+    color: '#7b7b85',
+    fontSize: 12
   },
   themesGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '12px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: 18
   },
-  themeCard: {
+  themeTile: {
+    borderRadius: 18,
+    padding: 14,
     cursor: 'pointer',
-    border: '2px solid #333',
-    borderRadius: '8px',
-    padding: '8px',
-    transition: 'all 0.3s',
-    backgroundColor: '#1a1a1a',
-  },
-  themeCardSelected: {
-    borderColor: '#FFD700',
-    backgroundColor: '#2a2a2a',
+    transition: 'all 0.3s ease',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.01)'
   },
   themePreview: {
-    backgroundColor: '#8B0000',
-    borderRadius: '6px',
-    height: '100px',
-    marginBottom: '8px',
+    borderRadius: 14,
+    padding: '28px 20px',
+    marginBottom: 10,
+    minHeight: 120,
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '8px',
-    position: 'relative',
-    overflow: 'hidden',
+    justifyContent: 'space-between',
+    boxShadow: 'inset 0 0 40px rgba(0,0,0,0.35)'
   },
-  themeHeaderStandard: {
-    fontSize: '8px',
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: '4px',
+  themeLogo: {
+    fontSize: 32,
+    fontWeight: 700
   },
-  themeHeaderClassic: {
-    fontSize: '8px',
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: '4px',
-  },
-  themeHeaderModern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '20px',
-    backgroundColor: '#fff',
-  },
-  themeAvatar: {
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    backgroundColor: '#fff',
-    marginBottom: '4px',
+  themeDesc: {
+    fontSize: 12,
+    opacity: 0.8
   },
   themeName: {
-    fontSize: '7px',
-    color: '#fff',
-    marginBottom: '2px',
-  },
-  themeButton: {
-    fontSize: '6px',
-    padding: '2px 6px',
-    backgroundColor: '#fff',
-    color: '#8B0000',
-    borderRadius: '8px',
-    fontWeight: 'bold',
-  },
-  themeSocialIcons: {
-    display: 'flex',
-    gap: '6px',
-    fontSize: '10px',
-    marginTop: '4px',
-  },
-  themeLabel: {
-    fontSize: '11px',
-    textAlign: 'center',
-    color: '#ccc',
     margin: 0,
+    fontWeight: 600,
+    letterSpacing: 0.2
   },
-  colorControls: {
+  formGridTwo: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: 18
+  },
+  formField: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: 8,
+    fontSize: 13
   },
-  colorControl: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
+  accordionWrapper: {
+    marginTop: 24,
+    borderTop: '1px solid rgba(255,255,255,0.1)'
   },
-  label: {
-    fontSize: '13px',
-    color: '#ccc',
-    fontWeight: '500',
+  accordionSection: {
+    borderBottom: '1px solid rgba(255,255,255,0.08)'
   },
-  colorInputGroup: {
-    display: 'flex',
-    gap: '10px',
-    alignItems: 'center',
-  },
-  colorPicker: {
-    width: '50px',
-    height: '40px',
-    border: '1px solid #444',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  colorInput: {
-    flex: 1,
-    padding: '10px',
-    fontSize: '16px',
-    backgroundColor: '#1a1a1a',
-    border: '1px solid #444',
-    borderRadius: '4px',
-    color: '#fff',
-  },
-  formGroup: {
-    marginBottom: '16px',
-  },
-  input: {
+  accordionHeader: {
     width: '100%',
-    padding: '10px',
-    fontSize: '16px',
-    backgroundColor: '#1a1a1a',
-    border: '1px solid #444',
-    borderRadius: '4px',
+    padding: '14px 0',
+    background: 'transparent',
+    border: 'none',
     color: '#fff',
-    marginTop: '6px',
-    boxSizing: 'border-box',
-  },
-  previewContainer: {
-    marginTop: '30px',
+    fontWeight: 600,
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    cursor: 'pointer',
+    fontSize: 14
   },
-  phoneFrame: {
-    width: '280px',
-    backgroundColor: '#222',
-    borderRadius: '20px',
-    padding: '16px',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-  },
-  cardPreview: {
-    borderRadius: '12px',
-    padding: '24px 16px',
-    minHeight: '400px',
+  accordionBody: {
+    paddingBottom: 16,
     display: 'flex',
     flexDirection: 'column',
+    gap: 12
+  },
+  listRow: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center'
+  },
+  contactRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr auto',
+    gap: 8,
+    alignItems: 'center'
+  },
+  addRowBtn: {
+    alignSelf: 'flex-start',
+    padding: '8px 14px',
+    borderRadius: 10,
+    border: '1px dashed rgba(255,255,255,0.3)',
+    background: 'transparent',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 600
+  },
+  removeRowBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'transparent',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: 18
+  },
+  textInput: {
+    borderRadius: 12,
+    padding: '10px 14px',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff',
+    fontSize: 14
+  },
+  textarea: {
+    borderRadius: 12,
+    padding: '12px 14px',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff',
+    fontSize: 14,
+    resize: 'vertical'
+  },
+  socialRow: {
+    display: 'flex',
+    gap: 12,
+    flexWrap: 'wrap'
+  },
+  select: {
+    flex: 1,
+    minWidth: 180,
+    borderRadius: 12,
+    padding: '10px 40px 10px 14px',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff'
+  },
+  addIconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'transparent',
+    color: '#fff',
+    fontSize: 20,
+    cursor: 'pointer'
+  },
+  socialChips: {
+    marginTop: 16,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10
+  },
+  socialChip: {
+    display: 'flex',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '12px',
-    position: 'relative',
+    padding: '10px 14px',
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    gap: 12
   },
   previewHeader: {
-    fontSize: '14px',
-    fontWeight: 'bold',
-    marginBottom: '8px',
-  },
-  previewHeaderModernFull: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '60px',
-    borderTopLeftRadius: '12px',
-    borderTopRightRadius: '12px',
-  },
-  previewAvatar: {
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    backgroundColor: '#fff',
-    marginTop: '40px',
-    marginBottom: '8px',
-  },
-  previewName: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-  },
-  previewDesignation: {
-    fontSize: '12px',
-    opacity: 0.8,
-  },
-  previewIcons: {
     display: 'flex',
-    gap: '16px',
-    fontSize: '20px',
-    margin: '12px 0',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16
   },
-  previewIconsModern: {
+  previewTitle: {
+    margin: 0,
+    fontWeight: 600,
+    fontSize: 18
+  },
+  previewSubtitle: {
+    color: '#b7b7b7'
+  },
+  previewSwitch: {
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: 999,
+    padding: 4,
     display: 'flex',
-    gap: '20px',
-    fontSize: '24px',
-    margin: '16px 0',
+    gap: 4
   },
-  previewButton: {
-    padding: '10px 24px',
-    borderRadius: '20px',
+  previewSwitchBtn: {
     border: 'none',
-    fontSize: '14px',
-    fontWeight: '600',
+    background: 'transparent',
+    color: '#b7b7b7',
+    padding: '6px 14px',
+    borderRadius: 999,
     cursor: 'pointer',
-    margin: '12px 0',
+    fontWeight: 600
   },
-  previewContact: {
-    marginTop: '16px',
-    textAlign: 'center',
+  previewSwitchBtnActive: {
+    background: '#fff',
+    color: '#050505'
+  },
+  cardPreviewWrapper: {
+    borderRadius: 32,
+    padding: 24,
+    background: 'radial-gradient(circle at top, rgba(247,210,124,0.15), transparent 70%)',
+    display: 'flex',
+    justifyContent: 'center'
+  },
+  cardSide: {
+    width: '100%',
+    minHeight: 220,
+    borderRadius: 30,
+    padding: 30,
+    position: 'relative',
+    boxShadow: '0 30px 60px rgba(0,0,0,0.55)'
+  },
+  cardLogo: {
+    fontSize: 110,
+    fontFamily: "'Cinzel', serif",
+    color: '#d6af6b',
+    lineHeight: 0.9
+  },
+  cardSubtitle: {
+    position: 'absolute',
+    top: '50%',
+    left: '42%',
+    transform: 'translate(-50%, -50%)',
+    letterSpacing: 5,
+    color: '#d6af6b'
+  },
+  cardBackContent: {
+    display: 'flex',
+    gap: 20,
+    flexWrap: 'wrap'
+  },
+  qrPlaceholder: {
+    width: 160,
+    height: 160,
+    borderRadius: 20,
+    background: 'rgba(0,0,0,0.4)',
+    position: 'relative',
+    border: '1px solid rgba(255,255,255,0.1)'
+  },
+  qrInner: {
+    position: 'absolute',
+    inset: 32,
+    border: '2px dashed',
+    borderRadius: 12
+  },
+  qrCorner: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    border: '3px solid',
+    borderRadius: 8,
+    top: 16,
+    left: 16
+  },
+  cardDetails: {
+    flex: 1,
+    minWidth: 180,
+    color: '#fff'
+  },
+  cardName: {
+    fontSize: 26,
+    margin: 0
+  },
+  cardDesignation: {
+    margin: '6px 0 18px',
+    letterSpacing: 2
+  },
+  cardContact: {
+    margin: '4px 0',
+    color: '#d6af6b'
+  },
+  cardContactList: {
+    marginTop: 4,
+    marginBottom: 8
+  },
+  cardActionBtn: {
+    marginTop: 20,
+    border: '1px solid rgba(255,255,255,0.25)',
+    borderRadius: 16,
+    padding: '8px 16px',
+    display: 'inline-flex',
+    gap: 12
+  },
+  previewDevice: {
+    marginTop: 24
+  },
+  previewPhone: {
+    width: 260,
+    margin: '0 auto',
+    borderRadius: 50,
+    padding: 16,
+    background: 'linear-gradient(135deg,#1c1c28,#09090f)'
+  },
+  previewScreen: {
+    borderRadius: 32,
+    padding: 18,
+    background: '#fff',
+    minHeight: 360,
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
+    gap: 16
   },
+  previewBrandRow: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center'
+  },
+  previewBrandIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    background: '#050505',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  previewBrandName: {
+    margin: 0,
+    color: '#050505',
+    fontWeight: 700
+  },
+  previewContactCard: {
+    borderRadius: 20,
+    border: '1px solid rgba(0,0,0,0.08)',
+    padding: 16,
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center'
+  },
+  previewAvatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 16,
+    background: 'rgba(0,0,0,0.1)'
+  },
+  previewCta: {
+    borderRadius: 16,
+    border: 'none',
+    background: '#050505',
+    color: '#fff',
+    padding: '12px 20px',
+    fontWeight: 600,
+    cursor: 'pointer'
+  },
+  previewInfoBlock: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTop: '1px solid rgba(0,0,0,0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8
+  },
+  previewSectionLabel: {
+    margin: 0,
+    fontWeight: 600,
+    color: '#050505',
+    fontSize: 14
+  },
+  previewInfoRow: {
+    display: 'flex',
+    gap: 10,
+    alignItems: 'center',
+    color: '#1f1f1f',
+    fontSize: 13
+  },
+  previewInfoLabel: {
+    fontWeight: 600
+  },
+  previewParagraph: {
+    margin: 0,
+    color: '#1f1f1f',
+    lineHeight: 1.5,
+    fontSize: 13
+  }
 };
 
 export default CardCustomization;

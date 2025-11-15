@@ -43,6 +43,13 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       setIsMenuOpen(false);
       return;
     }
+
+     if (targetId === '#shop') {
+      window.history.pushState({}, '', '/shop');
+      window.dispatchEvent(new Event('navigate'));
+      setIsMenuOpen(false);
+      return;
+    }
     
     // Handle create QR navigation separately
     if (targetId === '#create') {

@@ -14,6 +14,7 @@ import ResetPassword from './components/ResetPassword';
 import './App.css';
 import ContactUs from './components/ContactUs';
 import WhatsappChat from './components/WhatsappChat';
+import ShopPage from './components/ShopPage';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
@@ -56,6 +57,8 @@ function App() {
         setActiveView('blog');
       } else if (path.startsWith('/contact')){
         setActiveView('contact');
+      }else if (path.startsWith('/shop')){
+        setActiveView('shop');
       }
        else if (path.startsWith('/create-qrCode') || path.startsWith('/create-qr')) {
         setActiveView('create-qr');
@@ -104,6 +107,15 @@ function App() {
     return (
       <div className="App">
         <CardCustomization />
+      </div>
+    );
+  }
+   if (activeView === 'shop') {
+    return (
+      <div className="App">
+        <Header />
+        <ShopPage />
+         <Footer />
       </div>
     );
   }
