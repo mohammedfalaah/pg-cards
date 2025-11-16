@@ -55,7 +55,7 @@ const CardCustomization = () => {
     }
   }, []);
 
-  const [activeTab, setActiveTab] = useState('appearance');
+  const [activeTab, setActiveTab] = useState('personal');
   const [selectedTheme, setSelectedTheme] = useState(premiumThemes[0].id);
   const [customUrlEnabled, setCustomUrlEnabled] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
@@ -68,7 +68,9 @@ const CardCustomization = () => {
     address: '',
     website: '',
     tagline: '',
-    about: ''
+    about: '',
+    aboutCompany: '',
+    ctaButton: ''
   });
   const [socialForm, setSocialForm] = useState({ platform: '', link: '' });
   const [socialLinks, setSocialLinks] = useState([]);
@@ -144,75 +146,6 @@ const CardCustomization = () => {
       return next.length ? next : [{ label: '', value: '' }];
     });
 
-  const renderAppearanceTab = () => (
-    <>
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Your page URL</h3>
-        <div style={styles.urlCard}>
-          <label style={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={customUrlEnabled}
-              onChange={(e) => setCustomUrlEnabled(e.target.checked)}
-            />
-            <span>Customize URL</span>
-          </label>
-          <div style={styles.urlInputRow}>
-            <div style={styles.urlInputGroup}>
-              <span style={styles.urlPrefix}>{baseUrl}</span>
-              <input
-                type="text"
-                placeholder={generatedSlug}
-                value={customSlug}
-                onChange={(e) => setCustomSlug(e.target.value.replace(/\s/g, '-').toLowerCase())}
-                disabled={!customUrlEnabled}
-                style={{
-                  ...styles.urlInput,
-                  ...(customUrlEnabled ? {} : styles.urlInputDisabled)
-                }}
-              />
-            </div>
-          </div>
-          <div style={styles.finalUrlRow}>
-            <span>Final URL</span>
-            <a href={`https://${finalUrl}`} target="_blank" rel="noreferrer">
-              {finalUrl}
-            </a>
-          </div>
-          <p style={styles.urlNote}>Note: Once saved, the URL cannot be changed later.</p>
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Themes</h3>
-        <div style={styles.themesGrid}>
-          {premiumThemes.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                ...styles.themeTile,
-                borderColor: selectedTheme === item.id ? item.accent : 'rgba(255,255,255,0.1)',
-                boxShadow: selectedTheme === item.id ? `0 10px 30px rgba(227,187,107,0.3)` : 'none'
-              }}
-              onClick={() => setSelectedTheme(item.id)}
-            >
-              <div
-                style={{
-                  ...styles.themePreview,
-                  background: item.background
-                }}
-              >
-                <div style={{ ...styles.themeLogo, color: item.accent }}>PG</div>
-                <div style={{ ...styles.themeDesc, color: '#fff' }}>{item.description}</div>
-              </div>
-              <p style={styles.themeName}>{item.name}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
-  );
-
   const renderPersonalTab = () => (
     <>
       <div style={styles.formGridTwo}>
@@ -243,6 +176,7 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('company', e.target.value)}
           />
         </div>
+        
         <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
           <label>About (optional)</label>
           <textarea
@@ -253,6 +187,65 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('about', e.target.value)}
           />
         </div>
+        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
+          <label>About Company</label>
+          <textarea
+            rows={4}
+            style={styles.textarea}
+            placeholder="Describe your business, services or offerings."
+            value={personalInfo.aboutCompany}
+            onChange={(e) => handleInputChange('aboutCompany', e.target.value)}
+          />
+        </div>
+        <div style={styles.formField}>
+          <label>Custom CTA Button</label>
+          <input 
+            style={styles.textInput} 
+            placeholder="Add to contacts link"
+            value={personalInfo.ctaButton}
+            onChange={(e) => handleInputChange('ctaButton', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Social Media</h3>
+        <div style={styles.socialRow}>
+          <select
+            style={styles.select}
+            value={socialForm.platform}
+            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
+          >
+            <option value="">Select Platform</option>
+            {socialPlatforms.map((platform) => (
+              <option key={platform} value={platform}>
+                {platform}
+              </option>
+            ))}
+          </select>
+          <input
+            style={styles.textInput}
+            placeholder="Enter a valid link"
+            value={socialForm.link}
+            onChange={(e) => handleSocialFormChange('link', e.target.value)}
+          />
+          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
+            +
+          </button>
+        </div>
+        {socialLinks.length > 0 && (
+          <div style={styles.socialChips}>
+            {socialLinks.map((item, idx) => (
+              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
+                <span>{item.platform}</span>
+                <a href={item.link} target="_blank" rel="noreferrer">
+                  {item.link}
+                </a>
+                <button onClick={() => handleRemoveSocial(idx)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={styles.accordionWrapper}>
@@ -346,78 +339,84 @@ const CardCustomization = () => {
     </>
   );
 
-  const renderLinksTab = () => (
+  const renderAppearanceTab = () => (
     <>
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Social Media</h3>
-        <div style={styles.socialRow}>
-          <select
-            style={styles.select}
-            value={socialForm.platform}
-            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
-          >
-            <option value="">Select Platform</option>
-            {socialPlatforms.map((platform) => (
-              <option key={platform} value={platform}>
-                {platform}
-              </option>
-            ))}
-          </select>
-          <input
-            style={styles.textInput}
-            placeholder="Enter a valid link"
-            value={socialForm.link}
-            onChange={(e) => handleSocialFormChange('link', e.target.value)}
-          />
-          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
-            +
-          </button>
-        </div>
-        {socialLinks.length > 0 && (
-          <div style={styles.socialChips}>
-            {socialLinks.map((item, idx) => (
-              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
-                <span>{item.platform}</span>
-                <a href={item.link} target="_blank" rel="noreferrer">
-                  {item.link}
-                </a>
-                <button onClick={() => handleRemoveSocial(idx)}>×</button>
-              </div>
-            ))}
+        <h3 style={styles.sectionTitle}>Your page URL</h3>
+        <div style={styles.urlCard}>
+          <label style={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={customUrlEnabled}
+              onChange={(e) => setCustomUrlEnabled(e.target.checked)}
+            />
+            <span>Customize URL</span>
+          </label>
+          <div style={styles.urlInputRow}>
+            <div style={styles.urlInputGroup}>
+              <span style={styles.urlPrefix}>{baseUrl}</span>
+              <input
+                type="text"
+                placeholder={generatedSlug}
+                value={customSlug}
+                onChange={(e) => setCustomSlug(e.target.value.replace(/\s/g, '-').toLowerCase())}
+                disabled={!customUrlEnabled}
+                style={{
+                  ...styles.urlInput,
+                  ...(customUrlEnabled ? {} : styles.urlInputDisabled)
+                }}
+              />
+            </div>
           </div>
-        )}
+          <div style={styles.finalUrlRow}>
+            <span>Final URL</span>
+            <a href={`https://${finalUrl}`} target="_blank" rel="noreferrer">
+              {finalUrl}
+            </a>
+          </div>
+          <p style={styles.urlNote}>Note: Once saved, the URL cannot be changed later.</p>
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Themes</h3>
+        <div style={styles.themesGrid}>
+          {premiumThemes.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                ...styles.themeTile,
+                borderColor: selectedTheme === item.id ? item.accent : 'rgba(255,255,255,0.1)',
+                boxShadow: selectedTheme === item.id ? `0 10px 30px rgba(227,187,107,0.3)` : 'none'
+              }}
+              onClick={() => setSelectedTheme(item.id)}
+            >
+              <div
+                style={{
+                  ...styles.themePreview,
+                  background: item.background
+                }}
+              >
+                <div style={{ ...styles.themeLogo, color: item.accent }}>PG</div>
+                <div style={{ ...styles.themeDesc, color: '#fff' }}>{item.description}</div>
+              </div>
+              <p style={styles.themeName}>{item.name}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );
 
-  const renderDataTab = () => (
-    <div style={styles.section}>
-      <h3 style={styles.sectionTitle}>Additional Data</h3>
-      <div style={styles.formField}>
-        <label>About Company</label>
-        <textarea
-          rows={4}
-          style={styles.textarea}
-          placeholder="Describe your business, services or offerings."
-        />
-      </div>
-      <div style={styles.formField}>
-        <label>Custom CTA Button</label>
-        <input style={styles.textInput} placeholder="Add to contacts link" />
-      </div>
-    </div>
-  );
+
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'appearance':
-        return renderAppearanceTab();
       case 'personal':
         return renderPersonalTab();
-      case 'links':
-        return renderLinksTab();
-      case 'data':
-        return renderDataTab();
+      case 'appearance':
+        return renderAppearanceTab();
+     
       default:
         return null;
     }
@@ -445,10 +444,9 @@ const CardCustomization = () => {
         <div style={styles.panel}>
           <div style={styles.tabsRow}>
             {[
-              { id: 'appearance', label: 'Appearance' },
               { id: 'personal', label: 'Personal Info' },
-              { id: 'links', label: 'Links' },
-              { id: 'data', label: 'Data' }
+              { id: 'appearance', label: 'Appearance' },
+             // { id: 'links', label: 'Links' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -547,7 +545,9 @@ const CardCustomization = () => {
                     <small>{personalInfo.company || 'Company Name'}</small>
                   </div>
                 </div>
-                <button style={styles.previewCta}>Add to contacts</button>
+                <button style={styles.previewCta}>
+                  {personalInfo.ctaButton || 'Add to contacts'}
+                </button>
                 <div style={styles.previewInfoBlock}>
                   <p style={styles.previewSectionLabel}>Contact Info</p>
                   {phoneNumbers.filter(Boolean).map((phone, idx) => (
@@ -580,6 +580,12 @@ const CardCustomization = () => {
                   <div style={styles.previewInfoBlock}>
                     <p style={styles.previewSectionLabel}>About</p>
                     <p style={styles.previewParagraph}>{personalInfo.about}</p>
+                  </div>
+                )}
+                {personalInfo.aboutCompany && (
+                  <div style={styles.previewInfoBlock}>
+                    <p style={styles.previewSectionLabel}>About Company</p>
+                    <p style={styles.previewParagraph}>{personalInfo.aboutCompany}</p>
                   </div>
                 )}
               </div>
@@ -941,26 +947,6 @@ const styles = {
   previewSubtitle: {
     color: '#b7b7b7'
   },
-  previewSwitch: {
-    background: 'rgba(0,0,0,0.3)',
-    borderRadius: 999,
-    padding: 4,
-    display: 'flex',
-    gap: 4
-  },
-  previewSwitchBtn: {
-    border: 'none',
-    background: 'transparent',
-    color: '#b7b7b7',
-    padding: '6px 14px',
-    borderRadius: 999,
-    cursor: 'pointer',
-    fontWeight: 600
-  },
-  previewSwitchBtnActive: {
-    background: '#fff',
-    color: '#050505'
-  },
   cardPreviewWrapper: {
     borderRadius: 32,
     padding: 24,
@@ -975,20 +961,6 @@ const styles = {
     padding: 30,
     position: 'relative',
     boxShadow: '0 30px 60px rgba(0,0,0,0.55)'
-  },
-  cardLogo: {
-    fontSize: 110,
-    fontFamily: "'Cinzel', serif",
-    color: '#d6af6b',
-    lineHeight: 0.9
-  },
-  cardSubtitle: {
-    position: 'absolute',
-    top: '50%',
-    left: '42%',
-    transform: 'translate(-50%, -50%)',
-    letterSpacing: 5,
-    color: '#d6af6b'
   },
   cardBackContent: {
     display: 'flex',
