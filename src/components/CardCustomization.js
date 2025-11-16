@@ -176,7 +176,6 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('company', e.target.value)}
           />
         </div>
-        
         <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
           <label>About (optional)</label>
           <textarea
@@ -206,46 +205,6 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('ctaButton', e.target.value)}
           />
         </div>
-      </div>
-
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Social Media</h3>
-        <div style={styles.socialRow}>
-          <select
-            style={styles.select}
-            value={socialForm.platform}
-            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
-          >
-            <option value="">Select Platform</option>
-            {socialPlatforms.map((platform) => (
-              <option key={platform} value={platform}>
-                {platform}
-              </option>
-            ))}
-          </select>
-          <input
-            style={styles.textInput}
-            placeholder="Enter a valid link"
-            value={socialForm.link}
-            onChange={(e) => handleSocialFormChange('link', e.target.value)}
-          />
-          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
-            +
-          </button>
-        </div>
-        {socialLinks.length > 0 && (
-          <div style={styles.socialChips}>
-            {socialLinks.map((item, idx) => (
-              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
-                <span>{item.platform}</span>
-                <a href={item.link} target="_blank" rel="noreferrer">
-                  {item.link}
-                </a>
-                <button onClick={() => handleRemoveSocial(idx)}>×</button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <div style={styles.accordionWrapper}>
@@ -408,7 +367,197 @@ const CardCustomization = () => {
     </>
   );
 
+  const renderLinksTab = () => (
+    <>
+      <div style={styles.formGridTwo}>
+        <div style={styles.formField}>
+          <label>Full Name</label>
+          <input
+            style={styles.textInput}
+            placeholder="Full Name"
+            value={personalInfo.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+          />
+        </div>
+        <div style={styles.formField}>
+          <label>Company Designation</label>
+          <input
+            style={styles.textInput}
+            placeholder="Company Designation"
+            value={personalInfo.designation}
+            onChange={(e) => handleInputChange('designation', e.target.value)}
+          />
+        </div>
+        <div style={styles.formField}>
+          <label>Company Name</label>
+          <input
+            style={styles.textInput}
+            placeholder="Company Name"
+            value={personalInfo.company}
+            onChange={(e) => handleInputChange('company', e.target.value)}
+          />
+        </div>
+        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
+          <label>About (optional)</label>
+          <textarea
+            style={styles.textarea}
+            placeholder="About You"
+            rows={4}
+            value={personalInfo.about}
+            onChange={(e) => handleInputChange('about', e.target.value)}
+          />
+        </div>
+        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
+          <label>About Company</label>
+          <textarea
+            rows={4}
+            style={styles.textarea}
+            placeholder="Describe your business, services or offerings."
+            value={personalInfo.aboutCompany}
+            onChange={(e) => handleInputChange('aboutCompany', e.target.value)}
+          />
+        </div>
+        <div style={styles.formField}>
+          <label>Custom CTA Button</label>
+          <input 
+            style={styles.textInput} 
+            placeholder="Add to contacts link"
+            value={personalInfo.ctaButton}
+            onChange={(e) => handleInputChange('ctaButton', e.target.value)}
+          />
+        </div>
+      </div>
 
+      <div style={styles.accordionWrapper}>
+        <div style={styles.accordionSection}>
+          <button style={styles.accordionHeader} onClick={() => toggleAccordion('phones')}>
+            <span>Phone Numbers</span>
+            <span>{accordionOpen.phones ? '−' : '+'}</span>
+          </button>
+          {accordionOpen.phones && (
+            <div style={styles.accordionBody}>
+              {phoneNumbers.map((phone, idx) => (
+                <div key={`phone-${idx}`} style={styles.listRow}>
+                  <input
+                    style={styles.textInput}
+                    placeholder="+971 000 000 000"
+                    value={phone}
+                    onChange={(e) => handlePhoneChange(idx, e.target.value)}
+                  />
+                  <button style={styles.removeRowBtn} onClick={() => removePhoneField(idx)}>
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button style={styles.addRowBtn} onClick={addPhoneField}>
+                + Add Phone
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={styles.accordionSection}>
+          <button style={styles.accordionHeader} onClick={() => toggleAccordion('emails')}>
+            <span>Emails</span>
+            <span>{accordionOpen.emails ? '−' : '+'}</span>
+          </button>
+          {accordionOpen.emails && (
+            <div style={styles.accordionBody}>
+              {emails.map((email, idx) => (
+                <div key={`email-${idx}`} style={styles.listRow}>
+                  <input
+                    style={styles.textInput}
+                    placeholder="name@email.com"
+                    value={email}
+                    onChange={(e) => handleEmailChange(idx, e.target.value)}
+                  />
+                  <button style={styles.removeRowBtn} onClick={() => removeEmailField(idx)}>
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button style={styles.addRowBtn} onClick={addEmailField}>
+                + Add Email
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={styles.accordionSection}>
+          <button style={styles.accordionHeader} onClick={() => toggleAccordion('contact')}>
+            <span>Contact Details</span>
+            <span>{accordionOpen.contact ? '−' : '+'}</span>
+          </button>
+          {accordionOpen.contact && (
+            <div style={styles.accordionBody}>
+              {contactDetails.map((detail, idx) => (
+                <div key={`contact-${idx}`} style={styles.contactRow}>
+                  <input
+                    style={styles.textInput}
+                    placeholder="Label (e.g. Website)"
+                    value={detail.label}
+                    onChange={(e) => handleContactDetailChange(idx, 'label', e.target.value)}
+                  />
+                  <input
+                    style={styles.textInput}
+                    placeholder="Detail"
+                    value={detail.value}
+                    onChange={(e) => handleContactDetailChange(idx, 'value', e.target.value)}
+                  />
+                  <button style={styles.removeRowBtn} onClick={() => removeContactDetailField(idx)}>
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button style={styles.addRowBtn} onClick={addContactDetailField}>
+                + Add Detail
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Social Media</h3>
+        <div style={styles.socialRow}>
+          <select
+            style={styles.select}
+            value={socialForm.platform}
+            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
+          >
+            <option value="">Select Platform</option>
+            {socialPlatforms.map((platform) => (
+              <option key={platform} value={platform}>
+                {platform}
+              </option>
+            ))}
+          </select>
+          <input
+            style={styles.textInput}
+            placeholder="Enter a valid link"
+            value={socialForm.link}
+            onChange={(e) => handleSocialFormChange('link', e.target.value)}
+          />
+          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
+            +
+          </button>
+        </div>
+        {socialLinks.length > 0 && (
+          <div style={styles.socialChips}>
+            {socialLinks.map((item, idx) => (
+              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
+                <span>{item.platform}</span>
+                <a href={item.link} target="_blank" rel="noreferrer">
+                  {item.link}
+                </a>
+                <button onClick={() => handleRemoveSocial(idx)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -416,7 +565,8 @@ const CardCustomization = () => {
         return renderPersonalTab();
       case 'appearance':
         return renderAppearanceTab();
-     
+      case 'links':
+        return renderLinksTab();
       default:
         return null;
     }
@@ -446,7 +596,7 @@ const CardCustomization = () => {
             {[
               { id: 'personal', label: 'Personal Info' },
               { id: 'appearance', label: 'Appearance' },
-             // { id: 'links', label: 'Links' }
+              { id: 'links', label: 'Links' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -604,13 +754,16 @@ const styles = {
     background: 'linear-gradient(135deg, #080808 0%, #150b1f 100%)',
     color: '#fff',
     fontFamily: "'Inter', sans-serif",
-    paddingBottom: 60
+    paddingBottom: 60,
+    overflowX: 'hidden'
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     padding: '20px 4vw',
-    alignItems: 'center'
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12
   },
   logoMark: {
     display: 'flex',
@@ -641,17 +794,20 @@ const styles = {
   },
   headerButtons: {
     display: 'flex',
-    gap: 10,
-    flexWrap: 'wrap'
+    gap: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end'
   },
   headerBtn: {
     borderRadius: 22,
-    padding: '8px 18px',
+    padding: '8px 16px',
     fontWeight: 600,
     border: '1px solid transparent',
     background: 'transparent',
     color: '#fff',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    fontSize: 14,
+    whiteSpace: 'nowrap'
   },
   btnGhost: {
     borderColor: 'rgba(255,255,255,0.2)'
@@ -666,20 +822,25 @@ const styles = {
   },
   wrapper: {
     display: 'flex',
-    gap: 32,
+    gap: 24,
     padding: '0 4vw 60px',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    alignItems: 'flex-start'
   },
   panel: {
     flex: 1,
-    minWidth: 320
+    minWidth: 280,
+    width: '100%',
+    maxWidth: '100%'
   },
   preview: {
     flex: 1,
-    minWidth: 320,
+    minWidth: 280,
+    width: '100%',
+    maxWidth: '100%',
     background: 'rgba(255,255,255,0.02)',
     borderRadius: 24,
-    padding: 24,
+    padding: 20,
     border: '1px solid rgba(255,255,255,0.08)',
     boxShadow: '0 25px 60px rgba(0,0,0,0.45)'
   },
@@ -706,9 +867,10 @@ const styles = {
   tabCard: {
     background: 'rgba(255,255,255,0.02)',
     borderRadius: 24,
-    padding: 24,
+    padding: 16,
     border: '1px solid rgba(255,255,255,0.08)',
-    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)'
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
+    overflowX: 'hidden'
   },
   section: {
     marginBottom: 32
@@ -743,20 +905,24 @@ const styles = {
     flex: 1,
     border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 12,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    minWidth: 0
   },
   urlPrefix: {
     background: 'rgba(255,255,255,0.05)',
     padding: '10px 12px',
     color: '#d2d2d2',
-    fontSize: 13
+    fontSize: 13,
+    whiteSpace: 'nowrap',
+    flexShrink: 0
   },
   urlInput: {
     flex: 1,
     background: 'transparent',
     border: 'none',
     padding: '10px 12px',
-    color: '#fff'
+    color: '#fff',
+    minWidth: 0
   },
   urlInputDisabled: {
     color: '#666'
@@ -811,8 +977,8 @@ const styles = {
   },
   formGridTwo: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: 18
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: 16
   },
   formField: {
     display: 'flex',
@@ -882,7 +1048,9 @@ const styles = {
     background: 'rgba(255,255,255,0.03)',
     border: '1px solid rgba(255,255,255,0.1)',
     color: '#fff',
-    fontSize: 14
+    fontSize: 14,
+    width: '100%',
+    boxSizing: 'border-box'
   },
   textarea: {
     borderRadius: 12,
@@ -891,7 +1059,9 @@ const styles = {
     border: '1px solid rgba(255,255,255,0.1)',
     color: '#fff',
     fontSize: 14,
-    resize: 'vertical'
+    resize: 'vertical',
+    width: '100%',
+    boxSizing: 'border-box'
   },
   socialRow: {
     display: 'flex',
@@ -931,7 +1101,9 @@ const styles = {
     borderRadius: 12,
     background: 'rgba(255,255,255,0.03)',
     border: '1px solid rgba(255,255,255,0.08)',
-    gap: 12
+    gap: 12,
+    flexWrap: 'wrap',
+    wordBreak: 'break-all'
   },
   previewHeader: {
     display: 'flex',
@@ -949,18 +1121,20 @@ const styles = {
   },
   cardPreviewWrapper: {
     borderRadius: 32,
-    padding: 24,
+    padding: 16,
     background: 'radial-gradient(circle at top, rgba(247,210,124,0.15), transparent 70%)',
     display: 'flex',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    overflow: 'hidden'
   },
   cardSide: {
     width: '100%',
     minHeight: 220,
     borderRadius: 30,
-    padding: 30,
+    padding: 20,
     position: 'relative',
-    boxShadow: '0 30px 60px rgba(0,0,0,0.55)'
+    boxShadow: '0 30px 60px rgba(0,0,0,0.55)',
+    boxSizing: 'border-box'
   },
   cardBackContent: {
     display: 'flex',
@@ -968,12 +1142,13 @@ const styles = {
     flexWrap: 'wrap'
   },
   qrPlaceholder: {
-    width: 160,
-    height: 160,
+    width: 140,
+    height: 140,
     borderRadius: 20,
     background: 'rgba(0,0,0,0.4)',
     position: 'relative',
-    border: '1px solid rgba(255,255,255,0.1)'
+    border: '1px solid rgba(255,255,255,0.1)',
+    flexShrink: 0
   },
   qrInner: {
     position: 'absolute',
@@ -992,11 +1167,11 @@ const styles = {
   },
   cardDetails: {
     flex: 1,
-    minWidth: 180,
+    minWidth: 150,
     color: '#fff'
   },
   cardName: {
-    fontSize: 26,
+    fontSize: 22,
     margin: 0
   },
   cardDesignation: {
@@ -1023,7 +1198,8 @@ const styles = {
     marginTop: 24
   },
   previewPhone: {
-    width: 260,
+    width: '100%',
+    maxWidth: 260,
     margin: '0 auto',
     borderRadius: 50,
     padding: 16,
