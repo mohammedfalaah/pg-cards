@@ -70,7 +70,8 @@ const CardCustomization = () => {
     tagline: '',
     about: '',
     aboutCompany: '',
-    ctaButton: ''
+    ctaButton: '',
+    logo: ''
   });
   const [socialForm, setSocialForm] = useState({ platform: '', link: '' });
   const [socialLinks, setSocialLinks] = useState([]);
@@ -91,6 +92,17 @@ const CardCustomization = () => {
 
   const handleInputChange = (field, value) => {
     setPersonalInfo((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPersonalInfo((prev) => ({ ...prev, logo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSocialFormChange = (field, value) => {
@@ -149,6 +161,28 @@ const CardCustomization = () => {
   const renderPersonalTab = () => (
     <>
       <div style={styles.formGridTwo}>
+        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
+          <label>Upload Logo</label>
+          <div style={styles.logoUploadWrapper}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              style={styles.fileInput}
+              id="logoUpload"
+            />
+            <label htmlFor="logoUpload" style={styles.logoUploadLabel}>
+              {personalInfo.logo ? (
+                <img src={personalInfo.logo} alt="Logo" style={styles.logoPreview} />
+              ) : (
+                <div style={styles.logoPlaceholder}>
+                  <span style={{ fontSize: 32 }}>📷</span>
+                  <span style={{ fontSize: 13, marginTop: 8 }}>Click to upload logo</span>
+                </div>
+              )}
+            </label>
+          </div>
+        </div>
         <div style={styles.formField}>
           <label>Full Name</label>
           <input
@@ -196,7 +230,6 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('aboutCompany', e.target.value)}
           />
         </div>
-        
         <div style={styles.formField}>
           <label>Custom CTA Button</label>
           <input 
@@ -206,6 +239,47 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('ctaButton', e.target.value)}
           />
         </div>
+
+        
+      </div>
+       <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Social Media</h3>
+        <div style={styles.socialRow}>
+          <select
+            style={styles.select}
+            value={socialForm.platform}
+            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
+          >
+            <option value="">Select Platform</option>
+            {socialPlatforms.map((platform) => (
+              <option key={platform} value={platform}>
+                {platform}
+              </option>
+            ))}
+          </select>
+          <input
+            style={styles.textInput}
+            placeholder="Enter a valid link"
+            value={socialForm.link}
+            onChange={(e) => handleSocialFormChange('link', e.target.value)}
+          />
+          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
+            +
+          </button>
+        </div>
+        {socialLinks.length > 0 && (
+          <div style={styles.socialChips}>
+            {socialLinks.map((item, idx) => (
+              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
+                <span>{item.platform}</span>
+                <a href={item.link} target="_blank" rel="noreferrer">
+                  {item.link}
+                </a>
+                <button onClick={() => handleRemoveSocial(idx)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={styles.accordionWrapper}>
@@ -296,45 +370,7 @@ const CardCustomization = () => {
           )}
         </div>
       </div>
-       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Social Media</h3>
-        <div style={styles.socialRow}>
-          <select
-            style={styles.select}
-            value={socialForm.platform}
-            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
-          >
-            <option value="">Select Platform</option>
-            {socialPlatforms.map((platform) => (
-              <option key={platform} value={platform}>
-                {platform}
-              </option>
-            ))}
-          </select>
-          <input
-            style={styles.textInput}
-            placeholder="Enter a valid link"
-            value={socialForm.link}
-            onChange={(e) => handleSocialFormChange('link', e.target.value)}
-          />
-          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
-            +
-          </button>
-        </div>
-        {socialLinks.length > 0 && (
-          <div style={styles.socialChips}>
-            {socialLinks.map((item, idx) => (
-              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
-                <span>{item.platform}</span>
-                <a href={item.link} target="_blank" rel="noreferrer">
-                  {item.link}
-                </a>
-                <button onClick={() => handleRemoveSocial(idx)}>×</button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      
     </>
   );
 
@@ -407,7 +443,7 @@ const CardCustomization = () => {
     </>
   );
 
-  
+ 
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -435,7 +471,7 @@ const CardCustomization = () => {
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Cancel</button>
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Clear All</button>
           <button style={{ ...styles.headerBtn, ...styles.btnOutline }}>Free Trial</button>
-          {/* <button style={{ ...styles.headerBtn, ...styles.btnSolid }}>Buy Now</button> */}
+          <button style={{ ...styles.headerBtn, ...styles.btnSolid }}>Buy Now</button>
         </div>
       </header>
 
@@ -445,7 +481,7 @@ const CardCustomization = () => {
             {[
               { id: 'personal', label: 'Personal Info' },
               { id: 'appearance', label: 'Appearance' },
-            //  { id: 'links', label: 'Links' }
+           
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -475,20 +511,26 @@ const CardCustomization = () => {
             <div style={{ ...styles.cardSide, background: theme.background }}>
               <div style={styles.cardBackContent}>
                 <div style={styles.qrPlaceholder}>
-                  <div style={{ ...styles.qrInner, borderColor: theme.qrAccent }} />
-                  <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent }} />
-                  <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, top: 'auto', bottom: 16 }} />
-                  <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, left: 'auto', right: 16 }} />
-                  <div
-                    style={{
-                      ...styles.qrCorner,
-                      borderColor: theme.qrAccent,
-                      top: 'auto',
-                      bottom: 16,
-                      left: 'auto',
-                      right: 16
-                    }}
-                  />
+                  {personalInfo.logo ? (
+                    <img src={personalInfo.logo} alt="Logo" style={styles.qrLogo} />
+                  ) : (
+                    <>
+                      <div style={{ ...styles.qrInner, borderColor: theme.qrAccent }} />
+                      <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent }} />
+                      <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, top: 'auto', bottom: 16 }} />
+                      <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, left: 'auto', right: 16 }} />
+                      <div
+                        style={{
+                          ...styles.qrCorner,
+                          borderColor: theme.qrAccent,
+                          top: 'auto',
+                          bottom: 16,
+                          left: 'auto',
+                          right: 16
+                        }}
+                      />
+                    </>
+                  )}
                 </div>
                 <div style={styles.cardDetails}>
                   <h4 style={{ ...styles.cardName, color: theme.accent }}>
@@ -1134,6 +1176,45 @@ const styles = {
     color: '#1f1f1f',
     lineHeight: 1.5,
     fontSize: 13
+  },
+  logoUploadWrapper: {
+    width: '100%',
+    marginBottom: 8
+  },
+  fileInput: {
+    display: 'none'
+  },
+  logoUploadLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: 160,
+    borderRadius: 16,
+    border: '2px dashed rgba(255,255,255,0.2)',
+    background: 'rgba(255,255,255,0.03)',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    overflow: 'hidden'
+  },
+  logoPlaceholder: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#d9d9d9'
+  },
+  logoPreview: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+    padding: 10
+  },
+  qrLogo: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+    borderRadius: 20
   }
 };
 
