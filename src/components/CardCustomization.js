@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-const baseUrl = 'zeeqr.info/profile-view/';
+const baseUrl = 'pgcards.info/profile-view/';
 
 const socialPlatforms = [
   'Instagram',
@@ -533,7 +533,7 @@ const CardCustomization = () => {
                 <div style={styles.previewBrandRow}>
                   <div style={styles.previewBrandIcon}>🪄</div>
                   <div>
-                    <p style={styles.previewBrandName}>{personalInfo.company || 'ZEEQR'}</p>
+                    <p style={styles.previewBrandName}>{personalInfo.company || 'PGCARDS'}</p>
                     <small style={{ color: '#d9b871', letterSpacing: 1 }}>
                       {personalInfo.designation || 'Renovating the future'}
                     </small>
