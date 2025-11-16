@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import PGCardsLogo from './PGCardsLogo';
 
 const baseUrl = 'pgcards.info/profile-view/';
 
@@ -77,6 +78,8 @@ const CardCustomization = () => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [phoneNumbers, setPhoneNumbers] = useState(['']);
   const [emails, setEmails] = useState(['']);
+    const [logoSize, setLogoSize] = useState(100);
+  
   const [contactDetails, setContactDetails] = useState([{ label: 'Website', value: '' }]);
   const [accordionOpen, setAccordionOpen] = useState({
     phones: true,
@@ -460,17 +463,13 @@ const CardCustomization = () => {
   return (
     <div style={styles.page}>
       <header style={styles.header}>
-        <div style={styles.logoMark}>
-          <div style={styles.logoIcon}>PG</div>
-          <div>
-            <p style={styles.logoTitle}>PG Cards</p>
-            <small style={styles.logoSubtitle}>Renovating the future</small>
+        <div className="logo-section">
+            <PGCardsLogo size={logoSize} />
           </div>
-        </div>
         <div style={styles.headerButtons}>
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Cancel</button>
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Clear All</button>
-          <button style={{ ...styles.headerBtn, ...styles.btnOutline }}>Free Trial</button>
+          {/* <button style={{ ...styles.headerBtn, ...styles.btnOutline }}>Free Trial</button> */}
           <button style={{ ...styles.headerBtn, ...styles.btnSolid }}>Buy Now</button>
         </div>
       </header>
