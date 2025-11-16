@@ -435,7 +435,7 @@ const CardCustomization = () => {
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Cancel</button>
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Clear All</button>
           <button style={{ ...styles.headerBtn, ...styles.btnOutline }}>Free Trial</button>
-          <button style={{ ...styles.headerBtn, ...styles.btnSolid }}>Buy Now</button>
+          {/* <button style={{ ...styles.headerBtn, ...styles.btnSolid }}>Buy Now</button> */}
         </div>
       </header>
 
