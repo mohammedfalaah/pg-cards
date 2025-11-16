@@ -196,6 +196,7 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('aboutCompany', e.target.value)}
           />
         </div>
+        
         <div style={styles.formField}>
           <label>Custom CTA Button</label>
           <input 
@@ -294,6 +295,45 @@ const CardCustomization = () => {
             </div>
           )}
         </div>
+      </div>
+       <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Social Media</h3>
+        <div style={styles.socialRow}>
+          <select
+            style={styles.select}
+            value={socialForm.platform}
+            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
+          >
+            <option value="">Select Platform</option>
+            {socialPlatforms.map((platform) => (
+              <option key={platform} value={platform}>
+                {platform}
+              </option>
+            ))}
+          </select>
+          <input
+            style={styles.textInput}
+            placeholder="Enter a valid link"
+            value={socialForm.link}
+            onChange={(e) => handleSocialFormChange('link', e.target.value)}
+          />
+          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
+            +
+          </button>
+        </div>
+        {socialLinks.length > 0 && (
+          <div style={styles.socialChips}>
+            {socialLinks.map((item, idx) => (
+              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
+                <span>{item.platform}</span>
+                <a href={item.link} target="_blank" rel="noreferrer">
+                  {item.link}
+                </a>
+                <button onClick={() => handleRemoveSocial(idx)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );
@@ -367,197 +407,7 @@ const CardCustomization = () => {
     </>
   );
 
-  const renderLinksTab = () => (
-    <>
-      <div style={styles.formGridTwo}>
-        <div style={styles.formField}>
-          <label>Full Name</label>
-          <input
-            style={styles.textInput}
-            placeholder="Full Name"
-            value={personalInfo.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-          />
-        </div>
-        <div style={styles.formField}>
-          <label>Company Designation</label>
-          <input
-            style={styles.textInput}
-            placeholder="Company Designation"
-            value={personalInfo.designation}
-            onChange={(e) => handleInputChange('designation', e.target.value)}
-          />
-        </div>
-        <div style={styles.formField}>
-          <label>Company Name</label>
-          <input
-            style={styles.textInput}
-            placeholder="Company Name"
-            value={personalInfo.company}
-            onChange={(e) => handleInputChange('company', e.target.value)}
-          />
-        </div>
-        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
-          <label>About (optional)</label>
-          <textarea
-            style={styles.textarea}
-            placeholder="About You"
-            rows={4}
-            value={personalInfo.about}
-            onChange={(e) => handleInputChange('about', e.target.value)}
-          />
-        </div>
-        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
-          <label>About Company</label>
-          <textarea
-            rows={4}
-            style={styles.textarea}
-            placeholder="Describe your business, services or offerings."
-            value={personalInfo.aboutCompany}
-            onChange={(e) => handleInputChange('aboutCompany', e.target.value)}
-          />
-        </div>
-        <div style={styles.formField}>
-          <label>Custom CTA Button</label>
-          <input 
-            style={styles.textInput} 
-            placeholder="Add to contacts link"
-            value={personalInfo.ctaButton}
-            onChange={(e) => handleInputChange('ctaButton', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div style={styles.accordionWrapper}>
-        <div style={styles.accordionSection}>
-          <button style={styles.accordionHeader} onClick={() => toggleAccordion('phones')}>
-            <span>Phone Numbers</span>
-            <span>{accordionOpen.phones ? '−' : '+'}</span>
-          </button>
-          {accordionOpen.phones && (
-            <div style={styles.accordionBody}>
-              {phoneNumbers.map((phone, idx) => (
-                <div key={`phone-${idx}`} style={styles.listRow}>
-                  <input
-                    style={styles.textInput}
-                    placeholder="+971 000 000 000"
-                    value={phone}
-                    onChange={(e) => handlePhoneChange(idx, e.target.value)}
-                  />
-                  <button style={styles.removeRowBtn} onClick={() => removePhoneField(idx)}>
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button style={styles.addRowBtn} onClick={addPhoneField}>
-                + Add Phone
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div style={styles.accordionSection}>
-          <button style={styles.accordionHeader} onClick={() => toggleAccordion('emails')}>
-            <span>Emails</span>
-            <span>{accordionOpen.emails ? '−' : '+'}</span>
-          </button>
-          {accordionOpen.emails && (
-            <div style={styles.accordionBody}>
-              {emails.map((email, idx) => (
-                <div key={`email-${idx}`} style={styles.listRow}>
-                  <input
-                    style={styles.textInput}
-                    placeholder="name@email.com"
-                    value={email}
-                    onChange={(e) => handleEmailChange(idx, e.target.value)}
-                  />
-                  <button style={styles.removeRowBtn} onClick={() => removeEmailField(idx)}>
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button style={styles.addRowBtn} onClick={addEmailField}>
-                + Add Email
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div style={styles.accordionSection}>
-          <button style={styles.accordionHeader} onClick={() => toggleAccordion('contact')}>
-            <span>Contact Details</span>
-            <span>{accordionOpen.contact ? '−' : '+'}</span>
-          </button>
-          {accordionOpen.contact && (
-            <div style={styles.accordionBody}>
-              {contactDetails.map((detail, idx) => (
-                <div key={`contact-${idx}`} style={styles.contactRow}>
-                  <input
-                    style={styles.textInput}
-                    placeholder="Label (e.g. Website)"
-                    value={detail.label}
-                    onChange={(e) => handleContactDetailChange(idx, 'label', e.target.value)}
-                  />
-                  <input
-                    style={styles.textInput}
-                    placeholder="Detail"
-                    value={detail.value}
-                    onChange={(e) => handleContactDetailChange(idx, 'value', e.target.value)}
-                  />
-                  <button style={styles.removeRowBtn} onClick={() => removeContactDetailField(idx)}>
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button style={styles.addRowBtn} onClick={addContactDetailField}>
-                + Add Detail
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Social Media</h3>
-        <div style={styles.socialRow}>
-          <select
-            style={styles.select}
-            value={socialForm.platform}
-            onChange={(e) => handleSocialFormChange('platform', e.target.value)}
-          >
-            <option value="">Select Platform</option>
-            {socialPlatforms.map((platform) => (
-              <option key={platform} value={platform}>
-                {platform}
-              </option>
-            ))}
-          </select>
-          <input
-            style={styles.textInput}
-            placeholder="Enter a valid link"
-            value={socialForm.link}
-            onChange={(e) => handleSocialFormChange('link', e.target.value)}
-          />
-          <button style={styles.addIconBtn} onClick={handleAddSocialLink}>
-            +
-          </button>
-        </div>
-        {socialLinks.length > 0 && (
-          <div style={styles.socialChips}>
-            {socialLinks.map((item, idx) => (
-              <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
-                <span>{item.platform}</span>
-                <a href={item.link} target="_blank" rel="noreferrer">
-                  {item.link}
-                </a>
-                <button onClick={() => handleRemoveSocial(idx)}>×</button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
-  );
+  
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -565,8 +415,7 @@ const CardCustomization = () => {
         return renderPersonalTab();
       case 'appearance':
         return renderAppearanceTab();
-      case 'links':
-        return renderLinksTab();
+      
       default:
         return null;
     }
@@ -596,7 +445,7 @@ const CardCustomization = () => {
             {[
               { id: 'personal', label: 'Personal Info' },
               { id: 'appearance', label: 'Appearance' },
-              { id: 'links', label: 'Links' }
+            //  { id: 'links', label: 'Links' }
             ].map((tab) => (
               <button
                 key={tab.id}
