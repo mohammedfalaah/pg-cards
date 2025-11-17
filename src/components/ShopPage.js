@@ -9,6 +9,7 @@ const ShopPage = () => {
   const [materialFilter, setMaterialFilter] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [maxPrice, setMaxPrice] = useState(100000);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -128,10 +129,44 @@ const ShopPage = () => {
         <span style={styles.breadcrumbActive}>All products</span>
       </div>
 
+      {/* Filter Toggle Button (Mobile Only) */}
+      <button 
+        style={styles.filterToggleBtn}
+        className="filter-toggle-btn"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        <span style={styles.filterIcon}>☰</span>
+        Filters
+      </button>
+
       {/* Main Content */}
       <div style={styles.mainContent} className="main-content">
+        {/* Sidebar Overlay (Mobile) */}
+        {sidebarOpen && (
+          <div 
+            style={styles.sidebarOverlay} 
+            className="sidebar-overlay"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Left Sidebar - Filters */}
-        <div style={styles.sidebar}>
+        <div 
+          style={{
+            ...styles.sidebar,
+            ...(sidebarOpen ? styles.sidebarOpen : {})
+          }}
+          className="sidebar"
+        >
+          {/* Close Button (Mobile Only) */}
+          <button
+            style={styles.sidebarCloseBtn}
+            className="sidebar-close-btn"
+            onClick={() => setSidebarOpen(false)}
+          >
+            ×
+          </button>
+
           <h3 style={styles.sidebarTitle}>FILTER BY</h3>
           
           {/* Product Type Filter */}
@@ -498,7 +533,7 @@ const styles = {
     fontSize: '16px',
   },
   breadcrumbs: {
-    //padding: '16px 40px',
+    padding: '16px 40px',
     backgroundColor: '#f5f5f5',
     borderBottom: '1px solid #e0e0e0',
     fontSize: '14px',
@@ -517,6 +552,35 @@ const styles = {
     color: '#000',
     fontWeight: '500',
   },
+  filterToggleBtn: {
+    display: 'none',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    backgroundColor: '#000',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    margin: '20px 20px 0',
+    maxWidth: '1400px',
+    width: 'calc(100% - 40px)',
+  },
+  filterIcon: {
+    fontSize: '18px',
+  },
+  sidebarOverlay: {
+    display: 'none',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 998,
+  },
   mainContent: {
     display: 'flex',
     maxWidth: '1400px',
@@ -534,6 +598,27 @@ const styles = {
     position: 'sticky',
     top: '100px',
     borderRight: '1px solid #e0e0e0',
+    transition: 'transform 0.3s ease',
+  },
+  sidebarOpen: {
+    transform: 'translateX(0)',
+  },
+  sidebarCloseBtn: {
+    display: 'none',
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    backgroundColor: '#000',
+    color: '#fff',
+    border: 'none',
+    fontSize: '24px',
+    cursor: 'pointer',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
   },
   sidebarTitle: {
     fontSize: '16px',
