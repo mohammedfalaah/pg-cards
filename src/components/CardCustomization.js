@@ -1247,7 +1247,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8
+   // marginBottom: 8
   },
   toggleSwitch: {
     position: 'relative',
