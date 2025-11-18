@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import PGCardsLogo from './PGCardsLogo';
 
+
+
 const baseUrl = 'pgcards.info/profile-view/';
 
 const socialPlatforms = [
@@ -78,13 +80,27 @@ const CardCustomization = () => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [phoneNumbers, setPhoneNumbers] = useState(['']);
   const [emails, setEmails] = useState(['']);
-    const [logoSize, setLogoSize] = useState(100);
-  
-  const [contactDetails, setContactDetails] = useState([{ label: 'Website', value: '' }]);
+  const [logoSize, setLogoSize] = useState(100);
+  const [images, setImages] = useState({
+    coverImage: '',
+    profileImage: '',
+    companyLogo: '',
+    backgroundImage: ''
+  });
+  const [imageToggles, setImageToggles] = useState({
+    profileImage: true,
+    companyLogo: true
+  });
+  const [contactDetails, setContactDetails] = useState([
+    { label: "Address", value: "" },
+    { label: "State", value: "" },
+    { label: "Country", value: "" },
+  ]);
   const [accordionOpen, setAccordionOpen] = useState({
     phones: true,
     emails: false,
-    contact: false
+    contact: false,
+    imageandlogos: false
   });
 
   const generatedSlug = useMemo(() => Math.random().toString(36).substring(2, 12), []);
@@ -106,6 +122,27 @@ const CardCustomization = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleImageUpload = (imageType, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImages((prev) => ({ ...prev, [imageType]: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageToggle = (imageType) => {
+    setImageToggles((prev) => ({ ...prev, [imageType]: !prev[imageType] }));
+  };
+
+  const handleContactDetailChange = (index, field, value) => {
+    const updated = [...contactDetails];
+    updated[index][field] = value;
+    setContactDetails(updated);
   };
 
   const handleSocialFormChange = (field, value) => {
@@ -134,12 +171,6 @@ const CardCustomization = () => {
     setEmails((prev) => prev.map((email, idx) => (idx === index ? value : email)));
   };
 
-  const handleContactDetailChange = (index, field, value) => {
-    setContactDetails((prev) =>
-      prev.map((detail, idx) => (idx === index ? { ...detail, [field]: value } : detail))
-    );
-  };
-
   const addPhoneField = () => setPhoneNumbers((prev) => [...prev, '']);
   const removePhoneField = (index) =>
     setPhoneNumbers((prev) => {
@@ -164,28 +195,6 @@ const CardCustomization = () => {
   const renderPersonalTab = () => (
     <>
       <div style={styles.formGridTwo}>
-        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
-          <label>Upload Logo</label>
-          <div style={styles.logoUploadWrapper}>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleLogoUpload}
-              style={styles.fileInput}
-              id="logoUpload"
-            />
-            <label htmlFor="logoUpload" style={styles.logoUploadLabel}>
-              {personalInfo.logo ? (
-                <img src={personalInfo.logo} alt="Logo" style={styles.logoPreview} />
-              ) : (
-                <div style={styles.logoPlaceholder}>
-                  <span style={{ fontSize: 32 }}>📷</span>
-                  <span style={{ fontSize: 13, marginTop: 8 }}>Click to upload logo</span>
-                </div>
-              )}
-            </label>
-          </div>
-        </div>
         <div style={styles.formField}>
           <label>Full Name</label>
           <input
@@ -213,40 +222,236 @@ const CardCustomization = () => {
             onChange={(e) => handleInputChange('company', e.target.value)}
           />
         </div>
-        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
-          <label>About (optional)</label>
-          <textarea
-            style={styles.textarea}
-            placeholder="About You"
-            rows={4}
-            value={personalInfo.about}
-            onChange={(e) => handleInputChange('about', e.target.value)}
-          />
-        </div>
-        <div style={{ ...styles.formField, gridColumn: 'span 2' }}>
-          <label>About Company</label>
-          <textarea
-            rows={4}
-            style={styles.textarea}
-            placeholder="Describe your business, services or offerings."
-            value={personalInfo.aboutCompany}
-            onChange={(e) => handleInputChange('aboutCompany', e.target.value)}
-          />
-        </div>
-        <div style={styles.formField}>
-          <label>Custom CTA Button</label>
-          <input 
-            style={styles.textInput} 
-            placeholder="Add to contacts link"
-            value={personalInfo.ctaButton}
-            onChange={(e) => handleInputChange('ctaButton', e.target.value)}
-          />
-        </div>
-
-        
       </div>
-       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Social Media</h3>
+
+      <div style={styles.accordionSection}>
+        <button style={styles.accordionHeader} onClick={() => toggleAccordion('phones')}>
+          <span>Phone Numbers</span>
+          <span>{accordionOpen.phones ? '−' : '+'}</span>
+        </button>
+        {accordionOpen.phones && (
+          <div style={styles.accordionBody}>
+            {phoneNumbers.map((phone, idx) => (
+              <div key={`phone-${idx}`} style={styles.listRow}>
+                <input
+                  style={styles.textInput}
+                  placeholder="+971 000 000 000"
+                  value={phone}
+                  onChange={(e) => handlePhoneChange(idx, e.target.value)}
+                />
+                <button style={styles.removeRowBtn} onClick={() => removePhoneField(idx)}>
+                  ×
+                </button>
+              </div>
+            ))}
+            <button style={styles.addRowBtn} onClick={addPhoneField}>
+              + Add Phone
+            </button>
+          </div>
+        )}
+      </div>
+      <div className='col-lg-6'>
+<div  style={styles.accordionSection}>
+        <button
+          style={styles.accordionHeader}
+          onClick={() => toggleAccordion("imageandlogos")}
+        >
+          <span>Images and Logos</span>
+          <span>{accordionOpen.imageandlogos ? "−" : "+"}</span>
+        </button>
+        {accordionOpen.imageandlogos && (
+          <div style={styles.accordionBody}>
+            {/* Cover Image */}
+ 
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+  {/* Cover Image */}
+  <div style={styles.imageUploadSection}>
+    <label style={styles.imageLabel}>Cover Image</label>
+    <div style={styles.imageUploadBox}>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => handleImageUpload('coverImage', e)}
+        style={styles.fileInput}
+        id="coverImage"
+      />
+      <label htmlFor="coverImage" style={styles.uploadLabel}>
+        {images.coverImage ? (
+          <img src={images.coverImage} alt="Cover" style={styles.uploadedImage} />
+        ) : (
+          <div style={styles.uploadPlaceholder}>
+            <span style={{ fontSize: 32 }}>+</span>
+            <span>Upload</span>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+          </div>
+        )}
+      </label>
+    </div>
+  </div>
+
+  {/* Profile Image */}
+  <div style={styles.imageUploadSection}>
+    <div style={styles.imageLabelRow}>
+      <label style={styles.imageLabel}>Profile Image</label>
+      <label style={styles.toggleSwitch}>
+        <input
+          type="checkbox"
+          checked={imageToggles.profileImage}
+          onChange={() => handleImageToggle('profileImage')}
+          style={{ display: 'none' }}
+        />
+      </label>
+    </div>
+    <div style={styles.imageUploadBox}>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => handleImageUpload('profileImage', e)}
+        style={styles.fileInput}
+        id="profileImage"
+      />
+      <label htmlFor="profileImage" style={styles.uploadLabel}>
+        {images.profileImage ? (
+          <img src={images.profileImage} alt="Profile" style={styles.uploadedImage} />
+        ) : (
+          <div style={styles.uploadPlaceholder}>
+            <span style={{ fontSize: 32 }}>+</span>
+            <span>Upload</span>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+          </div>
+        )}
+      </label>
+    </div>
+  </div>
+
+  {/* Company Logo */}
+  <div style={styles.imageUploadSection}>
+    <div style={styles.imageLabelRow}>
+      <label style={styles.imageLabel}>Company Logo</label>
+      <label style={styles.toggleSwitch}>
+        <input
+          type="checkbox"
+          checked={imageToggles.companyLogo}
+          onChange={() => handleImageToggle('companyLogo')}
+          style={{ display: 'none' }}
+        />
+      </label>
+    </div>
+    <div style={styles.imageUploadBox}>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => handleImageUpload('companyLogo', e)}
+        style={styles.fileInput}
+        id="companyLogo"
+      />
+      <label htmlFor="companyLogo" style={styles.uploadLabel}>
+        {images.companyLogo ? (
+          <img src={images.companyLogo} alt="Company Logo" style={styles.uploadedImage} />
+        ) : (
+          <div style={styles.uploadPlaceholder}>
+            <span style={{ fontSize: 32 }}>+</span>
+            <span>Upload</span>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+          </div>
+        )}
+      </label>
+    </div>
+  </div>
+
+  {/* Background Image */}
+  <div style={styles.imageUploadSection}>
+    <label style={styles.imageLabel}>Background Image</label>
+    <div style={styles.imageUploadBox}>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => handleImageUpload('backgroundImage', e)}
+        style={styles.fileInput}
+        id="backgroundImage"
+      />
+      <label htmlFor="backgroundImage" style={styles.uploadLabel}>
+        {images.backgroundImage ? (
+          <img src={images.backgroundImage} alt="Background" style={styles.uploadedImage} />
+        ) : (
+          <div style={styles.uploadPlaceholder}>
+            <span style={{ fontSize: 32 }}>+</span>
+            <span>Upload</span>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+          </div>
+        )}
+      </label>
+    </div>
+  </div>
+</div>
+
+          </div>
+        )}
+      </div>
+
+      </div>
+
+      
+
+      <div style={styles.accordionSection}>
+        <button
+          style={styles.accordionHeader}
+          onClick={() => toggleAccordion("contact")}
+        >
+          <span>Contact Details</span>
+          <span>{accordionOpen.contact ? "−" : "+"}</span>
+        </button>
+
+        {accordionOpen.contact && (
+          <div style={styles.accordionBody}>
+            {contactDetails.map((detail, idx) => (
+              <div key={`contact-${idx}`} style={{ marginBottom: "12px" }}>
+                <label style={{ color: "#aaa", fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                  {detail.label}
+                </label>
+                <input
+                  style={styles.textInput}
+                  placeholder={detail.label}
+                  value={detail.value}
+                  onChange={(e) =>
+                    handleContactDetailChange(idx, "value", e.target.value)
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={styles.accordionSection}>
+        <button style={styles.accordionHeader} onClick={() => toggleAccordion('emails')}>
+          <span>Emails</span>
+          <span>{accordionOpen.emails ? '−' : '+'}</span>
+        </button>
+        {accordionOpen.emails && (
+          <div style={styles.accordionBody}>
+            {emails.map((email, idx) => (
+              <div key={`email-${idx}`} style={styles.listRow}>
+                <input
+                  style={styles.textInput}
+                  placeholder="name@email.com"
+                  value={email}
+                  onChange={(e) => handleEmailChange(idx, e.target.value)}
+                />
+                <button style={styles.removeRowBtn} onClick={() => removeEmailField(idx)}>
+                  ×
+                </button>
+              </div>
+            ))}
+            <button style={styles.addRowBtn} onClick={addEmailField}>
+              + Add Email
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div style={styles.section}>
+        <span style={styles.accordionHeader}>Social Media</span>
         <div style={styles.socialRow}>
           <select
             style={styles.select}
@@ -284,169 +489,120 @@ const CardCustomization = () => {
           </div>
         )}
       </div>
-
-      <div style={styles.accordionWrapper}>
-        <div style={styles.accordionSection}>
-          <button style={styles.accordionHeader} onClick={() => toggleAccordion('phones')}>
-            <span>Phone Numbers</span>
-            <span>{accordionOpen.phones ? '−' : '+'}</span>
-          </button>
-          {accordionOpen.phones && (
-            <div style={styles.accordionBody}>
-              {phoneNumbers.map((phone, idx) => (
-                <div key={`phone-${idx}`} style={styles.listRow}>
-                  <input
-                    style={styles.textInput}
-                    placeholder="+971 000 000 000"
-                    value={phone}
-                    onChange={(e) => handlePhoneChange(idx, e.target.value)}
-                  />
-                  <button style={styles.removeRowBtn} onClick={() => removePhoneField(idx)}>
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button style={styles.addRowBtn} onClick={addPhoneField}>
-                + Add Phone
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div style={styles.accordionSection}>
-          <button style={styles.accordionHeader} onClick={() => toggleAccordion('emails')}>
-            <span>Emails</span>
-            <span>{accordionOpen.emails ? '−' : '+'}</span>
-          </button>
-          {accordionOpen.emails && (
-            <div style={styles.accordionBody}>
-              {emails.map((email, idx) => (
-                <div key={`email-${idx}`} style={styles.listRow}>
-                  <input
-                    style={styles.textInput}
-                    placeholder="name@email.com"
-                    value={email}
-                    onChange={(e) => handleEmailChange(idx, e.target.value)}
-                  />
-                  <button style={styles.removeRowBtn} onClick={() => removeEmailField(idx)}>
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button style={styles.addRowBtn} onClick={addEmailField}>
-                + Add Email
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div style={styles.accordionSection}>
-          <button style={styles.accordionHeader} onClick={() => toggleAccordion('contact')}>
-            <span>Contact Details</span>
-            <span>{accordionOpen.contact ? '−' : '+'}</span>
-          </button>
-          {accordionOpen.contact && (
-            <div style={styles.accordionBody}>
-              {contactDetails.map((detail, idx) => (
-                <div key={`contact-${idx}`} style={styles.contactRow}>
-                  <input
-                    style={styles.textInput}
-                    placeholder="Label (e.g. Website)"
-                    value={detail.label}
-                    onChange={(e) => handleContactDetailChange(idx, 'label', e.target.value)}
-                  />
-                  <input
-                    style={styles.textInput}
-                    placeholder="Detail"
-                    value={detail.value}
-                    onChange={(e) => handleContactDetailChange(idx, 'value', e.target.value)}
-                  />
-                  <button style={styles.removeRowBtn} onClick={() => removeContactDetailField(idx)}>
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button style={styles.addRowBtn} onClick={addContactDetailField}>
-                + Add Detail
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      
     </>
   );
 
   const renderAppearanceTab = () => (
     <>
+      {/* PERSONAL INFO PREVIEW SECTION */}
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Your page URL</h3>
-        <div style={styles.urlCard}>
-          <label style={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={customUrlEnabled}
-              onChange={(e) => setCustomUrlEnabled(e.target.checked)}
-            />
-            <span>Customize URL</span>
-          </label>
-          <div style={styles.urlInputRow}>
-            <div style={styles.urlInputGroup}>
-              <span style={styles.urlPrefix}>{baseUrl}</span>
-              <input
-                type="text"
-                placeholder={generatedSlug}
-                value={customSlug}
-                onChange={(e) => setCustomSlug(e.target.value.replace(/\s/g, '-').toLowerCase())}
-                disabled={!customUrlEnabled}
-                style={{
-                  ...styles.urlInput,
-                  ...(customUrlEnabled ? {} : styles.urlInputDisabled)
-                }}
-              />
-            </div>
-          </div>
-          <div style={styles.finalUrlRow}>
-            <span>Final URL</span>
-            <a href={`https://${finalUrl}`} target="_blank" rel="noreferrer">
-              {finalUrl}
-            </a>
-          </div>
-          <p style={styles.urlNote}>Note: Once saved, the URL cannot be changed later.</p>
-        </div>
-      </div>
+        <h3 style={styles.sectionTitle}>Stored Personal Info</h3>
 
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Themes</h3>
-        <div style={styles.themesGrid}>
-          {premiumThemes.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                ...styles.themeTile,
-                borderColor: selectedTheme === item.id ? item.accent : 'rgba(255,255,255,0.1)',
-                boxShadow: selectedTheme === item.id ? `0 10px 30px rgba(227,187,107,0.3)` : 'none'
-              }}
-              onClick={() => setSelectedTheme(item.id)}
-            >
-              <div
-                style={{
-                  ...styles.themePreview,
-                  background: item.background
-                }}
-              >
-                <div style={{ ...styles.themeLogo, color: item.accent }}>PG</div>
-                <div style={{ ...styles.themeDesc, color: '#fff' }}>{item.description}</div>
+        <div
+          style={{
+            background: "#111",
+            padding: 20,
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "#fff",
+          }}
+        >
+          {/* NAME */}
+          <p><strong>Full Name:</strong> {personalInfo.name || "Not provided"}</p>
+
+          {/* DESIGNATION */}
+          <p><strong>Designation:</strong> {personalInfo.designation || "Not provided"}</p>
+
+          {/* COMPANY */}
+          <p><strong>Company:</strong> {personalInfo.company || "Not provided"}</p>
+
+          <hr style={{ opacity: 0.1, margin: "14px 0" }} />
+
+          {/* PHONES */}
+          <p><strong>Phone Numbers:</strong></p>
+          {phoneNumbers.filter(Boolean).length > 0 ? (
+            phoneNumbers.map((p, i) => (
+              <div key={i}>📞 {p}</div>
+            ))
+          ) : (
+            <div>None added</div>
+          )}
+
+          <hr style={{ opacity: 0.1, margin: "14px 0" }} />
+
+          {/* EMAILS */}
+          <p><strong>Emails:</strong></p>
+          {emails.filter(Boolean).length > 0 ? (
+            emails.map((e, i) => (
+              <div key={i}>📧 {e}</div>
+            ))
+          ) : (
+            <div>None added</div>
+          )}
+
+          <hr style={{ opacity: 0.1, margin: "14px 0" }} />
+
+          {/* CONTACT DETAILS */}
+          <p><strong>Contact Details:</strong></p>
+          {contactDetails.filter(c => c.value).length > 0 ? (
+            contactDetails.map((c, i) => (
+              c.value && (
+                <div key={i}>📍 {c.label}: {c.value}</div>
+              )
+            ))
+          ) : (
+            <div>None added</div>
+          )}
+
+          <hr style={{ opacity: 0.1, margin: "14px 0" }} />
+
+          {/* SOCIAL LINKS */}
+          <p><strong>Social Media:</strong></p>
+          {socialLinks.length > 0 ? (
+            socialLinks.map((s, i) => (
+              <div key={i}>🔗 {s.platform}: {s.link}</div>
+            ))
+          ) : (
+            <div>None added</div>
+          )}
+
+          <hr style={{ opacity: 0.1, margin: "14px 0" }} />
+
+          {/* IMAGES */}
+          <p><strong>Uploaded Images:</strong></p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 12 }}>
+            {images.coverImage && (
+              <div>
+                <small>Cover Image</small>
+                <img src={images.coverImage} alt="Cover" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
               </div>
-              <p style={styles.themeName}>{item.name}</p>
-            </div>
-          ))}
+            )}
+            {images.profileImage && imageToggles.profileImage && (
+              <div>
+                <small>Profile Image</small>
+                <img src={images.profileImage} alt="Profile" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
+              </div>
+            )}
+            {images.companyLogo && imageToggles.companyLogo && (
+              <div>
+                <small>Company Logo</small>
+                <img src={images.companyLogo} alt="Logo" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
+              </div>
+            )}
+            {images.backgroundImage && (
+              <div>
+                <small>Background Image</small>
+                <img src={images.backgroundImage} alt="Background" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
+              </div>
+            )}
+          </div>
+          {!images.coverImage && !images.profileImage && !images.companyLogo && !images.backgroundImage && (
+            <div>None uploaded</div>
+          )}
         </div>
       </div>
     </>
   );
-
- 
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -454,7 +610,6 @@ const CardCustomization = () => {
         return renderPersonalTab();
       case 'appearance':
         return renderAppearanceTab();
-      
       default:
         return null;
     }
@@ -464,12 +619,11 @@ const CardCustomization = () => {
     <div style={styles.page}>
       <header style={styles.header}>
         <div className="logo-section">
-            <PGCardsLogo size={logoSize} />
-          </div>
+          <PGCardsLogo size={logoSize} />
+        </div>
         <div style={styles.headerButtons}>
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Cancel</button>
           <button style={{ ...styles.headerBtn, ...styles.btnGhost }}>Clear All</button>
-          {/* <button style={{ ...styles.headerBtn, ...styles.btnOutline }}>Free Trial</button> */}
           <button style={{ ...styles.headerBtn, ...styles.btnSolid }}>Buy Now</button>
         </div>
       </header>
@@ -480,7 +634,6 @@ const CardCustomization = () => {
             {[
               { id: 'personal', label: 'Personal Info' },
               { id: 'appearance', label: 'Appearance' },
-           
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -496,141 +649,6 @@ const CardCustomization = () => {
           </div>
 
           <div style={styles.tabCard}>{renderTabContent()}</div>
-        </div>
-
-        <div style={styles.preview}>
-          <div style={styles.previewHeader}>
-            <div>
-              <p style={styles.previewTitle}>Live Preview</p>
-              <small style={styles.previewSubtitle}>View your premium NFC card</small>
-            </div>
-          </div>
-
-          <div style={styles.cardPreviewWrapper}>
-            <div style={{ ...styles.cardSide, background: theme.background }}>
-              <div style={styles.cardBackContent}>
-                <div style={styles.qrPlaceholder}>
-                  {personalInfo.logo ? (
-                    <img src={personalInfo.logo} alt="Logo" style={styles.qrLogo} />
-                  ) : (
-                    <>
-                      <div style={{ ...styles.qrInner, borderColor: theme.qrAccent }} />
-                      <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent }} />
-                      <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, top: 'auto', bottom: 16 }} />
-                      <div style={{ ...styles.qrCorner, borderColor: theme.qrAccent, left: 'auto', right: 16 }} />
-                      <div
-                        style={{
-                          ...styles.qrCorner,
-                          borderColor: theme.qrAccent,
-                          top: 'auto',
-                          bottom: 16,
-                          left: 'auto',
-                          right: 16
-                        }}
-                      />
-                    </>
-                  )}
-                </div>
-                <div style={styles.cardDetails}>
-                  <h4 style={{ ...styles.cardName, color: theme.accent }}>
-                    {personalInfo.name || 'YOUR NAME'}
-                  </h4>
-                  <p style={{ ...styles.cardDesignation, color: theme.accent }}>
-                    {personalInfo.designation || 'DESIGNATION'}
-                  </p>
-                  {(phoneNumbers.filter(Boolean).length > 0 || emails.filter(Boolean).length > 0) && (
-                    <div style={styles.cardContactList}>
-                      {phoneNumbers.filter(Boolean).map((phone) => (
-                        <p key={phone} style={styles.cardContact}>
-                          {phone}
-                        </p>
-                      ))}
-                      {emails.filter(Boolean).map((email) => (
-                        <p key={email} style={styles.cardContact}>
-                          {email}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  <div style={styles.cardActionBtn}>
-                    <span role="img" aria-label="nfc">
-                      📶
-                    </span>
-                    <span role="img" aria-label="qr">
-                      🔳
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={styles.previewDevice}>
-            <div style={styles.previewPhone}>
-              <div style={styles.previewScreen}>
-                <div style={styles.previewBrandRow}>
-                  <div style={styles.previewBrandIcon}>🪄</div>
-                  <div>
-                    <p style={styles.previewBrandName}>{personalInfo.company || 'PGCARDS'}</p>
-                    <small style={{ color: '#d9b871', letterSpacing: 1 }}>
-                      {personalInfo.designation || 'Renovating the future'}
-                    </small>
-                  </div>
-                </div>
-                <div style={styles.previewContactCard}>
-                  <div style={styles.previewAvatar} />
-                  <div>
-                    <p style={{ fontWeight: 600 }}>{personalInfo.name || 'Name'}</p>
-                    <small>{personalInfo.designation || 'Designation'}</small>
-                    <small>{personalInfo.company || 'Company Name'}</small>
-                  </div>
-                </div>
-                <button style={styles.previewCta}>
-                  {personalInfo.ctaButton || 'Add to contacts'}
-                </button>
-                <div style={styles.previewInfoBlock}>
-                  <p style={styles.previewSectionLabel}>Contact Info</p>
-                  {phoneNumbers.filter(Boolean).map((phone, idx) => (
-                    <div key={`preview-phone-${idx}`} style={styles.previewInfoRow}>
-                      <span>📞</span>
-                      <span>{phone}</span>
-                    </div>
-                  ))}
-                  {emails.filter(Boolean).map((email, idx) => (
-                    <div key={`preview-email-${idx}`} style={styles.previewInfoRow}>
-                      <span>✉️</span>
-                      <span>{email}</span>
-                    </div>
-                  ))}
-                </div>
-                {contactDetails.filter(({ label, value }) => label || value).length > 0 && (
-                  <div style={styles.previewInfoBlock}>
-                    <p style={styles.previewSectionLabel}>Contact Details</p>
-                    {contactDetails
-                      .filter(({ label, value }) => label || value)
-                      .map((detail, idx) => (
-                        <div key={`preview-contact-${idx}`} style={styles.previewInfoRow}>
-                          <span style={styles.previewInfoLabel}>{detail.label || 'Detail'}</span>
-                          <span>{detail.value || '-'}</span>
-                        </div>
-                      ))}
-                  </div>
-                )}
-                {personalInfo.about && (
-                  <div style={styles.previewInfoBlock}>
-                    <p style={styles.previewSectionLabel}>About</p>
-                    <p style={styles.previewParagraph}>{personalInfo.about}</p>
-                  </div>
-                )}
-                {personalInfo.aboutCompany && (
-                  <div style={styles.previewInfoBlock}>
-                    <p style={styles.previewSectionLabel}>About Company</p>
-                    <p style={styles.previewParagraph}>{personalInfo.aboutCompany}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1214,6 +1232,83 @@ const styles = {
     height: '100%',
     objectFit: 'contain',
     borderRadius: 20
+  },
+  imageUploadSection: {
+    marginBottom: 20
+  },
+  imageLabel: {
+    fontSize: 14,
+    fontWeight: 600,
+    marginBottom: 8,
+    display: 'block',
+    color: '#fff'
+  },
+  imageLabelRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8
+  },
+  toggleSwitch: {
+    position: 'relative',
+    display: 'inline-block',
+    width: 44,
+    height: 24,
+    cursor: 'pointer'
+  },
+  toggleSlider: {
+    position: 'absolute',
+    cursor: 'pointer',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 24,
+    transition: '0.3s',
+    display: 'block'
+  },
+  toggleDot: {
+    position: 'absolute',
+    content: '""',
+    height: 18,
+    width: 18,
+    left: 3,
+    bottom: 3,
+    backgroundColor: 'white',
+    borderRadius: '50%',
+    transition: '0.3s',
+    display: 'block'
+  },
+  imageUploadBox: {
+    width: '100%',
+    minHeight: 120,
+    borderRadius: 12,
+    overflow: 'hidden',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.03)'
+  },
+  uploadLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    minHeight: 120,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  uploadPlaceholder: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    color: '#aaa'
+  },
+  uploadedImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    minHeight: 120
   }
 };
 

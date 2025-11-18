@@ -22,7 +22,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
-    handleResize(); // Set initial size
+    handleResize(); 
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
