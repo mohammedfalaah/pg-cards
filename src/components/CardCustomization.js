@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import PGCardsLogo from './PGCardsLogo';
 
-
-
 const baseUrl = 'pgcards.info/profile-view/';
 
 const socialPlatforms = [
@@ -20,12 +18,84 @@ const socialPlatforms = [
 
 const premiumThemes = [
   {
+    id: 'standard',
+    name: 'Standard',
+    description: 'Clean white background with verified badge',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+    accent: '#28a745',
+    textColor: '#000000',
+    secondaryColor: '#6c757d',
+    cardBg: '#ffffff'
+  },
+  {
+    id: 'classic',
+    name: 'Classic Custom',
+    description: 'Elegant light grey with centered logo',
+    background: 'linear-gradient(135deg, #e8e8e8 0%, #d4d4d4 100%)',
+    accent: '#000000',
+    textColor: '#000000',
+    secondaryColor: '#555555',
+    cardBg: '#f5f5f5'
+  },
+  {
+    id: 'modern',
+    name: 'Modern',
+    description: 'Bold red accent with contemporary design',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
+    accent: '#ff4757',
+    textColor: '#000000',
+    secondaryColor: '#ff6b81',
+    cardBg: '#ffffff'
+  },
+  {
+    id: 'iconic',
+    name: 'Iconic',
+    description: 'Minimalist white with icon-based layout',
+    background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',
+    accent: '#1e88e5',
+    textColor: '#212121',
+    secondaryColor: '#42a5f5',
+    cardBg: '#ffffff'
+  },
+  {
+    id: 'digital',
+    name: 'Digital',
+    description: 'Modern dark theme with cyan accents',
+    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+    accent: '#00d9ff',
+    textColor: '#ffffff',
+    secondaryColor: '#4dd4ff',
+    cardBg: '#16213e'
+  },
+  {
+    id: 'epic',
+    name: 'Epic',
+    description: 'Bold black and gold luxury theme',
+    background: 'linear-gradient(135deg, #000000 0%, #1c1c1c 100%)',
+    accent: '#ffd700',
+    textColor: '#ffffff',
+    secondaryColor: '#ffed4e',
+    cardBg: '#0a0a0a'
+  },
+  {
+    id: 'vex',
+    name: 'Vex',
+    description: 'Navy blue professional theme',
+    background: 'linear-gradient(135deg, #0a1929 0%, #1e3a5f 100%)',
+    accent: '#4a90e2',
+    textColor: '#ffffff',
+    secondaryColor: '#64b5f6',
+    cardBg: '#1e3a5f'
+  },
+  {
     id: 'obsidian',
     name: 'Black Obsidian',
     description: 'Matte black with premium gold accents',
     background: 'linear-gradient(135deg, #050505 0%, #0A0A10 100%)',
     accent: '#E3BB6B',
-    qrAccent: '#E8C987'
+    textColor: '#ffffff',
+    secondaryColor: '#E8C987',
+    cardBg: '#0A0A10'
   },
   {
     id: 'midnight',
@@ -33,7 +103,9 @@ const premiumThemes = [
     description: 'Deep violet gradient for luxury brands',
     background: 'linear-gradient(135deg, #1c1b33 0%, #21102E 100%)',
     accent: '#D4B27B',
-    qrAccent: '#e3c59b'
+    textColor: '#ffffff',
+    secondaryColor: '#e3c59b',
+    cardBg: '#21102E'
   },
   {
     id: 'polar',
@@ -41,7 +113,9 @@ const premiumThemes = [
     description: 'Bright whites with champagne gold',
     background: 'linear-gradient(135deg, #f4f4f7 0%, #e4e4ed 100%)',
     accent: '#c9a260',
-    qrAccent: '#e7cfa4'
+    textColor: '#333333',
+    secondaryColor: '#e7cfa4',
+    cardBg: '#ffffff'
   }
 ];
 
@@ -60,6 +134,12 @@ const CardCustomization = () => {
 
   const [activeTab, setActiveTab] = useState('personal');
   const [selectedTheme, setSelectedTheme] = useState(premiumThemes[0].id);
+  const [customColors, setCustomColors] = useState({
+    primary: '#E3BB6B',
+    secondary: '#E8C987',
+    text: '#ffffff',
+    background: '#0A0A10'
+  });
   const [customUrlEnabled, setCustomUrlEnabled] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
   const [personalInfo, setPersonalInfo] = useState({
@@ -100,7 +180,10 @@ const CardCustomization = () => {
     phones: true,
     emails: false,
     contact: false,
-    imageandlogos: false
+    imageandlogos: false,
+    themes: true,
+    customizeColour: false,
+    imagesLogosAppearance: false
   });
 
   const generatedSlug = useMemo(() => Math.random().toString(36).substring(2, 12), []);
@@ -192,6 +275,23 @@ const CardCustomization = () => {
       return next.length ? next : [{ label: '', value: '' }];
     });
 
+  const handleThemeSelect = (themeId) => {
+    setSelectedTheme(themeId);
+    const selected = premiumThemes.find(t => t.id === themeId);
+    if (selected) {
+      setCustomColors({
+        primary: selected.accent,
+        secondary: selected.secondaryColor,
+        text: selected.textColor,
+        background: selected.cardBg
+      });
+    }
+  };
+
+  const handleColorChange = (colorType, value) => {
+    setCustomColors(prev => ({ ...prev, [colorType]: value }));
+  };
+
   const renderPersonalTab = () => (
     <>
       <div style={styles.formGridTwo}>
@@ -250,8 +350,8 @@ const CardCustomization = () => {
           </div>
         )}
       </div>
-      <div className='col-lg-6'>
-<div  style={styles.accordionSection}>
+
+      <div style={styles.accordionSection}>
         <button
           style={styles.accordionHeader}
           onClick={() => toggleAccordion("imageandlogos")}
@@ -261,137 +361,144 @@ const CardCustomization = () => {
         </button>
         {accordionOpen.imageandlogos && (
           <div style={styles.accordionBody}>
-            {/* Cover Image */}
- 
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-  {/* Cover Image */}
-  <div style={styles.imageUploadSection}>
-    <label style={styles.imageLabel}>Cover Image</label>
-    <div style={styles.imageUploadBox}>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleImageUpload('coverImage', e)}
-        style={styles.fileInput}
-        id="coverImage"
-      />
-      <label htmlFor="coverImage" style={styles.uploadLabel}>
-        {images.coverImage ? (
-          <img src={images.coverImage} alt="Cover" style={styles.uploadedImage} />
-        ) : (
-          <div style={styles.uploadPlaceholder}>
-            <span style={{ fontSize: 32 }}>+</span>
-            <span>Upload</span>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
-          </div>
-        )}
-      </label>
-    </div>
-  </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={styles.imageUploadSection}>
+                <label style={styles.imageLabel}>Cover Image</label>
+                <div style={styles.imageUploadBox}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('coverImage', e)}
+                    style={styles.fileInput}
+                    id="coverImage"
+                  />
+                  <label htmlFor="coverImage" style={styles.uploadLabel}>
+                    {images.coverImage ? (
+                      <img src={images.coverImage} alt="Cover" style={styles.uploadedImage} />
+                    ) : (
+                      <div style={styles.uploadPlaceholder}>
+                        <span style={{ fontSize: 32 }}>+</span>
+                        <span>Upload</span>
+                        <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
 
-  {/* Profile Image */}
-  <div style={styles.imageUploadSection}>
-    <div style={styles.imageLabelRow}>
-      <label style={styles.imageLabel}>Profile Image</label>
-      <label style={styles.toggleSwitch}>
-        <input
-          type="checkbox"
-          checked={imageToggles.profileImage}
-          onChange={() => handleImageToggle('profileImage')}
-          style={{ display: 'none' }}
-        />
-      </label>
-    </div>
-    <div style={styles.imageUploadBox}>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleImageUpload('profileImage', e)}
-        style={styles.fileInput}
-        id="profileImage"
-      />
-      <label htmlFor="profileImage" style={styles.uploadLabel}>
-        {images.profileImage ? (
-          <img src={images.profileImage} alt="Profile" style={styles.uploadedImage} />
-        ) : (
-          <div style={styles.uploadPlaceholder}>
-            <span style={{ fontSize: 32 }}>+</span>
-            <span>Upload</span>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
-          </div>
-        )}
-      </label>
-    </div>
-  </div>
+              <div style={styles.imageUploadSection}>
+                <div style={styles.imageLabelRow}>
+                  <label style={styles.imageLabel}>Profile Image</label>
+                  <label style={styles.toggleSwitch}>
+                    <input
+                      type="checkbox"
+                      checked={imageToggles.profileImage}
+                      onChange={() => handleImageToggle('profileImage')}
+                      style={{ display: 'none' }}
+                    />
+                    <span style={{
+                      ...styles.toggleSlider,
+                      background: imageToggles.profileImage ? '#0066ff' : '#666'
+                    }}>
+                      <span style={{
+                        ...styles.toggleDot,
+                        transform: imageToggles.profileImage ? 'translateX(20px)' : 'translateX(0)'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+                <div style={styles.imageUploadBox}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('profileImage', e)}
+                    style={styles.fileInput}
+                    id="profileImage"
+                  />
+                  <label htmlFor="profileImage" style={styles.uploadLabel}>
+                    {images.profileImage ? (
+                      <img src={images.profileImage} alt="Profile" style={styles.uploadedImage} />
+                    ) : (
+                      <div style={styles.uploadPlaceholder}>
+                        <span style={{ fontSize: 32 }}>+</span>
+                        <span>Upload</span>
+                        <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
 
-  {/* Company Logo */}
-  <div style={styles.imageUploadSection}>
-    <div style={styles.imageLabelRow}>
-      <label style={styles.imageLabel}>Company Logo</label>
-      <label style={styles.toggleSwitch}>
-        <input
-          type="checkbox"
-          checked={imageToggles.companyLogo}
-          onChange={() => handleImageToggle('companyLogo')}
-          style={{ display: 'none' }}
-        />
-      </label>
-    </div>
-    <div style={styles.imageUploadBox}>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleImageUpload('companyLogo', e)}
-        style={styles.fileInput}
-        id="companyLogo"
-      />
-      <label htmlFor="companyLogo" style={styles.uploadLabel}>
-        {images.companyLogo ? (
-          <img src={images.companyLogo} alt="Company Logo" style={styles.uploadedImage} />
-        ) : (
-          <div style={styles.uploadPlaceholder}>
-            <span style={{ fontSize: 32 }}>+</span>
-            <span>Upload</span>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
-          </div>
-        )}
-      </label>
-    </div>
-  </div>
+              <div style={styles.imageUploadSection}>
+                <div style={styles.imageLabelRow}>
+                  <label style={styles.imageLabel}>Company Logo</label>
+                  <label style={styles.toggleSwitch}>
+                    <input
+                      type="checkbox"
+                      checked={imageToggles.companyLogo}
+                      onChange={() => handleImageToggle('companyLogo')}
+                      style={{ display: 'none' }}
+                    />
+                    <span style={{
+                      ...styles.toggleSlider,
+                      background: imageToggles.companyLogo ? '#0066ff' : '#666'
+                    }}>
+                      <span style={{
+                        ...styles.toggleDot,
+                        transform: imageToggles.companyLogo ? 'translateX(20px)' : 'translateX(0)'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+                <div style={styles.imageUploadBox}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('companyLogo', e)}
+                    style={styles.fileInput}
+                    id="companyLogo"
+                  />
+                  <label htmlFor="companyLogo" style={styles.uploadLabel}>
+                    {images.companyLogo ? (
+                      <img src={images.companyLogo} alt="Company Logo" style={styles.uploadedImage} />
+                    ) : (
+                      <div style={styles.uploadPlaceholder}>
+                        <span style={{ fontSize: 32 }}>+</span>
+                        <span>Upload</span>
+                        <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
 
-  {/* Background Image */}
-  <div style={styles.imageUploadSection}>
-    <label style={styles.imageLabel}>Background Image</label>
-    <div style={styles.imageUploadBox}>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleImageUpload('backgroundImage', e)}
-        style={styles.fileInput}
-        id="backgroundImage"
-      />
-      <label htmlFor="backgroundImage" style={styles.uploadLabel}>
-        {images.backgroundImage ? (
-          <img src={images.backgroundImage} alt="Background" style={styles.uploadedImage} />
-        ) : (
-          <div style={styles.uploadPlaceholder}>
-            <span style={{ fontSize: 32 }}>+</span>
-            <span>Upload</span>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
-          </div>
-        )}
-      </label>
-    </div>
-  </div>
-</div>
-
+              <div style={styles.imageUploadSection}>
+                <label style={styles.imageLabel}>Background Image</label>
+                <div style={styles.imageUploadBox}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('backgroundImage', e)}
+                    style={styles.fileInput}
+                    id="backgroundImage"
+                  />
+                  <label htmlFor="backgroundImage" style={styles.uploadLabel}>
+                    {images.backgroundImage ? (
+                      <img src={images.backgroundImage} alt="Background" style={styles.uploadedImage} />
+                    ) : (
+                      <div style={styles.uploadPlaceholder}>
+                        <span style={{ fontSize: 32 }}>+</span>
+                        <span>Upload</span>
+                        <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      </div>
-
-      
 
       <div style={styles.accordionSection}>
         <button
@@ -494,110 +601,225 @@ const CardCustomization = () => {
 
   const renderAppearanceTab = () => (
     <>
-      {/* PERSONAL INFO PREVIEW SECTION */}
+      {/* THEMES SECTION */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Select Your Theme</h3>
+        <div style={styles.themesGrid}>
+          {premiumThemes.map((themeOption) => (
+            <div
+              key={themeOption.id}
+              onClick={() => handleThemeSelect(themeOption.id)}
+              style={{
+                ...styles.themeTile,
+                ...(selectedTheme === themeOption.id ? styles.themeTileActive : {})
+              }}
+            >
+              <div style={{ ...styles.themePreview, background: themeOption.background }}>
+                <div style={styles.themePreviewContent}>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: themeOption.textColor }}>
+                    {themeOption.name.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: 10, color: themeOption.secondaryColor, marginTop: 8 }}>
+                    Sample Text
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: '8px 0' }}>
+                <p style={styles.themeName}>{themeOption.name}</p>
+                <small style={styles.themeDesc}>{themeOption.description}</small>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* COLOR CUSTOMIZATION */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Customize Colors</h3>
+        <div style={styles.colorGrid}>
+          <div style={styles.colorField}>
+            <label>Primary Color</label>
+            <div style={styles.colorInputWrapper}>
+              <input
+                type="color"
+                value={customColors.primary}
+                onChange={(e) => handleColorChange('primary', e.target.value)}
+                style={styles.colorInput}
+              />
+              <input
+                type="text"
+                value={customColors.primary}
+                onChange={(e) => handleColorChange('primary', e.target.value)}
+                style={styles.colorTextInput}
+              />
+            </div>
+          </div>
+
+          <div style={styles.colorField}>
+            <label>Secondary Color</label>
+            <div style={styles.colorInputWrapper}>
+              <input
+                type="color"
+                value={customColors.secondary}
+                onChange={(e) => handleColorChange('secondary', e.target.value)}
+                style={styles.colorInput}
+              />
+              <input
+                type="text"
+                value={customColors.secondary}
+                onChange={(e) => handleColorChange('secondary', e.target.value)}
+                style={styles.colorTextInput}
+              />
+            </div>
+          </div>
+
+          <div style={styles.colorField}>
+            <label>Text Color</label>
+            <div style={styles.colorInputWrapper}>
+              <input
+                type="color"
+                value={customColors.text}
+                onChange={(e) => handleColorChange('text', e.target.value)}
+                style={styles.colorInput}
+              />
+              <input
+                type="text"
+                value={customColors.text}
+                onChange={(e) => handleColorChange('text', e.target.value)}
+                style={styles.colorTextInput}
+              />
+            </div>
+          </div>
+
+          <div style={styles.colorField}>
+            <label>Background Color</label>
+            <div style={styles.colorInputWrapper}>
+              <input
+                type="color"
+                value={customColors.background}
+                onChange={(e) => handleColorChange('background', e.target.value)}
+                style={styles.colorInput}
+              />
+              <input
+                type="text"
+                value={customColors.background}
+                onChange={(e) => handleColorChange('background', e.target.value)}
+                style={styles.colorTextInput}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* PREVIEW SECTION */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Live Preview</h3>
+        <div style={{ ...styles.previewPhone, background: theme.background }}>
+          <div style={{ ...styles.previewScreen, background: customColors.background }}>
+            {/* Cover Image */}
+            {images.coverImage && (
+              <div style={styles.previewCover}>
+                <img src={images.coverImage} alt="Cover" style={styles.previewCoverImg} />
+              </div>
+            )}
+
+            {/* Profile Section */}
+            <div style={styles.previewProfileSection}>
+              {images.profileImage && imageToggles.profileImage && (
+                <img src={images.profileImage} alt="Profile" style={styles.previewAvatar} />
+              )}
+              {images.companyLogo && imageToggles.companyLogo && (
+                <img src={images.companyLogo} alt="Logo" style={styles.previewLogo} />
+              )}
+            </div>
+
+            {/* Personal Info */}
+            <div style={{ ...styles.previewInfoCard, borderColor: customColors.primary }}>
+              <h3 style={{ ...styles.previewName, color: customColors.text }}>
+                {personalInfo.name || 'Your Name'}
+              </h3>
+              <p style={{ ...styles.previewDesignation, color: customColors.secondary }}>
+                {personalInfo.designation || 'Your Designation'}
+              </p>
+              <p style={{ ...styles.previewCompany, color: customColors.text, opacity: 0.8 }}>
+                {personalInfo.company || 'Company Name'}
+              </p>
+            </div>
+
+            {/* Contact Info */}
+            {(phoneNumbers.filter(Boolean).length > 0 || emails.filter(Boolean).length > 0) && (
+              <div style={styles.previewContactSection}>
+                <h4 style={{ ...styles.previewSectionTitle, color: customColors.text }}>Contact Info</h4>
+                {phoneNumbers.filter(Boolean).map((phone, i) => (
+                  <div key={i} style={{ ...styles.previewContactItem, color: customColors.text }}>
+                    <span>📞</span>
+                    <span>{phone}</span>
+                  </div>
+                ))}
+                {emails.filter(Boolean).map((email, i) => (
+                  <div key={i} style={{ ...styles.previewContactItem, color: customColors.text }}>
+                    <span>📧</span>
+                    <span>{email}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Social Media */}
+            {socialLinks.length > 0 && (
+              <div style={styles.previewContactSection}>
+                <h4 style={{ ...styles.previewSectionTitle, color: customColors.text }}>Social Media</h4>
+                <div style={styles.previewSocialIcons}>
+                  {socialLinks.map((social, i) => (
+                    <div key={i} style={{ ...styles.previewSocialIcon, borderColor: customColors.primary, color: customColors.primary }}>
+                      {social.platform.substring(0, 2)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA Button */}
+            <button style={{ ...styles.previewCtaBtn, background: customColors.primary, color: customColors.background }}>
+              Add to Contacts
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* DATA SUMMARY */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>Stored Personal Info</h3>
-
-        <div
-          style={{
-            background: "#111",
-            padding: 20,
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#fff",
-          }}
-        >
-          {/* NAME */}
+        <div style={styles.dataSummary}>
           <p><strong>Full Name:</strong> {personalInfo.name || "Not provided"}</p>
-
-          {/* DESIGNATION */}
           <p><strong>Designation:</strong> {personalInfo.designation || "Not provided"}</p>
-
-          {/* COMPANY */}
           <p><strong>Company:</strong> {personalInfo.company || "Not provided"}</p>
-
+          
           <hr style={{ opacity: 0.1, margin: "14px 0" }} />
-
-          {/* PHONES */}
+          
           <p><strong>Phone Numbers:</strong></p>
           {phoneNumbers.filter(Boolean).length > 0 ? (
-            phoneNumbers.map((p, i) => (
-              <div key={i}>📞 {p}</div>
-            ))
+            phoneNumbers.filter(Boolean).map((p, i) => <div key={i}>📞 {p}</div>)
           ) : (
             <div>None added</div>
           )}
-
+          
           <hr style={{ opacity: 0.1, margin: "14px 0" }} />
-
-          {/* EMAILS */}
+          
           <p><strong>Emails:</strong></p>
           {emails.filter(Boolean).length > 0 ? (
-            emails.map((e, i) => (
-              <div key={i}>📧 {e}</div>
-            ))
+            emails.filter(Boolean).map((e, i) => <div key={i}>📧 {e}</div>)
           ) : (
             <div>None added</div>
           )}
-
+          
           <hr style={{ opacity: 0.1, margin: "14px 0" }} />
-
-          {/* CONTACT DETAILS */}
+          
           <p><strong>Contact Details:</strong></p>
           {contactDetails.filter(c => c.value).length > 0 ? (
-            contactDetails.map((c, i) => (
-              c.value && (
-                <div key={i}>📍 {c.label}: {c.value}</div>
-              )
-            ))
+            contactDetails.filter(c => c.value).map((c, i) => <div key={i}>📍 {c.label}: {c.value}</div>)
           ) : (
             <div>None added</div>
-          )}
-
-          <hr style={{ opacity: 0.1, margin: "14px 0" }} />
-
-          {/* SOCIAL LINKS */}
-          <p><strong>Social Media:</strong></p>
-          {socialLinks.length > 0 ? (
-            socialLinks.map((s, i) => (
-              <div key={i}>🔗 {s.platform}: {s.link}</div>
-            ))
-          ) : (
-            <div>None added</div>
-          )}
-
-          <hr style={{ opacity: 0.1, margin: "14px 0" }} />
-
-          {/* IMAGES */}
-          <p><strong>Uploaded Images:</strong></p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 12 }}>
-            {images.coverImage && (
-              <div>
-                <small>Cover Image</small>
-                <img src={images.coverImage} alt="Cover" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
-              </div>
-            )}
-            {images.profileImage && imageToggles.profileImage && (
-              <div>
-                <small>Profile Image</small>
-                <img src={images.profileImage} alt="Profile" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
-              </div>
-            )}
-            {images.companyLogo && imageToggles.companyLogo && (
-              <div>
-                <small>Company Logo</small>
-                <img src={images.companyLogo} alt="Logo" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
-              </div>
-            )}
-            {images.backgroundImage && (
-              <div>
-                <small>Background Image</small>
-                <img src={images.backgroundImage} alt="Background" style={{ width: '100%', borderRadius: 8, marginTop: 4 }} />
-              </div>
-            )}
-          </div>
-          {!images.coverImage && !images.profileImage && !images.companyLogo && !images.backgroundImage && (
-            <div>None uploaded</div>
           )}
         </div>
       </div>
@@ -673,33 +895,6 @@ const styles = {
     flexWrap: 'wrap',
     gap: 12
   },
-  logoMark: {
-    display: 'flex',
-    gap: 12,
-    alignItems: 'center'
-  },
-  logoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    background: 'linear-gradient(135deg, #f7d27c, #ba8c38)',
-    color: '#050505',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 700,
-    fontSize: 18
-  },
-  logoTitle: {
-    margin: 0,
-    fontWeight: 600,
-    fontSize: 16
-  },
-  logoSubtitle: {
-    color: '#c0a870',
-    margin: 0,
-    fontSize: 12
-  },
   headerButtons: {
     display: 'flex',
     gap: 8,
@@ -720,10 +915,6 @@ const styles = {
   btnGhost: {
     borderColor: 'rgba(255,255,255,0.2)'
   },
-  btnOutline: {
-    borderColor: '#d7b05a',
-    color: '#d7b05a'
-  },
   btnSolid: {
     background: 'linear-gradient(135deg,#f7d27c,#ba8c38)',
     color: '#050505'
@@ -740,17 +931,6 @@ const styles = {
     minWidth: 280,
     width: '100%',
     maxWidth: '100%'
-  },
-  preview: {
-    flex: 1,
-    minWidth: 280,
-    width: '100%',
-    maxWidth: '100%',
-    background: 'rgba(255,255,255,0.02)',
-    borderRadius: 24,
-    padding: 20,
-    border: '1px solid rgba(255,255,255,0.08)',
-    boxShadow: '0 25px 60px rgba(0,0,0,0.45)'
   },
   tabsRow: {
     display: 'flex',
@@ -789,100 +969,6 @@ const styles = {
     fontWeight: 600,
     letterSpacing: 0.2
   },
-  urlCard: {
-    background: '#0d0d12',
-    borderRadius: 16,
-    padding: 18,
-    border: '1px solid rgba(255,255,255,0.05)'
-  },
-  checkboxLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    fontSize: 14,
-    marginBottom: 14
-  },
-  urlInputRow: {
-    display: 'flex',
-    gap: 10,
-    flexWrap: 'wrap',
-    marginBottom: 12
-  },
-  urlInputGroup: {
-    display: 'flex',
-    flex: 1,
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    overflow: 'hidden',
-    minWidth: 0
-  },
-  urlPrefix: {
-    background: 'rgba(255,255,255,0.05)',
-    padding: '10px 12px',
-    color: '#d2d2d2',
-    fontSize: 13,
-    whiteSpace: 'nowrap',
-    flexShrink: 0
-  },
-  urlInput: {
-    flex: 1,
-    background: 'transparent',
-    border: 'none',
-    padding: '10px 12px',
-    color: '#fff',
-    minWidth: 0
-  },
-  urlInputDisabled: {
-    color: '#666'
-  },
-  finalUrlRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: 13,
-    color: '#c7c7c7',
-    marginBottom: 6
-  },
-  urlNote: {
-    margin: 0,
-    color: '#7b7b85',
-    fontSize: 12
-  },
-  themesGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: 18
-  },
-  themeTile: {
-    borderRadius: 18,
-    padding: 14,
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.01)'
-  },
-  themePreview: {
-    borderRadius: 14,
-    padding: '28px 20px',
-    marginBottom: 10,
-    minHeight: 120,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    boxShadow: 'inset 0 0 40px rgba(0,0,0,0.35)'
-  },
-  themeLogo: {
-    fontSize: 32,
-    fontWeight: 700
-  },
-  themeDesc: {
-    fontSize: 12,
-    opacity: 0.8
-  },
-  themeName: {
-    margin: 0,
-    fontWeight: 600,
-    letterSpacing: 0.2
-  },
   formGridTwo: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -893,10 +979,6 @@ const styles = {
     flexDirection: 'column',
     gap: 8,
     fontSize: 13
-  },
-  accordionWrapper: {
-    marginTop: 24,
-    borderTop: '1px solid rgba(255,255,255,0.1)'
   },
   accordionSection: {
     borderBottom: '1px solid rgba(255,255,255,0.08)'
@@ -921,12 +1003,6 @@ const styles = {
   },
   listRow: {
     display: 'flex',
-    gap: 8,
-    alignItems: 'center'
-  },
-  contactRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr auto',
     gap: 8,
     alignItems: 'center'
   },
@@ -957,17 +1033,6 @@ const styles = {
     border: '1px solid rgba(255,255,255,0.1)',
     color: '#fff',
     fontSize: 14,
-    width: '100%',
-    boxSizing: 'border-box'
-  },
-  textarea: {
-    borderRadius: 12,
-    padding: '12px 14px',
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: '#fff',
-    fontSize: 14,
-    resize: 'vertical',
     width: '100%',
     boxSizing: 'border-box'
   },
@@ -1013,226 +1078,6 @@ const styles = {
     flexWrap: 'wrap',
     wordBreak: 'break-all'
   },
-  previewHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16
-  },
-  previewTitle: {
-    margin: 0,
-    fontWeight: 600,
-    fontSize: 18
-  },
-  previewSubtitle: {
-    color: '#b7b7b7'
-  },
-  cardPreviewWrapper: {
-    borderRadius: 32,
-    padding: 16,
-    background: 'radial-gradient(circle at top, rgba(247,210,124,0.15), transparent 70%)',
-    display: 'flex',
-    justifyContent: 'center',
-    overflow: 'hidden'
-  },
-  cardSide: {
-    width: '100%',
-    minHeight: 220,
-    borderRadius: 30,
-    padding: 20,
-    position: 'relative',
-    boxShadow: '0 30px 60px rgba(0,0,0,0.55)',
-    boxSizing: 'border-box'
-  },
-  cardBackContent: {
-    display: 'flex',
-    gap: 20,
-    flexWrap: 'wrap'
-  },
-  qrPlaceholder: {
-    width: 140,
-    height: 140,
-    borderRadius: 20,
-    background: 'rgba(0,0,0,0.4)',
-    position: 'relative',
-    border: '1px solid rgba(255,255,255,0.1)',
-    flexShrink: 0
-  },
-  qrInner: {
-    position: 'absolute',
-    inset: 32,
-    border: '2px dashed',
-    borderRadius: 12
-  },
-  qrCorner: {
-    position: 'absolute',
-    width: 28,
-    height: 28,
-    border: '3px solid',
-    borderRadius: 8,
-    top: 16,
-    left: 16
-  },
-  cardDetails: {
-    flex: 1,
-    minWidth: 150,
-    color: '#fff'
-  },
-  cardName: {
-    fontSize: 22,
-    margin: 0
-  },
-  cardDesignation: {
-    margin: '6px 0 18px',
-    letterSpacing: 2
-  },
-  cardContact: {
-    margin: '4px 0',
-    color: '#d6af6b'
-  },
-  cardContactList: {
-    marginTop: 4,
-    marginBottom: 8
-  },
-  cardActionBtn: {
-    marginTop: 20,
-    border: '1px solid rgba(255,255,255,0.25)',
-    borderRadius: 16,
-    padding: '8px 16px',
-    display: 'inline-flex',
-    gap: 12
-  },
-  previewDevice: {
-    marginTop: 24
-  },
-  previewPhone: {
-    width: '100%',
-    maxWidth: 260,
-    margin: '0 auto',
-    borderRadius: 50,
-    padding: 16,
-    background: 'linear-gradient(135deg,#1c1c28,#09090f)'
-  },
-  previewScreen: {
-    borderRadius: 32,
-    padding: 18,
-    background: '#fff',
-    minHeight: 360,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 16
-  },
-  previewBrandRow: {
-    display: 'flex',
-    gap: 12,
-    alignItems: 'center'
-  },
-  previewBrandIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    background: '#050505',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  previewBrandName: {
-    margin: 0,
-    color: '#050505',
-    fontWeight: 700
-  },
-  previewContactCard: {
-    borderRadius: 20,
-    border: '1px solid rgba(0,0,0,0.08)',
-    padding: 16,
-    display: 'flex',
-    gap: 12,
-    alignItems: 'center'
-  },
-  previewAvatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 16,
-    background: 'rgba(0,0,0,0.1)'
-  },
-  previewCta: {
-    borderRadius: 16,
-    border: 'none',
-    background: '#050505',
-    color: '#fff',
-    padding: '12px 20px',
-    fontWeight: 600,
-    cursor: 'pointer'
-  },
-  previewInfoBlock: {
-    marginTop: 16,
-    paddingTop: 12,
-    borderTop: '1px solid rgba(0,0,0,0.08)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8
-  },
-  previewSectionLabel: {
-    margin: 0,
-    fontWeight: 600,
-    color: '#050505',
-    fontSize: 14
-  },
-  previewInfoRow: {
-    display: 'flex',
-    gap: 10,
-    alignItems: 'center',
-    color: '#1f1f1f',
-    fontSize: 13
-  },
-  previewInfoLabel: {
-    fontWeight: 600
-  },
-  previewParagraph: {
-    margin: 0,
-    color: '#1f1f1f',
-    lineHeight: 1.5,
-    fontSize: 13
-  },
-  logoUploadWrapper: {
-    width: '100%',
-    marginBottom: 8
-  },
-  fileInput: {
-    display: 'none'
-  },
-  logoUploadLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: 160,
-    borderRadius: 16,
-    border: '2px dashed rgba(255,255,255,0.2)',
-    background: 'rgba(255,255,255,0.03)',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    overflow: 'hidden'
-  },
-  logoPlaceholder: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#d9d9d9'
-  },
-  logoPreview: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-    padding: 10
-  },
-  qrLogo: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-    borderRadius: 20
-  },
   imageUploadSection: {
     marginBottom: 20
   },
@@ -1247,7 +1092,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-   // marginBottom: 8
+    marginBottom: 8
   },
   toggleSwitch: {
     position: 'relative',
@@ -1309,6 +1154,208 @@ const styles = {
     height: '100%',
     objectFit: 'cover',
     minHeight: 120
+  },
+  fileInput: {
+    display: 'none'
+  },
+  themesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: 18
+  },
+  themeTile: {
+    borderRadius: 18,
+    padding: 14,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    border: '2px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.01)'
+  },
+  themeTileActive: {
+    borderColor: '#f7d27c',
+    boxShadow: '0 0 20px rgba(247,210,124,0.3)'
+  },
+  themePreview: {
+    borderRadius: 14,
+    padding: '28px 20px',
+    marginBottom: 10,
+    minHeight: 100,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    boxShadow: 'inset 0 0 40px rgba(0,0,0,0.35)'
+  },
+  themePreviewContent: {
+    textAlign: 'center'
+  },
+  themeName: {
+    margin: 0,
+    fontWeight: 600,
+    letterSpacing: 0.2,
+    fontSize: 14
+  },
+  themeDesc: {
+    fontSize: 11,
+    opacity: 0.7,
+    color: '#aaa'
+  },
+  colorGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: 16
+  },
+  colorField: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8
+  },
+  colorInputWrapper: {
+    display: 'flex',
+    gap: 10,
+    alignItems: 'center'
+  },
+  colorInput: {
+    width: 50,
+    height: 40,
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.2)',
+    cursor: 'pointer',
+    background: 'transparent'
+  },
+  colorTextInput: {
+    flex: 1,
+    borderRadius: 12,
+    padding: '10px 14px',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff',
+    fontSize: 14
+  },
+  previewPhone: {
+    width: '100%',
+    maxWidth: 360,
+    margin: '0 auto',
+    borderRadius: 40,
+    padding: 20,
+    boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+  },
+  previewScreen: {
+    borderRadius: 32,
+    padding: 20,
+    minHeight: 500,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  previewCover: {
+    width: 'calc(100% + 40px)',
+    height: 120,
+    margin: '-20px -20px 0',
+    overflow: 'hidden'
+  },
+  previewCoverImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+  },
+  previewProfileSection: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -30,
+    position: 'relative',
+    zIndex: 1
+  },
+  previewAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '3px solid white',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+  },
+  previewLogo: {
+    width: 60,
+    height: 60,
+    objectFit: 'contain',
+    borderRadius: 12,
+    padding: 8,
+    background: 'rgba(255,255,255,0.9)'
+  },
+  previewInfoCard: {
+    textAlign: 'center',
+    padding: 16,
+    borderRadius: 16,
+    border: '1px solid',
+    marginTop: 8
+  },
+  previewName: {
+    margin: 0,
+    fontSize: 20,
+    fontWeight: 700
+  },
+  previewDesignation: {
+    margin: '6px 0',
+    fontSize: 14,
+    fontWeight: 600
+  },
+  previewCompany: {
+    margin: 0,
+    fontSize: 13
+  },
+  previewContactSection: {
+    padding: 12,
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.05)'
+  },
+  previewSectionTitle: {
+    margin: '0 0 12px 0',
+    fontSize: 14,
+    fontWeight: 600
+  },
+  previewContactItem: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+    fontSize: 13,
+    marginBottom: 6
+  },
+  previewSocialIcons: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap'
+  },
+  previewSocialIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    border: '1px solid',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 12,
+    fontWeight: 700
+  },
+  previewCtaBtn: {
+    width: '100%',
+    padding: '12px 20px',
+    borderRadius: 12,
+    border: 'none',
+    fontWeight: 600,
+    fontSize: 14,
+    cursor: 'pointer',
+    marginTop: 8
+  },
+  dataSummary: {
+    background: '#111',
+    padding: 20,
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: '#fff'
   }
 };
 
