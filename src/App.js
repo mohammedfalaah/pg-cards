@@ -107,6 +107,7 @@ function App() {
     return (
       <div className="App">
         <CardCustomization />
+         <WhatsappChat />
       </div>
     );
   }
@@ -115,6 +116,7 @@ function App() {
       <div className="App">
         <Header />
         <ShopPage />
+         <WhatsappChat />
          <Footer />
       </div>
     );
@@ -138,6 +140,7 @@ function App() {
           isDashboard={false}
         />
         <Blog />
+         <WhatsappChat />
         <Footer />
       </div>
     );
