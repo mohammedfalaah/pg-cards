@@ -82,19 +82,7 @@ const premiumThemes = [
     hasGoldBorder: true,
     profilePosition: 'middle-center'
   },
-  {
-    id: 'vex',
-    name: 'Vex',
-    description: 'Navy blue professional theme',
-    background: 'linear-gradient(135deg, #0a1929 0%, #1e3a5f 100%)',
-    accent: '#4a90e2',
-    textColor: '#ffffff',
-    secondaryColor: '#64b5f6',
-    cardBg: '#1e3a5f',
-    layout: 'corporate',
-    hasBadge: true,
-    profilePosition: 'top-right'
-  },
+  
   {
     id: 'obsidian',
     name: 'Black Obsidian',
@@ -108,19 +96,7 @@ const premiumThemes = [
     hasElegantBorder: true,
     profilePosition: 'center-middle'
   },
-  {
-    id: 'midnight',
-    name: 'Midnight Violet',
-    description: 'Deep violet gradient for luxury brands',
-    background: 'linear-gradient(135deg, #1c1b33 0%, #21102E 100%)',
-    accent: '#D4B27B',
-    textColor: '#ffffff',
-    secondaryColor: '#e3c59b',
-    cardBg: '#21102E',
-    layout: 'gradient-overlay',
-    hasOverlay: true,
-    profilePosition: 'bottom-center'
-  },
+  
   {
     id: 'polar',
     name: 'Arctic Frost',
