@@ -25,7 +25,10 @@ const premiumThemes = [
     accent: '#28a745',
     textColor: '#000000',
     secondaryColor: '#6c757d',
-    cardBg: '#ffffff'
+    cardBg: '#ffffff',
+    layout: 'centered',
+    hasVerifiedBadge: true,
+    profilePosition: 'top-center'
   },
   {
     id: 'classic',
@@ -35,17 +38,10 @@ const premiumThemes = [
     accent: '#000000',
     textColor: '#000000',
     secondaryColor: '#555555',
-    cardBg: '#f5f5f5'
-  },
-  {
-    id: 'modern',
-    name: 'Modern',
-    description: 'Bold red accent with contemporary design',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
-    accent: '#ff4757',
-    textColor: '#000000',
-    secondaryColor: '#ff6b81',
-    cardBg: '#ffffff'
+    cardBg: '#f5f5f5',
+    layout: 'logo-centered',
+    hasLogoFrame: true,
+    profilePosition: 'middle-center'
   },
   {
     id: 'iconic',
@@ -55,7 +51,10 @@ const premiumThemes = [
     accent: '#1e88e5',
     textColor: '#212121',
     secondaryColor: '#42a5f5',
-    cardBg: '#ffffff'
+    cardBg: '#ffffff',
+    layout: 'icon-grid',
+    hasIcons: true,
+    profilePosition: 'top-left'
   },
   {
     id: 'digital',
@@ -65,7 +64,10 @@ const premiumThemes = [
     accent: '#00d9ff',
     textColor: '#ffffff',
     secondaryColor: '#4dd4ff',
-    cardBg: '#16213e'
+    cardBg: '#16213e',
+    layout: 'tech-grid',
+    hasGlowEffect: true,
+    profilePosition: 'center-top'
   },
   {
     id: 'epic',
@@ -75,7 +77,10 @@ const premiumThemes = [
     accent: '#ffd700',
     textColor: '#ffffff',
     secondaryColor: '#ffed4e',
-    cardBg: '#0a0a0a'
+    cardBg: '#0a0a0a',
+    layout: 'luxury-frame',
+    hasGoldBorder: true,
+    profilePosition: 'middle-center'
   },
   {
     id: 'vex',
@@ -85,7 +90,10 @@ const premiumThemes = [
     accent: '#4a90e2',
     textColor: '#ffffff',
     secondaryColor: '#64b5f6',
-    cardBg: '#1e3a5f'
+    cardBg: '#1e3a5f',
+    layout: 'corporate',
+    hasBadge: true,
+    profilePosition: 'top-right'
   },
   {
     id: 'obsidian',
@@ -95,7 +103,10 @@ const premiumThemes = [
     accent: '#E3BB6B',
     textColor: '#ffffff',
     secondaryColor: '#E8C987',
-    cardBg: '#0A0A10'
+    cardBg: '#0A0A10',
+    layout: 'minimal-dark',
+    hasElegantBorder: true,
+    profilePosition: 'center-middle'
   },
   {
     id: 'midnight',
@@ -105,7 +116,10 @@ const premiumThemes = [
     accent: '#D4B27B',
     textColor: '#ffffff',
     secondaryColor: '#e3c59b',
-    cardBg: '#21102E'
+    cardBg: '#21102E',
+    layout: 'gradient-overlay',
+    hasOverlay: true,
+    profilePosition: 'bottom-center'
   },
   {
     id: 'polar',
@@ -115,7 +129,10 @@ const premiumThemes = [
     accent: '#c9a260',
     textColor: '#333333',
     secondaryColor: '#e7cfa4',
-    cardBg: '#ffffff'
+    cardBg: '#ffffff',
+    layout: 'frosted-glass',
+    hasGlassEffect: true,
+    profilePosition: 'top-center'
   }
 ];
 
@@ -291,6 +308,1120 @@ const CardCustomization = () => {
   const handleColorChange = (colorType, value) => {
     setCustomColors(prev => ({ ...prev, [colorType]: value }));
   };
+
+  // Theme-specific layout renderers
+  const renderThemeLayout = () => {
+    const themeData = premiumThemes.find(t => t.id === selectedTheme) || premiumThemes[0];
+    
+    switch (themeData.layout) {
+      case 'centered':
+        return renderCenteredLayout();
+      case 'logo-centered':
+        return renderLogoCenteredLayout();
+      case 'split-view':
+        return renderSplitViewLayout();
+      case 'icon-grid':
+        return renderIconGridLayout();
+      case 'tech-grid':
+        return renderTechGridLayout();
+      case 'luxury-frame':
+        return renderLuxuryFrameLayout();
+      case 'corporate':
+        return renderCorporateLayout();
+      case 'minimal-dark':
+        return renderMinimalDarkLayout();
+      case 'gradient-overlay':
+        return renderGradientOverlayLayout();
+      case 'frosted-glass':
+        return renderFrostedGlassLayout();
+      default:
+        return renderCenteredLayout();
+    }
+  };
+
+  const renderCenteredLayout = () => (
+    <div style={{ ...styles.previewScreen, background: customColors.background }}>
+      {/* Cover Image */}
+      {images.coverImage && (
+        <div style={styles.previewCover}>
+          <img src={images.coverImage} alt="Cover" style={styles.previewCoverImg} />
+        </div>
+      )}
+
+      {/* Profile Section */}
+      <div style={styles.previewProfileSection}>
+        {images.profileImage && imageToggles.profileImage && (
+          <div style={{ position: 'relative' }}>
+            <img src={images.profileImage} alt="Profile" style={styles.previewAvatar} />
+            {theme.hasVerifiedBadge && (
+              <div style={{
+                position: 'absolute',
+                bottom: 5,
+                right: 5,
+                background: customColors.primary,
+                borderRadius: '50%',
+                width: 20,
+                height: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                color: '#fff'
+              }}>✓</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Personal Info */}
+      <div style={{ ...styles.previewInfoCard, borderColor: customColors.primary, textAlign: 'center' }}>
+        <h3 style={{ ...styles.previewName, color: customColors.text }}>
+          {personalInfo.name || 'Your Name'}
+        </h3>
+        <p style={{ ...styles.previewDesignation, color: customColors.secondary }}>
+          {personalInfo.designation || 'Your Designation'}
+        </p>
+        <p style={{ ...styles.previewCompany, color: customColors.text, opacity: 0.8 }}>
+          {personalInfo.company || 'Company Name'}
+        </p>
+      </div>
+
+      {/* Contact Info */}
+      {(phoneNumbers.filter(Boolean).length > 0 || emails.filter(Boolean).length > 0) && (
+        <div style={styles.previewContactSection}>
+          <h4 style={{ ...styles.previewSectionTitle, color: customColors.text }}>Contact Info</h4>
+          {phoneNumbers.filter(Boolean).map((phone, i) => (
+            <div key={i} style={{ ...styles.previewContactItem, color: customColors.text }}>
+              <span>📞</span>
+              <span>{phone}</span>
+            </div>
+          ))}
+          {emails.filter(Boolean).map((email, i) => (
+            <div key={i} style={{ ...styles.previewContactItem, color: customColors.text }}>
+              <span>📧</span>
+              <span>{email}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Social Media */}
+      {socialLinks.length > 0 && (
+        <div style={styles.previewContactSection}>
+          <h4 style={{ ...styles.previewSectionTitle, color: customColors.text }}>Social Media</h4>
+          <div style={styles.previewSocialIcons}>
+            {socialLinks.map((social, i) => (
+              <div key={i} style={{ ...styles.previewSocialIcon, borderColor: customColors.primary, color: customColors.primary }}>
+                {social.platform.substring(0, 2)}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CTA Button */}
+      <button style={{ ...styles.previewCtaBtn, background: customColors.primary, color: customColors.background }}>
+        Add to Contacts
+      </button>
+    </div>
+  );
+
+  const renderLogoCenteredLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 20
+    }}>
+      {/* Company Logo */}
+      {images.companyLogo && imageToggles.companyLogo && (
+        <div style={{
+          ...(theme.hasLogoFrame ? {
+            padding: 20,
+            borderRadius: 20,
+            background: 'rgba(255,255,255,0.1)',
+            border: `2px solid ${customColors.primary}`
+          } : {})
+        }}>
+          <img src={images.companyLogo} alt="Logo" style={{
+            width: 80,
+            height: 80,
+            objectFit: 'contain'
+          }} />
+        </div>
+      )}
+
+      {/* Profile Image */}
+      {images.profileImage && imageToggles.profileImage && (
+        <img src={images.profileImage} alt="Profile" style={{
+          width: 100,
+          height: 100,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          border: `3px solid ${customColors.primary}`
+        }} />
+      )}
+
+      {/* Personal Info */}
+      <div style={{ textAlign: 'center' }}>
+        <h3 style={{ ...styles.previewName, color: customColors.text, marginBottom: 8 }}>
+          {personalInfo.name || 'Your Name'}
+        </h3>
+        <p style={{ ...styles.previewDesignation, color: customColors.secondary, marginBottom: 4 }}>
+          {personalInfo.designation || 'Your Designation'}
+        </p>
+        <p style={{ ...styles.previewCompany, color: customColors.text, opacity: 0.8 }}>
+          {personalInfo.company || 'Company Name'}
+        </p>
+      </div>
+
+      {/* Simple Contact Info */}
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: customColors.text }}>
+            <span>📞</span>
+            <span style={{ fontSize: 12 }}>{phone}</span>
+          </div>
+        ))}
+        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, color: customColors.text }}>
+            <span>📧</span>
+            <span style={{ fontSize: 12 }}>{email}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Minimal Social Icons */}
+      {socialLinks.length > 0 && (
+        <div style={styles.previewSocialIcons}>
+          {socialLinks.slice(0, 4).map((social, i) => (
+            <div key={i} style={{ 
+              ...styles.previewSocialIcon, 
+              borderColor: customColors.primary, 
+              color: customColors.primary,
+              width: 35,
+              height: 35,
+              fontSize: 10
+            }}>
+              {social.platform.substring(0, 1)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderSplitViewLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 15,
+      padding: 15
+    }}>
+      {/* Left Side - Profile */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 15
+      }}>
+        {images.profileImage && imageToggles.profileImage && (
+          <img src={images.profileImage} alt="Profile" style={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: `2px solid ${customColors.primary}`
+          }} />
+        )}
+        
+        <div style={{ textAlign: 'center' }}>
+          <h3 style={{ ...styles.previewName, color: customColors.text, fontSize: 16, marginBottom: 4 }}>
+            {personalInfo.name || 'Your Name'}
+          </h3>
+          <p style={{ ...styles.previewDesignation, color: customColors.secondary, fontSize: 12 }}>
+            {personalInfo.designation || 'Designation'}
+          </p>
+        </div>
+      </div>
+
+      {/* Right Side - Details */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        justifyContent: 'center'
+      }}>
+        {/* Company */}
+        {personalInfo.company && (
+          <div style={{ color: customColors.text, fontSize: 12 }}>
+            <strong>Company:</strong> {personalInfo.company}
+          </div>
+        )}
+
+        {/* Phone */}
+        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+          <div key={i} style={{ color: customColors.text, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>📞</span>
+            <span>{phone}</span>
+          </div>
+        ))}
+
+        {/* Email */}
+        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+          <div key={i} style={{ color: customColors.text, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>📧</span>
+            <span>{email}</span>
+          </div>
+        ))}
+
+        {/* Social Media Mini */}
+        {socialLinks.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {socialLinks.slice(0, 3).map((social, i) => (
+              <div key={i} style={{
+                width: 25,
+                height: 25,
+                borderRadius: 6,
+                border: `1px solid ${customColors.primary}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 10,
+                color: customColors.primary
+              }}>
+                {social.platform.substring(0, 1)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Full Width CTA */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <button style={{ 
+          ...styles.previewCtaBtn, 
+          background: theme.hasGradientAccent 
+            ? `linear-gradient(135deg, ${customColors.primary}, ${customColors.secondary})`
+            : customColors.primary, 
+          color: customColors.background,
+          width: '100%'
+        }}>
+          Contact Me
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderIconGridLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 20,
+      padding: 20
+    }}>
+      {/* Header with Profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+        {images.profileImage && imageToggles.profileImage && (
+          <img src={images.profileImage} alt="Profile" style={{
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            objectFit: 'cover'
+          }} />
+        )}
+        <div>
+          <h3 style={{ ...styles.previewName, color: customColors.text, fontSize: 18, marginBottom: 4 }}>
+            {personalInfo.name || 'Your Name'}
+          </h3>
+          <p style={{ ...styles.previewDesignation, color: customColors.secondary, fontSize: 12 }}>
+            {personalInfo.designation || 'Your Designation'}
+          </p>
+        </div>
+      </div>
+
+      {/* Icon Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 15
+      }}>
+        {/* Phone */}
+        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 8,
+            padding: 12,
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: 12
+          }}>
+            <div style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              background: customColors.primary,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 14,
+              color: '#fff'
+            }}>📞</div>
+            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>Call</span>
+          </div>
+        ))}
+
+        {/* Email */}
+        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 8,
+            padding: 12,
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: 12
+          }}>
+            <div style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              background: customColors.primary,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 14,
+              color: '#fff'
+            }}>📧</div>
+            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>Email</span>
+          </div>
+        ))}
+
+        {/* Social Icons */}
+        {socialLinks.slice(0, 4).map((social, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 8,
+            padding: 12,
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: 12
+          }}>
+            <div style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              border: `2px solid ${customColors.primary}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              color: customColors.primary,
+              fontWeight: 'bold'
+            }}>
+              {social.platform.substring(0, 1)}
+            </div>
+            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>
+              {social.platform}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Company Info */}
+      {personalInfo.company && (
+        <div style={{
+          padding: 12,
+          background: 'rgba(255,255,255,0.05)',
+          borderRadius: 12,
+          textAlign: 'center'
+        }}>
+          <span style={{ color: customColors.text, fontSize: 12 }}>
+            {personalInfo.company}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderTechGridLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Glow Effect */}
+      {theme.hasGlowEffect && (
+        <div style={{
+          position: 'absolute',
+          top: -50,
+          right: -50,
+          width: 100,
+          height: 100,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${customColors.primary}20, transparent 70%)`,
+          filter: 'blur(10px)'
+        }}></div>
+      )}
+
+      <div style={{ padding: 20, position: 'relative', zIndex: 1 }}>
+        {/* Profile Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 20 }}>
+          {images.profileImage && imageToggles.profileImage && (
+            <img src={images.profileImage} alt="Profile" style={{
+              width: 60,
+              height: 60,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: `2px solid ${customColors.primary}`
+            }} />
+          )}
+          <div>
+            <h3 style={{ ...styles.previewName, color: customColors.text, fontSize: 18, marginBottom: 4 }}>
+              {personalInfo.name || 'Your Name'}
+            </h3>
+            <p style={{ ...styles.previewDesignation, color: customColors.secondary, fontSize: 12 }}>
+              {personalInfo.designation || 'Your Designation'}
+            </p>
+          </div>
+        </div>
+
+        {/* Tech Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: 12,
+          marginBottom: 20
+        }}>
+          {/* Phone */}
+          {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+            <div key={i} style={{
+              padding: 12,
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 8,
+              border: `1px solid ${customColors.primary}30`
+            }}>
+              <div style={{ color: customColors.primary, fontSize: 10, marginBottom: 4 }}>PHONE</div>
+              <div style={{ color: customColors.text, fontSize: 12 }}>{phone}</div>
+            </div>
+          ))}
+
+          {/* Email */}
+          {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+            <div key={i} style={{
+              padding: 12,
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 8,
+              border: `1px solid ${customColors.primary}30`
+            }}>
+              <div style={{ color: customColors.primary, fontSize: 10, marginBottom: 4 }}>EMAIL</div>
+              <div style={{ color: customColors.text, fontSize: 12 }}>{email}</div>
+            </div>
+          ))}
+
+          {/* Company */}
+          {personalInfo.company && (
+            <div style={{
+              padding: 12,
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 8,
+              border: `1px solid ${customColors.primary}30`,
+              gridColumn: '1 / -1'
+            }}>
+              <div style={{ color: customColors.primary, fontSize: 10, marginBottom: 4 }}>COMPANY</div>
+              <div style={{ color: customColors.text, fontSize: 12 }}>{personalInfo.company}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Social Links */}
+        {socialLinks.length > 0 && (
+          <div style={{
+            display: 'flex',
+            gap: 8,
+            justifyContent: 'center',
+            flexWrap: 'wrap'
+          }}>
+            {socialLinks.map((social, i) => (
+              <div key={i} style={{
+                padding: '8px 12px',
+                background: 'rgba(255,255,255,0.05)',
+                borderRadius: 20,
+                border: `1px solid ${customColors.primary}30`,
+                color: customColors.primary,
+                fontSize: 10,
+                fontWeight: 'bold'
+              }}>
+                {social.platform}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderLuxuryFrameLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      position: 'relative',
+      border: theme.hasGoldBorder ? `2px solid ${customColors.primary}` : 'none',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 20,
+      padding: 30
+    }}>
+      {/* Profile Image with Gold Border */}
+      {images.profileImage && imageToggles.profileImage && (
+        <div style={{
+          position: 'relative'
+        }}>
+          <img src={images.profileImage} alt="Profile" style={{
+            width: 100,
+            height: 100,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: `3px solid ${customColors.primary}`
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: -5,
+            right: -5,
+            width: 25,
+            height: 25,
+            borderRadius: '50%',
+            background: customColors.primary,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 12,
+            color: customColors.background,
+            fontWeight: 'bold'
+          }}>★</div>
+        </div>
+      )}
+
+      {/* Personal Info */}
+      <div style={{ textAlign: 'center' }}>
+        <h3 style={{ 
+          ...styles.previewName, 
+          color: customColors.text, 
+          fontSize: 22,
+          marginBottom: 8,
+          textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+        }}>
+          {personalInfo.name || 'Your Name'}
+        </h3>
+        <p style={{ 
+          ...styles.previewDesignation, 
+          color: customColors.primary,
+          fontSize: 14,
+          marginBottom: 4,
+          fontWeight: '600'
+        }}>
+          {personalInfo.designation || 'Your Designation'}
+        </p>
+        <p style={{ 
+          ...styles.previewCompany, 
+          color: customColors.text, 
+          opacity: 0.8,
+          fontSize: 12,
+          fontStyle: 'italic'
+        }}>
+          {personalInfo.company || 'Company Name'}
+        </p>
+      </div>
+
+      {/* Luxury Divider */}
+      <div style={{
+        width: '80%',
+        height: 1,
+        background: `linear-gradient(90deg, transparent, ${customColors.primary}, transparent)`,
+        margin: '10px 0'
+      }}></div>
+
+      {/* Contact in Columns */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 15,
+        width: '100%',
+        maxWidth: 250
+      }}>
+        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4
+          }}>
+            <div style={{ color: customColors.primary, fontSize: 20 }}>📞</div>
+            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>{phone}</span>
+          </div>
+        ))}
+
+        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 4
+          }}>
+            <div style={{ color: customColors.primary, fontSize: 20 }}>📧</div>
+            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>{email}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Social Media as Badges */}
+      {socialLinks.length > 0 && (
+        <div style={{
+          display: 'flex',
+          gap: 8,
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          {socialLinks.slice(0, 3).map((social, i) => (
+            <div key={i} style={{
+              padding: '6px 12px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: 15,
+              border: `1px solid ${customColors.primary}50`,
+              color: customColors.primary,
+              fontSize: 10,
+              fontWeight: 'bold'
+            }}>
+              {social.platform}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // Additional layout renderers for other themes
+  const renderCorporateLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      padding: 20
+    }}>
+      {/* Header with Badge */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div>
+          <h3 style={{ ...styles.previewName, color: customColors.text, fontSize: 18, marginBottom: 4 }}>
+            {personalInfo.name || 'Your Name'}
+          </h3>
+          <p style={{ ...styles.previewDesignation, color: customColors.secondary, fontSize: 12 }}>
+            {personalInfo.designation || 'Your Designation'}
+          </p>
+        </div>
+        {theme.hasBadge && (
+          <div style={{
+            padding: '4px 8px',
+            background: customColors.primary,
+            borderRadius: 4,
+            color: customColors.background,
+            fontSize: 10,
+            fontWeight: 'bold'
+          }}>
+            PRO
+          </div>
+        )}
+      </div>
+
+      {/* Company Info */}
+      {personalInfo.company && (
+        <div style={{
+          padding: 12,
+          background: 'rgba(255,255,255,0.05)',
+          borderRadius: 8,
+          marginBottom: 15,
+          borderLeft: `3px solid ${customColors.primary}`
+        }}>
+          <span style={{ color: customColors.text, fontSize: 12 }}>{personalInfo.company}</span>
+        </div>
+      )}
+
+      {/* Contact Details */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {phoneNumbers.filter(Boolean).map((phone, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              background: customColors.primary,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              color: '#fff'
+            }}>P</div>
+            <span style={{ color: customColors.text, fontSize: 12 }}>{phone}</span>
+          </div>
+        ))}
+
+        {emails.filter(Boolean).map((email, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 30,
+              height: 30,
+              borderRadius: '50%',
+              background: customColors.primary,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              color: '#fff'
+            }}>E</div>
+            <span style={{ color: customColors.text, fontSize: 12 }}>{email}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Social Media */}
+      {socialLinks.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ ...styles.previewSectionTitle, color: customColors.text, fontSize: 12, marginBottom: 10 }}>
+            Connect With Me
+          </div>
+          <div style={styles.previewSocialIcons}>
+            {socialLinks.map((social, i) => (
+              <div key={i} style={{ 
+                ...styles.previewSocialIcon, 
+                borderColor: customColors.primary, 
+                color: customColors.primary,
+                width: 35,
+                height: 35,
+                fontSize: 10
+              }}>
+                {social.platform.substring(0, 1)}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderMinimalDarkLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 25,
+      padding: 30
+    }}>
+      {/* Profile Image */}
+      {images.profileImage && imageToggles.profileImage && (
+        <img src={images.profileImage} alt="Profile" style={{
+          width: 80,
+          height: 80,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          border: theme.hasElegantBorder ? `2px solid ${customColors.primary}` : 'none'
+        }} />
+      )}
+
+      {/* Personal Info */}
+      <div style={{ textAlign: 'center' }}>
+        <h3 style={{ 
+          ...styles.previewName, 
+          color: customColors.text, 
+          fontSize: 20,
+          marginBottom: 8,
+          fontWeight: '300',
+          letterSpacing: '1px'
+        }}>
+          {personalInfo.name || 'Your Name'}
+        </h3>
+        <p style={{ 
+          ...styles.previewDesignation, 
+          color: customColors.primary,
+          fontSize: 12,
+          marginBottom: 4,
+          fontWeight: '400'
+        }}>
+          {personalInfo.designation || 'Your Designation'}
+        </p>
+      </div>
+
+      {/* Minimal Contact */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+          <div key={i} style={{ color: customColors.text, fontSize: 12, opacity: 0.8 }}>
+            {phone}
+          </div>
+        ))}
+        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+          <div key={i} style={{ color: customColors.text, fontSize: 12, opacity: 0.8 }}>
+            {email}
+          </div>
+        ))}
+      </div>
+
+      {/* Social Media as Minimal Dots */}
+      {socialLinks.length > 0 && (
+        <div style={{
+          display: 'flex',
+          gap: 15,
+          justifyContent: 'center'
+        }}>
+          {socialLinks.slice(0, 4).map((social, i) => (
+            <div key={i} style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: customColors.primary,
+              opacity: 0.7
+            }}></div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderGradientOverlayLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Gradient Overlay */}
+      {theme.hasOverlay && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `linear-gradient(135deg, ${customColors.primary}20, ${customColors.secondary}20)`,
+          zIndex: 0
+        }}></div>
+      )}
+
+      <div style={{ position: 'relative', zIndex: 1, padding: 20, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        {/* Profile at Bottom */}
+        <div style={{ textAlign: 'center', marginBottom: 30 }}>
+          {images.profileImage && imageToggles.profileImage && (
+            <img src={images.profileImage} alt="Profile" style={{
+              width: 70,
+              height: 70,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              marginBottom: 15,
+              border: `2px solid ${customColors.primary}`
+            }} />
+          )}
+          
+          <h3 style={{ 
+            ...styles.previewName, 
+            color: customColors.text, 
+            fontSize: 18,
+            marginBottom: 6
+          }}>
+            {personalInfo.name || 'Your Name'}
+          </h3>
+          <p style={{ 
+            ...styles.previewDesignation, 
+            color: customColors.primary,
+            fontSize: 12,
+            marginBottom: 4
+          }}>
+            {personalInfo.designation || 'Your Designation'}
+          </p>
+          {personalInfo.company && (
+            <p style={{ 
+              color: customColors.text, 
+              fontSize: 11,
+              opacity: 0.8
+            }}>
+              {personalInfo.company}
+            </p>
+          )}
+        </div>
+
+        {/* Contact Info at Bottom */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          background: 'rgba(0,0,0,0.3)',
+          borderRadius: 15,
+          padding: 15
+        }}>
+          {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{ color: customColors.primary, fontSize: 20, marginBottom: 4 }}>📞</div>
+              <span style={{ color: customColors.text, fontSize: 10 }}>Call</span>
+            </div>
+          ))}
+
+          {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{ color: customColors.primary, fontSize: 20, marginBottom: 4 }}>📧</div>
+              <span style={{ color: customColors.text, fontSize: 10 }}>Email</span>
+            </div>
+          ))}
+
+          {socialLinks.length > 0 && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: customColors.primary, fontSize: 20, marginBottom: 4 }}>🔗</div>
+              <span style={{ color: customColors.text, fontSize: 10 }}>Social</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFrostedGlassLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Frosted Glass Background */}
+      {theme.hasGlassEffect && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 0
+        }}></div>
+      )}
+
+      <div style={{ position: 'relative', zIndex: 1, padding: 25 }}>
+        {/* Profile Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 25 }}>
+          {images.profileImage && imageToggles.profileImage && (
+            <img src={images.profileImage} alt="Profile" style={{
+              width: 70,
+              height: 70,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: `2px solid ${customColors.primary}`
+            }} />
+          )}
+          <div>
+            <h3 style={{ 
+              ...styles.previewName, 
+              color: customColors.text, 
+              fontSize: 20,
+              marginBottom: 6
+            }}>
+              {personalInfo.name || 'Your Name'}
+            </h3>
+            <p style={{ 
+              ...styles.previewDesignation, 
+              color: customColors.primary,
+              fontSize: 13,
+              marginBottom: 4
+            }}>
+              {personalInfo.designation || 'Your Designation'}
+            </p>
+          </div>
+        </div>
+
+        {/* Glass Cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+            <div key={i} style={{
+              padding: 15,
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: 12,
+              backdropFilter: 'blur(5px)',
+              border: `1px solid rgba(255,255,255,0.2)`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ color: customColors.primary, fontSize: 16 }}>📞</div>
+                <span style={{ color: customColors.text, fontSize: 13 }}>{phone}</span>
+              </div>
+            </div>
+          ))}
+
+          {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+            <div key={i} style={{
+              padding: 15,
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: 12,
+              backdropFilter: 'blur(5px)',
+              border: `1px solid rgba(255,255,255,0.2)`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ color: customColors.primary, fontSize: 16 }}>📧</div>
+                <span style={{ color: customColors.text, fontSize: 13 }}>{email}</span>
+              </div>
+            </div>
+          ))}
+
+          {personalInfo.company && (
+            <div style={{
+              padding: 15,
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: 12,
+              backdropFilter: 'blur(5px)',
+              border: `1px solid rgba(255,255,255,0.2)`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ color: customColors.primary, fontSize: 16 }}>🏢</div>
+                <span style={{ color: customColors.text, fontSize: 13 }}>{personalInfo.company}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Social Media */}
+        {socialLinks.length > 0 && (
+          <div style={{
+            display: 'flex',
+            gap: 10,
+            justifyContent: 'center',
+            marginTop: 20,
+            flexWrap: 'wrap'
+          }}>
+            {socialLinks.slice(0, 4).map((social, i) => (
+              <div key={i} style={{
+                padding: '8px 12px',
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: 20,
+                backdropFilter: 'blur(5px)',
+                border: `1px solid rgba(255,255,255,0.2)`,
+                color: customColors.primary,
+                fontSize: 11,
+                fontWeight: 'bold'
+              }}>
+                {social.platform}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   const renderPersonalTab = () => (
     <>
@@ -616,11 +1747,20 @@ const CardCustomization = () => {
             >
               <div style={{ ...styles.themePreview, background: themeOption.background }}>
                 <div style={styles.themePreviewContent}>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: themeOption.textColor }}>
+                  <div style={{ 
+                    fontSize: 24, 
+                    fontWeight: 700, 
+                    color: themeOption.textColor,
+                    marginBottom: 8
+                  }}>
                     {themeOption.name.substring(0, 2).toUpperCase()}
                   </div>
-                  <div style={{ fontSize: 10, color: themeOption.secondaryColor, marginTop: 8 }}>
-                    Sample Text
+                  <div style={{ 
+                    fontSize: 10, 
+                    color: themeOption.secondaryColor,
+                    textAlign: 'center'
+                  }}>
+                    {themeOption.layout.replace('-', ' ')}
                   </div>
                 </div>
               </div>
@@ -713,77 +1853,9 @@ const CardCustomization = () => {
 
       {/* PREVIEW SECTION */}
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Live Preview</h3>
+        <h3 style={styles.sectionTitle}>Live Preview - {theme.name} Theme</h3>
         <div style={{ ...styles.previewPhone, background: theme.background }}>
-          <div style={{ ...styles.previewScreen, background: customColors.background }}>
-            {/* Cover Image */}
-            {images.coverImage && (
-              <div style={styles.previewCover}>
-                <img src={images.coverImage} alt="Cover" style={styles.previewCoverImg} />
-              </div>
-            )}
-
-            {/* Profile Section */}
-            <div style={styles.previewProfileSection}>
-              {images.profileImage && imageToggles.profileImage && (
-                <img src={images.profileImage} alt="Profile" style={styles.previewAvatar} />
-              )}
-              {images.companyLogo && imageToggles.companyLogo && (
-                <img src={images.companyLogo} alt="Logo" style={styles.previewLogo} />
-              )}
-            </div>
-
-            {/* Personal Info */}
-            <div style={{ ...styles.previewInfoCard, borderColor: customColors.primary }}>
-              <h3 style={{ ...styles.previewName, color: customColors.text }}>
-                {personalInfo.name || 'Your Name'}
-              </h3>
-              <p style={{ ...styles.previewDesignation, color: customColors.secondary }}>
-                {personalInfo.designation || 'Your Designation'}
-              </p>
-              <p style={{ ...styles.previewCompany, color: customColors.text, opacity: 0.8 }}>
-                {personalInfo.company || 'Company Name'}
-              </p>
-            </div>
-
-            {/* Contact Info */}
-            {(phoneNumbers.filter(Boolean).length > 0 || emails.filter(Boolean).length > 0) && (
-              <div style={styles.previewContactSection}>
-                <h4 style={{ ...styles.previewSectionTitle, color: customColors.text }}>Contact Info</h4>
-                {phoneNumbers.filter(Boolean).map((phone, i) => (
-                  <div key={i} style={{ ...styles.previewContactItem, color: customColors.text }}>
-                    <span>📞</span>
-                    <span>{phone}</span>
-                  </div>
-                ))}
-                {emails.filter(Boolean).map((email, i) => (
-                  <div key={i} style={{ ...styles.previewContactItem, color: customColors.text }}>
-                    <span>📧</span>
-                    <span>{email}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Social Media */}
-            {socialLinks.length > 0 && (
-              <div style={styles.previewContactSection}>
-                <h4 style={{ ...styles.previewSectionTitle, color: customColors.text }}>Social Media</h4>
-                <div style={styles.previewSocialIcons}>
-                  {socialLinks.map((social, i) => (
-                    <div key={i} style={{ ...styles.previewSocialIcon, borderColor: customColors.primary, color: customColors.primary }}>
-                      {social.platform.substring(0, 2)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* CTA Button */}
-            <button style={{ ...styles.previewCtaBtn, background: customColors.primary, color: customColors.background }}>
-              Add to Contacts
-            </button>
-          </div>
+          {renderThemeLayout()}
         </div>
       </div>
 
