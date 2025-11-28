@@ -18,6 +18,7 @@ import ShopPage from './components/ShopPage';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
+
   const [auth, setAuth] = useState(() => {
     if (typeof window === 'undefined') {
       return { user: null, token: null };
@@ -35,48 +36,39 @@ function App() {
     } catch (error) {
       console.error('Failed to parse auth from storage:', error);
     }
+
     return { user: null, token: null };
   });
 
   useEffect(() => {
-    // Check initial route
     const checkRoute = () => {
       const path = window.location.pathname;
-      if (path.startsWith('/customize')) {
-        setActiveView('customize');
-      } else if (path.startsWith('/dashboard')) {
+
+      if (path.startsWith('/customize')) setActiveView('customize');
+      else if (path.startsWith('/dashboard')) {
         if (auth?.user && auth?.token) {
           setActiveView('dashboard');
         } else {
           setActiveView('landing');
           window.history.replaceState({}, '', '/');
         }
-      } else if (path.startsWith('/reset-password')) {
-        setActiveView('reset-password');
-      } else if (path.startsWith('/blog')) {
-        setActiveView('blog');
-      } else if (path.startsWith('/contact')){
-        setActiveView('contact');
-      }else if (path.startsWith('/shop')){
-        setActiveView('shop');
       }
-       else if (path.startsWith('/create-qrCode') || path.startsWith('/create-qr')) {
+      else if (path.startsWith('/reset-password')) setActiveView('reset-password');
+      else if (path.startsWith('/blog')) setActiveView('blog');
+      else if (path.startsWith('/contact')) setActiveView('contact');
+      else if (path.startsWith('/shop')) setActiveView('shop');
+      else if (path.startsWith('/create-qrCode') || path.startsWith('/create-qr')) {
         setActiveView('create-qr');
-      } else {
-        setActiveView('landing');
       }
+      else setActiveView('landing');
     };
 
     checkRoute();
 
-    // Listen for navigation events
-    const handleNavigation = () => {
-      checkRoute();
-    };
-
+    const handleNavigation = () => checkRoute();
     window.addEventListener('popstate', handleNavigation);
     window.addEventListener('navigate', handleNavigation);
-    
+
     return () => {
       window.removeEventListener('popstate', handleNavigation);
       window.removeEventListener('navigate', handleNavigation);
@@ -103,74 +95,9 @@ function App() {
     window.history.pushState({}, '', '/');
   };
 
-  if (activeView === 'customize') {
-    return (
-      <div className="App">
-        <CardCustomization />
-         <WhatsappChat />
-      </div>
-    );
-  }
-   if (activeView === 'shop') {
-    return (
-      <div className="App">
-        <Header />
-        <ShopPage />
-         <WhatsappChat />
-         <Footer />
-      </div>
-    );
-  }
-
-  if (activeView === 'reset-password') {
-    return (
-      <div className="App">
-        <ResetPassword />
-      </div>
-    );
-  }
-
-  if (activeView === 'blog') {
-    return (
-      <div className="App">
-        <Header
-          user={auth.user}
-          onLoginSuccess={handleLoginSuccess}
-          onLogout={handleLogout}
-          isDashboard={false}
-        />
-        <Blog />
-         <WhatsappChat />
-        <Footer />
-      </div>
-    );
-  }
-  if (activeView === 'contact') {
-    return (
-      <div className="App">
-        <Header
-          user={auth.user}
-          onLoginSuccess={handleLoginSuccess}
-          onLogout={handleLogout}
-          isDashboard={false}
-        />
-        <ContactUs />
-        <WhatsappChat />
-          <Footer />
-      </div>
-    );
-  }
-
-  if (activeView === 'create-qr') {
-    return (
-      <div className="App">
-        <CreateQR />
-      </div>
-    );
-  }
-
   return (
     <div className="App">
+      {/* HEADER (hide only on dashboard) */}
       {activeView !== 'dashboard' && (
         <Header
           user={auth.user}
@@ -179,22 +106,39 @@ function App() {
           isDashboard={false}
         />
       )}
-      {activeView === 'dashboard' ? (
-        <Dashboard user={auth.user} token={auth.token} onLogout={handleLogout} />
-      ) : (
+
+      {/* PAGE CONTENTS */}
+      {activeView === 'landing' && (
         <>
           <Hero />
-          <WhatsappChat />
           <About />
           <WhyChooseUs />
-          {/* <Clients /> */}
           <Sustainability />
-          <Footer />
         </>
       )}
+
+      {activeView === 'customize' && <CardCustomization />}
+      {activeView === 'shop' && <ShopPage />}
+      {activeView === 'reset-password' && <ResetPassword />}
+      {activeView === 'blog' && <Blog />}
+      {activeView === 'contact' && <ContactUs />}
+      {activeView === 'create-qr' && <CreateQR />}
+
+      {activeView === 'dashboard' && (
+        <Dashboard
+          user={auth.user}
+          token={auth.token}
+          onLogout={handleLogout}
+        />
+      )}
+
+      {/* WHATSAPP → SHOW ON ALL PAGES */}
+      <WhatsappChat />
+
+      {/* FOOTER → HIDE on dashboard + reset-password */}
+      {activeView !== 'dashboard' && activeView !== 'reset-password' && <Footer />}
     </div>
   );
 }
 
 export default App;
-

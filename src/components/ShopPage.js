@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { getUserId } from './Utils';
+import axios from 'axios';
+import Login from './Login';
+import toast from 'react-hot-toast';
 
 const ShopPage = () => {
   const [products, setProducts] = useState([]);
@@ -10,6 +14,33 @@ const ShopPage = () => {
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [maxPrice, setMaxPrice] = useState(100000);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
+ const handleAddToCart = async (productId) => {
+  const userId = getUserId();
+
+  if (!userId) {
+    setShowLogin(true);   // ⬅️ Open login modal
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      "https://pg-cards.vercel.app/cart/addToCart",
+      {
+        userId,
+        productId
+      }
+    );
+
+    if (response.status === 200) {
+      toast.success("Added to cart successfully!");
+    }
+  } catch (error) {
+    console.error("Cart error:", error);
+    alert("Something went wrong");
+  }
+};
 
   useEffect(() => {
     fetchProducts();
@@ -367,13 +398,13 @@ const ShopPage = () => {
                       )}
                     </div>
 
-                    <button
-                      onClick={() => openProductModal(product)}
-                      style={styles.addToCartButton}
-                      className="add-to-cart-btn"
-                    >
-                      Add to Cart
-                    </button>
+                   <button
+  onClick={() => handleAddToCart(product._id)}
+  style={styles.addToCartButton}
+  className="add-to-cart-btn"
+>
+  Add to Cart
+</button>
                   </div>
                 </div>
               );
@@ -463,6 +494,9 @@ const ShopPage = () => {
                     ))}
                   </ul>
                 </div>
+                {showLogin && (
+  <Login onClose={() => setShowLogin(false)} />
+)}
 
                 <div style={styles.selectedVariantInfo}>
                   <div style={styles.selectedVariantHeader}>
@@ -492,17 +526,23 @@ const ShopPage = () => {
                   </div>
                 </div>
 
-                <button style={styles.buyButton}>
-                  Add to Cart
-                </button>
+                <button 
+  style={styles.buyButton}
+  onClick={() => handleAddToCart(selectedProduct._id)}
+>
+  Add to Cart
+</button>
+
               </div>
             </div>
           </div>
         </div>
+        
       )}
     </div>
   );
 };
+
 
 const styles = {
   container: {

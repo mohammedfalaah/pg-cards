@@ -29,6 +29,7 @@
 }
 
 .login-modal {
+    overflow-x: hidden;
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     border: 2px solid var(--gold);
     border-radius: 16px;
@@ -87,7 +88,6 @@
     font-size: 32px;
     font-weight: 800;
     color: var(--text-white);
-    margin: 20px 0 10px;
 }
 
 .login-subtitle {

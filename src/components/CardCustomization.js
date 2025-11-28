@@ -28,7 +28,8 @@ const premiumThemes = [
     cardBg: '#ffffff',
     layout: 'centered',
     hasVerifiedBadge: true,
-    profilePosition: 'top-center'
+    profilePosition: 'top-center',
+    type: 'professional'
   },
   {
     id: 'classic',
@@ -41,33 +42,50 @@ const premiumThemes = [
     cardBg: '#f5f5f5',
     layout: 'logo-centered',
     hasLogoFrame: true,
-    profilePosition: 'middle-center'
+    profilePosition: 'middle-center',
+    type: 'corporate'
   },
   {
-    id: 'iconic',
-    name: 'Iconic',
-    description: 'Minimalist white with icon-based layout',
-    background: 'linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%)',
-    accent: '#1e88e5',
-    textColor: '#212121',
-    secondaryColor: '#42a5f5',
-    cardBg: '#ffffff',
-    layout: 'icon-grid',
-    hasIcons: true,
-    profilePosition: 'top-left'
-  },
-  {
-    id: 'digital',
-    name: 'Digital',
-    description: 'Modern dark theme with cyan accents',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-    accent: '#00d9ff',
+    id: 'modern',
+    name: 'Modern',
+    description: 'Instagram-like profile with modern layout',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    accent: '#405de6',
     textColor: '#ffffff',
-    secondaryColor: '#4dd4ff',
-    cardBg: '#16213e',
-    layout: 'tech-grid',
-    hasGlowEffect: true,
-    profilePosition: 'center-top'
+    secondaryColor: '#c13584',
+    cardBg: 'rgba(255,255,255,0.1)',
+    layout: 'instagram-profile',
+    hasGradient: true,
+    profilePosition: 'top-center',
+    type: 'social'
+  },
+  {
+    id: 'linkedin',
+    name: 'Classic',
+    description: 'Professional LinkedIn-inspired layout',
+    background: 'linear-gradient(135deg, #0077b5 0%, #00a0dc 100%)',
+    accent: '#0077b5',
+    textColor: '#ffffff',
+    secondaryColor: '#00a0dc',
+    cardBg: 'rgba(255,255,255,0.9)',
+    layout: 'linkedin-profile',
+    hasProfessionalLayout: true,
+    profilePosition: 'top-left',
+    type: 'professional'
+  },
+  {
+    id: 'map',
+    name: 'Location Map',
+    description: 'Google Maps integration with location focus',
+    background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
+    accent: '#4285F4',
+    textColor: '#ffffff',
+    secondaryColor: '#34A853',
+    cardBg: 'rgba(255,255,255,0.95)',
+    layout: 'map-location',
+    hasMapIntegration: true,
+    profilePosition: 'center-top',
+    type: 'location'
   },
   {
     id: 'epic',
@@ -80,35 +98,8 @@ const premiumThemes = [
     cardBg: '#0a0a0a',
     layout: 'luxury-frame',
     hasGoldBorder: true,
-    profilePosition: 'middle-center'
-  },
-  
-  {
-    id: 'obsidian',
-    name: 'Black Obsidian',
-    description: 'Matte black with premium gold accents',
-    background: 'linear-gradient(135deg, #050505 0%, #0A0A10 100%)',
-    accent: '#E3BB6B',
-    textColor: '#ffffff',
-    secondaryColor: '#E8C987',
-    cardBg: '#0A0A10',
-    layout: 'minimal-dark',
-    hasElegantBorder: true,
-    profilePosition: 'center-middle'
-  },
-  
-  {
-    id: 'polar',
-    name: 'Arctic Frost',
-    description: 'Bright whites with champagne gold',
-    background: 'linear-gradient(135deg, #f4f4f7 0%, #e4e4ed 100%)',
-    accent: '#c9a260',
-    textColor: '#333333',
-    secondaryColor: '#e7cfa4',
-    cardBg: '#ffffff',
-    layout: 'frosted-glass',
-    hasGlassEffect: true,
-    profilePosition: 'top-center'
+    profilePosition: 'middle-center',
+    type: 'luxury'
   }
 ];
 
@@ -128,31 +119,35 @@ const CardCustomization = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [selectedTheme, setSelectedTheme] = useState(premiumThemes[0].id);
   const [customColors, setCustomColors] = useState({
-    primary: '#E3BB6B',
-    secondary: '#E8C987',
-    text: '#ffffff',
-    background: '#0A0A10'
+    primary: '#28a745',
+    secondary: '#6c757d',
+    text: '#000000',
+    background: '#ffffff'
   });
   const [customUrlEnabled, setCustomUrlEnabled] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
   const [personalInfo, setPersonalInfo] = useState({
-    name: '',
-    designation: '',
+    name: 'John Doe',
+    designation: 'Software Engineer',
     phone: '',
     email: '',
-    company: '',
-    address: '',
+    company: 'Tech Company Inc.',
+    address: '123 Business Street, City, Country',
     website: '',
     tagline: '',
-    about: '',
+    about: 'Experienced software developer with passion for creating innovative solutions and leading technical teams.',
     aboutCompany: '',
     ctaButton: '',
     logo: ''
   });
   const [socialForm, setSocialForm] = useState({ platform: '', link: '' });
-  const [socialLinks, setSocialLinks] = useState([]);
-  const [phoneNumbers, setPhoneNumbers] = useState(['']);
-  const [emails, setEmails] = useState(['']);
+  const [socialLinks, setSocialLinks] = useState([
+    { platform: 'Linkedin', link: 'https://linkedin.com/in/johndoe' },
+    { platform: 'Instagram', link: 'https://instagram.com/johndoe' },
+    { platform: 'Twitter', link: 'https://twitter.com/johndoe' }
+  ]);
+  const [phoneNumbers, setPhoneNumbers] = useState(['+1 (555) 123-4567']);
+  const [emails, setEmails] = useState(['john.doe@company.com']);
   const [logoSize, setLogoSize] = useState(100);
   const [images, setImages] = useState({
     coverImage: '',
@@ -165,10 +160,15 @@ const CardCustomization = () => {
     companyLogo: true
   });
   const [contactDetails, setContactDetails] = useState([
-    { label: "Address", value: "" },
-    { label: "State", value: "" },
-    { label: "Country", value: "" },
+    { label: "Address", value: "123 Business Street" },
+    { label: "State", value: "California" },
+    { label: "Country", value: "United States" },
   ]);
+  const [location, setLocation] = useState({
+    address: '123 Business Street, City, Country',
+    lat: 37.7749,
+    lng: -122.4194
+  });
   const [accordionOpen, setAccordionOpen] = useState({
     phones: true,
     emails: false,
@@ -294,26 +294,360 @@ const CardCustomization = () => {
         return renderCenteredLayout();
       case 'logo-centered':
         return renderLogoCenteredLayout();
-      case 'split-view':
-        return renderSplitViewLayout();
-      case 'icon-grid':
-        return renderIconGridLayout();
+      case 'instagram-profile':
+        return renderInstagramLayout();
+      case 'linkedin-profile':
+        return renderLinkedInLayout();
+      case 'map-location':
+        return renderMapLayout();
       case 'tech-grid':
         return renderTechGridLayout();
       case 'luxury-frame':
         return renderLuxuryFrameLayout();
-      case 'corporate':
-        return renderCorporateLayout();
-      case 'minimal-dark':
-        return renderMinimalDarkLayout();
-      case 'gradient-overlay':
-        return renderGradientOverlayLayout();
-      case 'frosted-glass':
-        return renderFrostedGlassLayout();
       default:
         return renderCenteredLayout();
     }
   };
+
+  const renderInstagramLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      padding: 0,
+      overflow: 'hidden'
+    }}>
+      {/* Instagram-style Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '60px 20px 20px 20px',
+        textAlign: 'center',
+        position: 'relative'
+      }}>
+        {images.profileImage && imageToggles.profileImage && (
+          <img src={images.profileImage} alt="Profile" style={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '3px solid white',
+            marginBottom: 15
+          }} />
+        )}
+        
+        <h3 style={{ color: '#fff', margin: '8px 0', fontSize: 18, fontWeight: '600' }}>
+          {personalInfo.name || 'Your Name'}
+        </h3>
+        <p style={{ color: 'rgba(255,255,255,0.9)', margin: '4px 0', fontSize: 14 }}>
+          {personalInfo.designation || 'Your Designation'}
+        </p>
+        <p style={{ color: 'rgba(255,255,255,0.8)', margin: '4px 0', fontSize: 12 }}>
+          {personalInfo.company || 'Company Name'}
+        </p>
+      </div>
+
+      {/* Stats Bar */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        padding: '15px 0',
+        background: 'rgba(255,255,255,0.95)',
+        borderBottom: '1px solid #e0e0e0'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontWeight: 'bold', color: customColors.primary }}>125</div>
+          <div style={{ fontSize: 12, color: '#666' }}>Connections</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontWeight: 'bold', color: customColors.primary }}>47</div>
+          <div style={{ fontSize: 12, color: '#666' }}>Posts</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontWeight: 'bold', color: customColors.primary }}>89</div>
+          <div style={{ fontSize: 12, color: '#666' }}>Following</div>
+        </div>
+      </div>
+
+      {/* Contact Info */}
+      <div style={{ padding: 20 }}>
+        <div style={{ marginBottom: 15 }}>
+          <h4 style={{ color: customColors.text, marginBottom: 10, fontSize: 14 }}>Contact Information</h4>
+          {phoneNumbers.filter(Boolean).map((phone, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={{ color: customColors.primary, fontSize: 16 }}>📞</div>
+              <span style={{ color: customColors.text, fontSize: 14 }}>{phone}</span>
+            </div>
+          ))}
+          {emails.filter(Boolean).map((email, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={{ color: customColors.primary, fontSize: 16 }}>📧</div>
+              <span style={{ color: customColors.text, fontSize: 14 }}>{email}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Social Links */}
+        {socialLinks.length > 0 && (
+          <div>
+            <h4 style={{ color: customColors.text, marginBottom: 10, fontSize: 14 }}>Social Media</h4>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {socialLinks.map((social, i) => (
+                <div key={i} style={{
+                  padding: '8px 12px',
+                  background: customColors.primary,
+                  borderRadius: 20,
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 'bold'
+                }}>
+                  {social.platform}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderLinkedInLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: '#f3f2ef',
+      padding: 0,
+      overflow: 'hidden'
+    }}>
+      {/* LinkedIn-style Header */}
+      <div style={{
+        background: customColors.primary,
+        height: 60,
+        position: 'relative'
+      }}>
+        {images.profileImage && imageToggles.profileImage && (
+          <img src={images.profileImage} alt="Profile" style={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '3px solid white',
+            position: 'absolute',
+            bottom: -40,
+            left: 20
+          }} />
+        )}
+      </div>
+
+      {/* Profile Info */}
+      <div style={{ padding: '50px 20px 20px 20px', background: '#fff', margin: '0 10px', borderRadius: '8px 8px 0 0' }}>
+        <h3 style={{ color: '#000', margin: '0 0 5px 0', fontSize: 20, fontWeight: '600' }}>
+          {personalInfo.name || 'Your Name'}
+        </h3>
+        <p style={{ color: customColors.primary, margin: '0 0 5px 0', fontSize: 14, fontWeight: '500' }}>
+          {personalInfo.designation || 'Your Designation'}
+        </p>
+        <p style={{ color: '#666', margin: '0 0 15px 0', fontSize: 12 }}>
+          {personalInfo.company || 'Company Name'}
+        </p>
+
+        {/* Connection Button */}
+        <button style={{
+          width: '100%',
+          padding: '8px',
+          background: customColors.primary,
+          color: '#fff',
+          border: 'none',
+          borderRadius: 20,
+          fontWeight: '600',
+          fontSize: 14,
+          cursor: 'pointer'
+        }}>
+          Connect
+        </button>
+      </div>
+
+      {/* About Section */}
+      <div style={{ padding: '15px 20px', background: '#fff', margin: '10px 10px', borderRadius: 8 }}>
+        <h4 style={{ color: '#000', marginBottom: 10, fontSize: 16 }}>About</h4>
+        <p style={{ color: '#666', fontSize: 12, lineHeight: 1.4 }}>
+          {personalInfo.about || 'Professional with experience in software development and team leadership.'}
+        </p>
+      </div>
+
+      {/* Contact Info */}
+      <div style={{ padding: '15px 20px', background: '#fff', margin: '0 10px', borderRadius: '0 0 8px 8px' }}>
+        <h4 style={{ color: '#000', marginBottom: 10, fontSize: 16 }}>Contact Info</h4>
+        {phoneNumbers.filter(Boolean).map((phone, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ color: customColors.primary, fontSize: 14 }}>📞</div>
+            <span style={{ color: '#666', fontSize: 14 }}>{phone}</span>
+          </div>
+        ))}
+        {emails.filter(Boolean).map((email, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ color: customColors.primary, fontSize: 14 }}>📧</div>
+            <span style={{ color: '#666', fontSize: 14 }}>{email}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderMapLayout = () => (
+    <div style={{ 
+      ...styles.previewScreen, 
+      background: customColors.background,
+      padding: 0,
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
+      {/* Map Header */}
+      <div style={{
+        height: '40%',
+        background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {/* Simplified Map Visualization */}
+        <div style={{
+          width: '80%',
+          height: '60%',
+          background: 'rgba(255,255,255,0.2)',
+          borderRadius: 10,
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Map Grid */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              linear-gradient(90deg, transparent 95%, rgba(255,255,255,0.3) 95%),
+              linear-gradient(0deg, transparent 95%, rgba(255,255,255,0.3) 95%)
+            `,
+            backgroundSize: '20px 20px'
+          }}></div>
+          
+          {/* Location Pin */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#EA4335',
+            fontSize: 24
+          }}>📍</div>
+        </div>
+      </div>
+
+      {/* Profile Content */}
+      <div style={{
+        position: 'absolute',
+        top: '30%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: '#fff',
+        borderRadius: 15,
+        padding: 15,
+        width: '80%',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        textAlign: 'center'
+      }}>
+        {images.profileImage && imageToggles.profileImage && (
+          <img src={images.profileImage} alt="Profile" style={{
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '3px solid #fff',
+            marginTop: -45,
+            marginBottom: 10
+          }} />
+        )}
+
+        <h3 style={{ color: '#000', margin: '5px 0', fontSize: 16, fontWeight: '600' }}>
+          {personalInfo.name || 'Your Name'}
+        </h3>
+        <p style={{ color: customColors.primary, margin: '2px 0', fontSize: 12, fontWeight: '500' }}>
+          {personalInfo.designation || 'Your Designation'}
+        </p>
+        <p style={{ color: '#666', margin: '2px 0', fontSize: 11 }}>
+          {personalInfo.company || 'Company Name'}
+        </p>
+      </div>
+
+      {/* Location Details */}
+      <div style={{ padding: '60% 20px 20px 20px' }}>
+        <h4 style={{ color: customColors.text, marginBottom: 15, fontSize: 16 }}>Location</h4>
+        
+        <div style={{
+          background: 'rgba(66, 133, 244, 0.1)',
+          borderRadius: 10,
+          padding: 15,
+          marginBottom: 15,
+          border: '1px solid rgba(66, 133, 244, 0.2)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <div style={{ color: customColors.primary, fontSize: 16 }}>📍</div>
+            <div>
+              <div style={{ color: customColors.text, fontSize: 14, fontWeight: '500', marginBottom: 5 }}>
+                Business Location
+              </div>
+              <div style={{ color: '#666', fontSize: 12 }}>
+                {personalInfo.address || '123 Business Street, City, Country'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Info */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.8)',
+              borderRadius: 8,
+              padding: 10,
+              textAlign: 'center'
+            }}>
+              <div style={{ color: customColors.primary, fontSize: 12, marginBottom: 4 }}>📞</div>
+              <div style={{ color: customColors.text, fontSize: 10 }}>{phone}</div>
+            </div>
+          ))}
+          
+          {emails.filter(Boolean).slice(0, 1).map((email, i) => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.8)',
+              borderRadius: 8,
+              padding: 10,
+              textAlign: 'center'
+            }}>
+              <div style={{ color: customColors.primary, fontSize: 12, marginBottom: 4 }}>📧</div>
+              <div style={{ color: customColors.text, fontSize: 10 }}>{email}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Get Directions Button */}
+        <button style={{
+          width: '100%',
+          padding: '12px',
+          background: customColors.primary,
+          color: '#fff',
+          border: 'none',
+          borderRadius: 10,
+          fontWeight: '600',
+          fontSize: 14,
+          marginTop: 15,
+          cursor: 'pointer'
+        }}>
+          Get Directions
+        </button>
+      </div>
+    </div>
+  );
 
   const renderCenteredLayout = () => (
     <div style={{ ...styles.previewScreen, background: customColors.background }}>
@@ -430,17 +764,6 @@ const CardCustomization = () => {
         </div>
       )}
 
-      {/* Profile Image */}
-      {images.profileImage && imageToggles.profileImage && (
-        <img src={images.profileImage} alt="Profile" style={{
-          width: 100,
-          height: 100,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: `3px solid ${customColors.primary}`
-        }} />
-      )}
-
       {/* Personal Info */}
       <div style={{ textAlign: 'center' }}>
         <h3 style={{ ...styles.previewName, color: customColors.text, marginBottom: 8 }}>
@@ -485,246 +808,6 @@ const CardCustomization = () => {
               {social.platform.substring(0, 1)}
             </div>
           ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderSplitViewLayout = () => (
-    <div style={{ 
-      ...styles.previewScreen, 
-      background: customColors.background,
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 15,
-      padding: 15
-    }}>
-      {/* Left Side - Profile */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 15
-      }}>
-        {images.profileImage && imageToggles.profileImage && (
-          <img src={images.profileImage} alt="Profile" style={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            objectFit: 'cover',
-            border: `2px solid ${customColors.primary}`
-          }} />
-        )}
-        
-        <div style={{ textAlign: 'center' }}>
-          <h3 style={{ ...styles.previewName, color: customColors.text, fontSize: 16, marginBottom: 4 }}>
-            {personalInfo.name || 'Your Name'}
-          </h3>
-          <p style={{ ...styles.previewDesignation, color: customColors.secondary, fontSize: 12 }}>
-            {personalInfo.designation || 'Designation'}
-          </p>
-        </div>
-      </div>
-
-      {/* Right Side - Details */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-        justifyContent: 'center'
-      }}>
-        {/* Company */}
-        {personalInfo.company && (
-          <div style={{ color: customColors.text, fontSize: 12 }}>
-            <strong>Company:</strong> {personalInfo.company}
-          </div>
-        )}
-
-        {/* Phone */}
-        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
-          <div key={i} style={{ color: customColors.text, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>📞</span>
-            <span>{phone}</span>
-          </div>
-        ))}
-
-        {/* Email */}
-        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
-          <div key={i} style={{ color: customColors.text, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>📧</span>
-            <span>{email}</span>
-          </div>
-        ))}
-
-        {/* Social Media Mini */}
-        {socialLinks.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {socialLinks.slice(0, 3).map((social, i) => (
-              <div key={i} style={{
-                width: 25,
-                height: 25,
-                borderRadius: 6,
-                border: `1px solid ${customColors.primary}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 10,
-                color: customColors.primary
-              }}>
-                {social.platform.substring(0, 1)}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Full Width CTA */}
-      <div style={{ gridColumn: '1 / -1' }}>
-        <button style={{ 
-          ...styles.previewCtaBtn, 
-          background: theme.hasGradientAccent 
-            ? `linear-gradient(135deg, ${customColors.primary}, ${customColors.secondary})`
-            : customColors.primary, 
-          color: customColors.background,
-          width: '100%'
-        }}>
-          Contact Me
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderIconGridLayout = () => (
-    <div style={{ 
-      ...styles.previewScreen, 
-      background: customColors.background,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 20,
-      padding: 20
-    }}>
-      {/* Header with Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-        {images.profileImage && imageToggles.profileImage && (
-          <img src={images.profileImage} alt="Profile" style={{
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            objectFit: 'cover'
-          }} />
-        )}
-        <div>
-          <h3 style={{ ...styles.previewName, color: customColors.text, fontSize: 18, marginBottom: 4 }}>
-            {personalInfo.name || 'Your Name'}
-          </h3>
-          <p style={{ ...styles.previewDesignation, color: customColors.secondary, fontSize: 12 }}>
-            {personalInfo.designation || 'Your Designation'}
-          </p>
-        </div>
-      </div>
-
-      {/* Icon Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 15
-      }}>
-        {/* Phone */}
-        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
-          <div key={i} style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 8,
-            padding: 12,
-            background: 'rgba(255,255,255,0.05)',
-            borderRadius: 12
-          }}>
-            <div style={{
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              background: customColors.primary,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14,
-              color: '#fff'
-            }}>📞</div>
-            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>Call</span>
-          </div>
-        ))}
-
-        {/* Email */}
-        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
-          <div key={i} style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 8,
-            padding: 12,
-            background: 'rgba(255,255,255,0.05)',
-            borderRadius: 12
-          }}>
-            <div style={{
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              background: customColors.primary,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14,
-              color: '#fff'
-            }}>📧</div>
-            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>Email</span>
-          </div>
-        ))}
-
-        {/* Social Icons */}
-        {socialLinks.slice(0, 4).map((social, i) => (
-          <div key={i} style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 8,
-            padding: 12,
-            background: 'rgba(255,255,255,0.05)',
-            borderRadius: 12
-          }}>
-            <div style={{
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              border: `2px solid ${customColors.primary}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 12,
-              color: customColors.primary,
-              fontWeight: 'bold'
-            }}>
-              {social.platform.substring(0, 1)}
-            </div>
-            <span style={{ color: customColors.text, fontSize: 10, textAlign: 'center' }}>
-              {social.platform}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Company Info */}
-      {personalInfo.company && (
-        <div style={{
-          padding: 12,
-          background: 'rgba(255,255,255,0.05)',
-          borderRadius: 12,
-          textAlign: 'center'
-        }}>
-          <span style={{ color: customColors.text, fontSize: 12 }}>
-            {personalInfo.company}
-          </span>
         </div>
       )}
     </div>
@@ -861,36 +944,6 @@ const CardCustomization = () => {
       gap: 20,
       padding: 30
     }}>
-      {/* Profile Image with Gold Border */}
-      {images.profileImage && imageToggles.profileImage && (
-        <div style={{
-          position: 'relative'
-        }}>
-          <img src={images.profileImage} alt="Profile" style={{
-            width: 100,
-            height: 100,
-            borderRadius: '50%',
-            objectFit: 'cover',
-            border: `3px solid ${customColors.primary}`
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: -5,
-            right: -5,
-            width: 25,
-            height: 25,
-            borderRadius: '50%',
-            background: customColors.primary,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 12,
-            color: customColors.background,
-            fontWeight: 'bold'
-          }}>★</div>
-        </div>
-      )}
-
       {/* Personal Info */}
       <div style={{ textAlign: 'center' }}>
         <h3 style={{ 
@@ -989,416 +1042,6 @@ const CardCustomization = () => {
     </div>
   );
 
-  // Additional layout renderers for other themes
-  const renderCorporateLayout = () => (
-    <div style={{ 
-      ...styles.previewScreen, 
-      background: customColors.background,
-      padding: 20
-    }}>
-      {/* Header with Badge */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-        <div>
-          <h3 style={{ ...styles.previewName, color: customColors.text, fontSize: 18, marginBottom: 4 }}>
-            {personalInfo.name || 'Your Name'}
-          </h3>
-          <p style={{ ...styles.previewDesignation, color: customColors.secondary, fontSize: 12 }}>
-            {personalInfo.designation || 'Your Designation'}
-          </p>
-        </div>
-        {theme.hasBadge && (
-          <div style={{
-            padding: '4px 8px',
-            background: customColors.primary,
-            borderRadius: 4,
-            color: customColors.background,
-            fontSize: 10,
-            fontWeight: 'bold'
-          }}>
-            PRO
-          </div>
-        )}
-      </div>
-
-      {/* Company Info */}
-      {personalInfo.company && (
-        <div style={{
-          padding: 12,
-          background: 'rgba(255,255,255,0.05)',
-          borderRadius: 8,
-          marginBottom: 15,
-          borderLeft: `3px solid ${customColors.primary}`
-        }}>
-          <span style={{ color: customColors.text, fontSize: 12 }}>{personalInfo.company}</span>
-        </div>
-      )}
-
-      {/* Contact Details */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {phoneNumbers.filter(Boolean).map((phone, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              background: customColors.primary,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 12,
-              color: '#fff'
-            }}>P</div>
-            <span style={{ color: customColors.text, fontSize: 12 }}>{phone}</span>
-          </div>
-        ))}
-
-        {emails.filter(Boolean).map((email, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              background: customColors.primary,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 12,
-              color: '#fff'
-            }}>E</div>
-            <span style={{ color: customColors.text, fontSize: 12 }}>{email}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Social Media */}
-      {socialLinks.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ ...styles.previewSectionTitle, color: customColors.text, fontSize: 12, marginBottom: 10 }}>
-            Connect With Me
-          </div>
-          <div style={styles.previewSocialIcons}>
-            {socialLinks.map((social, i) => (
-              <div key={i} style={{ 
-                ...styles.previewSocialIcon, 
-                borderColor: customColors.primary, 
-                color: customColors.primary,
-                width: 35,
-                height: 35,
-                fontSize: 10
-              }}>
-                {social.platform.substring(0, 1)}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderMinimalDarkLayout = () => (
-    <div style={{ 
-      ...styles.previewScreen, 
-      background: customColors.background,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 25,
-      padding: 30
-    }}>
-      {/* Profile Image */}
-      {images.profileImage && imageToggles.profileImage && (
-        <img src={images.profileImage} alt="Profile" style={{
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: theme.hasElegantBorder ? `2px solid ${customColors.primary}` : 'none'
-        }} />
-      )}
-
-      {/* Personal Info */}
-      <div style={{ textAlign: 'center' }}>
-        <h3 style={{ 
-          ...styles.previewName, 
-          color: customColors.text, 
-          fontSize: 20,
-          marginBottom: 8,
-          fontWeight: '300',
-          letterSpacing: '1px'
-        }}>
-          {personalInfo.name || 'Your Name'}
-        </h3>
-        <p style={{ 
-          ...styles.previewDesignation, 
-          color: customColors.primary,
-          fontSize: 12,
-          marginBottom: 4,
-          fontWeight: '400'
-        }}>
-          {personalInfo.designation || 'Your Designation'}
-        </p>
-      </div>
-
-      {/* Minimal Contact */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-        {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
-          <div key={i} style={{ color: customColors.text, fontSize: 12, opacity: 0.8 }}>
-            {phone}
-          </div>
-        ))}
-        {emails.filter(Boolean).slice(0, 1).map((email, i) => (
-          <div key={i} style={{ color: customColors.text, fontSize: 12, opacity: 0.8 }}>
-            {email}
-          </div>
-        ))}
-      </div>
-
-      {/* Social Media as Minimal Dots */}
-      {socialLinks.length > 0 && (
-        <div style={{
-          display: 'flex',
-          gap: 15,
-          justifyContent: 'center'
-        }}>
-          {socialLinks.slice(0, 4).map((social, i) => (
-            <div key={i} style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: customColors.primary,
-              opacity: 0.7
-            }}></div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderGradientOverlayLayout = () => (
-    <div style={{ 
-      ...styles.previewScreen, 
-      background: customColors.background,
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {/* Gradient Overlay */}
-      {theme.hasOverlay && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `linear-gradient(135deg, ${customColors.primary}20, ${customColors.secondary}20)`,
-          zIndex: 0
-        }}></div>
-      )}
-
-      <div style={{ position: 'relative', zIndex: 1, padding: 20, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        {/* Profile at Bottom */}
-        <div style={{ textAlign: 'center', marginBottom: 30 }}>
-          {images.profileImage && imageToggles.profileImage && (
-            <img src={images.profileImage} alt="Profile" style={{
-              width: 70,
-              height: 70,
-              borderRadius: '50%',
-              objectFit: 'cover',
-              marginBottom: 15,
-              border: `2px solid ${customColors.primary}`
-            }} />
-          )}
-          
-          <h3 style={{ 
-            ...styles.previewName, 
-            color: customColors.text, 
-            fontSize: 18,
-            marginBottom: 6
-          }}>
-            {personalInfo.name || 'Your Name'}
-          </h3>
-          <p style={{ 
-            ...styles.previewDesignation, 
-            color: customColors.primary,
-            fontSize: 12,
-            marginBottom: 4
-          }}>
-            {personalInfo.designation || 'Your Designation'}
-          </p>
-          {personalInfo.company && (
-            <p style={{ 
-              color: customColors.text, 
-              fontSize: 11,
-              opacity: 0.8
-            }}>
-              {personalInfo.company}
-            </p>
-          )}
-        </div>
-
-        {/* Contact Info at Bottom */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-around',
-          background: 'rgba(0,0,0,0.3)',
-          borderRadius: 15,
-          padding: 15
-        }}>
-          {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ color: customColors.primary, fontSize: 20, marginBottom: 4 }}>📞</div>
-              <span style={{ color: customColors.text, fontSize: 10 }}>Call</span>
-            </div>
-          ))}
-
-          {emails.filter(Boolean).slice(0, 1).map((email, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ color: customColors.primary, fontSize: 20, marginBottom: 4 }}>📧</div>
-              <span style={{ color: customColors.text, fontSize: 10 }}>Email</span>
-            </div>
-          ))}
-
-          {socialLinks.length > 0 && (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ color: customColors.primary, fontSize: 20, marginBottom: 4 }}>🔗</div>
-              <span style={{ color: customColors.text, fontSize: 10 }}>Social</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderFrostedGlassLayout = () => (
-    <div style={{ 
-      ...styles.previewScreen, 
-      background: customColors.background,
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {/* Frosted Glass Background */}
-      {theme.hasGlassEffect && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(255,255,255,0.1)',
-          backdropFilter: 'blur(10px)',
-          zIndex: 0
-        }}></div>
-      )}
-
-      <div style={{ position: 'relative', zIndex: 1, padding: 25 }}>
-        {/* Profile Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 25 }}>
-          {images.profileImage && imageToggles.profileImage && (
-            <img src={images.profileImage} alt="Profile" style={{
-              width: 70,
-              height: 70,
-              borderRadius: '50%',
-              objectFit: 'cover',
-              border: `2px solid ${customColors.primary}`
-            }} />
-          )}
-          <div>
-            <h3 style={{ 
-              ...styles.previewName, 
-              color: customColors.text, 
-              fontSize: 20,
-              marginBottom: 6
-            }}>
-              {personalInfo.name || 'Your Name'}
-            </h3>
-            <p style={{ 
-              ...styles.previewDesignation, 
-              color: customColors.primary,
-              fontSize: 13,
-              marginBottom: 4
-            }}>
-              {personalInfo.designation || 'Your Designation'}
-            </p>
-          </div>
-        </div>
-
-        {/* Glass Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {phoneNumbers.filter(Boolean).slice(0, 1).map((phone, i) => (
-            <div key={i} style={{
-              padding: 15,
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: 12,
-              backdropFilter: 'blur(5px)',
-              border: `1px solid rgba(255,255,255,0.2)`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ color: customColors.primary, fontSize: 16 }}>📞</div>
-                <span style={{ color: customColors.text, fontSize: 13 }}>{phone}</span>
-              </div>
-            </div>
-          ))}
-
-          {emails.filter(Boolean).slice(0, 1).map((email, i) => (
-            <div key={i} style={{
-              padding: 15,
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: 12,
-              backdropFilter: 'blur(5px)',
-              border: `1px solid rgba(255,255,255,0.2)`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ color: customColors.primary, fontSize: 16 }}>📧</div>
-                <span style={{ color: customColors.text, fontSize: 13 }}>{email}</span>
-              </div>
-            </div>
-          ))}
-
-          {personalInfo.company && (
-            <div style={{
-              padding: 15,
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: 12,
-              backdropFilter: 'blur(5px)',
-              border: `1px solid rgba(255,255,255,0.2)`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ color: customColors.primary, fontSize: 16 }}>🏢</div>
-                <span style={{ color: customColors.text, fontSize: 13 }}>{personalInfo.company}</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Social Media */}
-        {socialLinks.length > 0 && (
-          <div style={{
-            display: 'flex',
-            gap: 10,
-            justifyContent: 'center',
-            marginTop: 20,
-            flexWrap: 'wrap'
-          }}>
-            {socialLinks.slice(0, 4).map((social, i) => (
-              <div key={i} style={{
-                padding: '8px 12px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: 20,
-                backdropFilter: 'blur(5px)',
-                border: `1px solid rgba(255,255,255,0.2)`,
-                color: customColors.primary,
-                fontSize: 11,
-                fontWeight: 'bold'
-              }}>
-                {social.platform}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   const renderPersonalTab = () => (
     <>
       <div style={styles.formGridTwo}>
@@ -1427,6 +1070,15 @@ const CardCustomization = () => {
             placeholder="Company Name"
             value={personalInfo.company}
             onChange={(e) => handleInputChange('company', e.target.value)}
+          />
+        </div>
+        <div style={styles.formField}>
+          <label>Address</label>
+          <input
+            style={styles.textInput}
+            placeholder="Business Address"
+            value={personalInfo.address}
+            onChange={(e) => handleInputChange('address', e.target.value)}
           />
         </div>
       </div>
@@ -1578,30 +1230,6 @@ const CardCustomization = () => {
                   </label>
                 </div>
               </div>
-
-              <div style={styles.imageUploadSection}>
-                <label style={styles.imageLabel}>Background Image</label>
-                <div style={styles.imageUploadBox}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload('backgroundImage', e)}
-                    style={styles.fileInput}
-                    id="backgroundImage"
-                  />
-                  <label htmlFor="backgroundImage" style={styles.uploadLabel}>
-                    {images.backgroundImage ? (
-                      <img src={images.backgroundImage} alt="Background" style={styles.uploadedImage} />
-                    ) : (
-                      <div style={styles.uploadPlaceholder}>
-                        <span style={{ fontSize: 32 }}>+</span>
-                        <span>Upload</span>
-                        <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
-                      </div>
-                    )}
-                  </label>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -1721,23 +1349,75 @@ const CardCustomization = () => {
                 ...(selectedTheme === themeOption.id ? styles.themeTileActive : {})
               }}
             >
-              <div style={{ ...styles.themePreview, background: themeOption.background }}>
+              <div style={{ 
+                ...styles.themePreview, 
+                background: themeOption.background,
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
                 <div style={styles.themePreviewContent}>
-                  <div style={{ 
-                    fontSize: 24, 
-                    fontWeight: 700, 
-                    color: themeOption.textColor,
-                    marginBottom: 8
-                  }}>
-                    {themeOption.name.substring(0, 2).toUpperCase()}
-                  </div>
-                  <div style={{ 
-                    fontSize: 10, 
-                    color: themeOption.secondaryColor,
-                    textAlign: 'center'
-                  }}>
-                    {themeOption.layout.replace('-', ' ')}
-                  </div>
+                  {/* Theme-specific mini preview */}
+                  {themeOption.layout === 'instagram-profile' && (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: 10
+                    }}>
+                      <div style={{ background: '#fff', width: 30, height: 30, borderRadius: '50%', marginBottom: 5 }}></div>
+                      <div>Instagram</div>
+                    </div>
+                  )}
+                  
+                  {themeOption.layout === 'linkedin-profile' && (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: '#0077b5',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      color: '#fff',
+                      fontSize: 10,
+                      padding: 5
+                    }}>
+                      <div style={{ height: 20, background: '#0077b5' }}></div>
+                      <div style={{ background: '#fff', width: 25, height: 25, borderRadius: '50%', marginTop: -12, alignSelf: 'center' }}></div>
+                      <div style={{ textAlign: 'center', marginTop: 5 }}>LinkedIn</div>
+                    </div>
+                  )}
+                  
+                  {themeOption.layout === 'map-location' && (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: 10
+                    }}>
+                      <div style={{ fontSize: 16, marginBottom: 5 }}>📍</div>
+                      <div>Map Location</div>
+                    </div>
+                  )}
+                  
+                  {!['instagram-profile', 'linkedin-profile', 'map-location'].includes(themeOption.layout) && (
+                    <div style={{ 
+                      fontSize: 24, 
+                      fontWeight: 700, 
+                      color: themeOption.textColor,
+                      marginBottom: 8
+                    }}>
+                      {themeOption.name.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
                 </div>
               </div>
               <div style={{ padding: '8px 0' }}>
@@ -1874,17 +1554,6 @@ const CardCustomization = () => {
     </>
   );
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'personal':
-        return renderPersonalTab();
-      case 'appearance':
-        return renderAppearanceTab();
-      default:
-        return null;
-    }
-  };
-
   return (
     <div style={styles.page}>
       <header style={styles.header}>
@@ -1918,7 +1587,9 @@ const CardCustomization = () => {
             ))}
           </div>
 
-          <div style={styles.tabCard}>{renderTabContent()}</div>
+          <div style={styles.tabCard}>
+            {activeTab === 'personal' ? renderPersonalTab() : renderAppearanceTab()}
+          </div>
         </div>
       </div>
     </div>

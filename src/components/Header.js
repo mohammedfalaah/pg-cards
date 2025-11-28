@@ -8,6 +8,18 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [logoSize, setLogoSize] = useState(120);
+
+  useEffect(() => {
+  const storedUser = localStorage.getItem("userData");
+  if (storedUser) {
+    try {
+      onLoginSuccess(JSON.parse(storedUser));
+    } catch (e) {
+      console.error("Invalid userData in localStorage");
+    }
+  }
+}, []);
+
   
 
   useEffect(() => {
@@ -130,17 +142,22 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
                 My Account
               </button>
             )}
-            {user ? (
-              <div className="user-auth">
-                <div className="user-greeting">
-                  <span className="user-name">{user.name || 'User'}</span>
-                  <span className="user-email">{user.email}</span>
-                </div>
-                <button className="btn-logout" onClick={onLogout}>Logout</button>
-              </div>
-            ) : (
-              <button className="btn-primary" onClick={() => setShowLogin(true)}>Login</button>
-            )}
+           {user ? (
+  <div className="profile-section">
+    <img
+      src={user.profileImage || "/default-profile.png"}
+      alt="Profile"
+      className="profile-icon"
+      onClick={() => {
+        window.history.pushState({}, '', '/dashboard');
+        window.dispatchEvent(new Event('navigate'));
+      }}
+    />
+  </div>
+) : (
+  <button className="btn-primary" onClick={() => setShowLogin(true)}>Login</button>
+)}
+
           </div>
           
           {!isDashboard && (
@@ -172,4 +189,5 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
 };
 
 export default Header;
+
 

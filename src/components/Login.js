@@ -282,7 +282,7 @@ const Login = ({ onClose, onLogin }) => {
 
   return (
     <div className="login-overlay" onClick={onClose}>
-      <div className="login-modal" onClick={(e) => e.stopPropagation()}>
+      <div  className="login-modal" onClick={(e) => e.stopPropagation()}>
         <button className="login-close" onClick={onClose} aria-label="Close">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -291,15 +291,14 @@ const Login = ({ onClose, onLogin }) => {
         </button>
 
         <div className="login-header">
-          <PGCardsLogo size={50} variant="inline" />
           <h2 className="login-title">
             {mode === 'login' ? 'Welcome Back' : mode === 'register' ? 'Create your account' : 'Reset Password'}
           </h2>
-          <p className="login-subtitle">
+          {/* <p className="login-subtitle">
             {mode === 'login' ? 'Sign in to your PG CARDS account' : 
              mode === 'register' ? 'Register to get your dashboard and insights' : 
              'Enter your email and we\'ll send you a reset link'}
-          </p>
+          </p> */}
         </div>
 
         {mode === 'forgot' ? (
