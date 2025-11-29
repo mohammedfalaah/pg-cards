@@ -20,6 +20,7 @@ const ShopPage = () => {
   const userId = getUserId();
 
   if (!userId) {
+  //  alert("hhdvg")
     setShowLogin(true);   // ⬅️ Open login modal
     return;
   }
@@ -494,9 +495,7 @@ const ShopPage = () => {
                     ))}
                   </ul>
                 </div>
-                {showLogin && (
-  <Login onClose={() => setShowLogin(false)} />
-)}
+
 
                 <div style={styles.selectedVariantInfo}>
                   <div style={styles.selectedVariantHeader}>
@@ -539,7 +538,12 @@ const ShopPage = () => {
         </div>
         
       )}
+                      {showLogin && (
+  <Login onClose={() => setShowLogin(false)} />
+)}
     </div>
+    
+    
   );
 };
 
@@ -1288,7 +1292,9 @@ styleSheet.textContent = `
       height: 200px !important;
     }
   }
+    
 `;
+
 document.head.appendChild(styleSheet);
 
 export default ShopPage;
