@@ -3,6 +3,7 @@ import PGCardsLogo from './PGCardsLogo';
 import './Login.css';
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pg-cards.vercel.app';
 // const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '340844493737-ldev50489jene365c0smg0ttgm2siba5.apps.googleusercontent.com';
@@ -28,65 +29,7 @@ const Login = ({ onClose, onLogin }) => {
     };
   }, []);
 
-  // Google Identity Services loader
-  // useEffect(() => {
-  //   if (window.google || !GOOGLE_CLIENT_ID) return;
-  //   const script = document.createElement('script');
-  //   script.src = 'https://accounts.google.com/gsi/client';
-  //   script.async = true;
-  //   script.defer = true;
-  //   script.onload = () => {
-  //     try {
-  //       window.google.accounts.id.initialize({
-  //         client_id: GOOGLE_CLIENT_ID,
-  //         callback: async (response) => {
-  //           if (!response?.credential) return;
-  //           setIsLoading(true);
-  //           setApiError('');
-  //           try {
-  //             const res = await fetch(`${API_BASE_URL}/user/googleAuth`, {
-  //               method: 'POST',
-  //               headers: { 'Content-Type': 'application/json' },
-  //               body: JSON.stringify({ token: response.credential }),
-  //             });
-  //             console.log("res",res);
-              
-  //             const result = await res.json();
-  //             if (!res.ok) throw new Error(result?.message || result?.msg || 'Google sign-in failed');
-  //             const userData = result?.data?.data || result?.data?.user || result?.user;
-  //             const token = result?.data?.token || result?.token;
-  //             if (!userData || !token) throw new Error('Invalid response from server.');
-  //             onLogin && onLogin({ user: userData, token });
-  //           } catch (err) {
-  //             console.error('Google auth error:', err);
-  //             setApiError(err.message || 'Google sign-in failed.');
-  //           } finally {
-  //             setIsLoading(false);
-  //           }
-  //         },
-  //       });
-  //     } catch (e) {
-  //       console.error('Failed to init Google', e);
-  //     }
-  //   };
-  //   document.head.appendChild(script);
-  // }, [GOOGLE_CLIENT_ID]);
-
-  // const handleGoogleClick = () => {
-  //   if (!GOOGLE_CLIENT_ID) {  
-  //     setApiError('Google sign-in not available.');
-  //     return;
-  //   }
-  //   try {
-  //     window.google.accounts.id.prompt();
-  //     console.log(window.google.accounts.id.prompt());
-      
-  //   } catch (e) {
-  //     console.error('Google prompt error', e);
-  //     setApiError('Unable to open Google sign-in.');
-  //   }
-  // };
-
+ 
   const handleGoogleSuccess = async (credentialResponse) => {
   try {
     if (!credentialResponse?.credential) return;
@@ -236,7 +179,7 @@ const Login = ({ onClose, onLogin }) => {
         });
         const result = await response.json();
         if (!response.ok) {
-          throw new Error(result?.msg || 'Unable to login. Please try again.');
+          toast.success('Unable to login. Please try again.',false) 
         }
         const userData = result?.data?.data;
         const token = result?.data?.token;

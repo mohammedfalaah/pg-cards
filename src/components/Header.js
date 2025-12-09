@@ -8,19 +8,42 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [logoSize, setLogoSize] = useState(120);
+  const [currentUser, setCurrentUser] = useState(null);
 
+  // Check for user in localStorage on mount
   useEffect(() => {
-  const storedUser = localStorage.getItem("userData");
-  if (storedUser) {
-    try {
-      onLoginSuccess(JSON.parse(storedUser));
-    } catch (e) {
-      console.error("Invalid userData in localStorage");
+    const storedUserData = localStorage.getItem("userData");
+    const storedUser = localStorage.getItem("user");
+    
+    if (storedUserData) {
+      try {
+        const userData = JSON.parse(storedUserData);
+        setCurrentUser(userData);
+        if (onLoginSuccess) {
+          onLoginSuccess(userData);
+        }
+      } catch (e) {
+        console.error("Invalid userData in localStorage");
+      }
+    } else if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setCurrentUser(userData);
+        if (onLoginSuccess) {
+          onLoginSuccess(userData);
+        }
+      } catch (e) {
+        console.error("Invalid user in localStorage");
+      }
     }
-  }
-}, []);
+  }, []);
 
-  
+  // Update currentUser when user prop changes
+  useEffect(() => {
+    if (user) {
+      setCurrentUser(user);
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,7 +79,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       return;
     }
 
-     if (targetId === '#shop') {
+    if (targetId === '#shop') {
       window.history.pushState({}, '', '/shop');
       window.dispatchEvent(new Event('navigate'));
       setIsMenuOpen(false);
@@ -71,7 +94,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       return;
     }
 
-      if (targetId === '#contact') {
+    if (targetId === '#contact') {
       window.history.pushState({}, '', '/contact');
       window.dispatchEvent(new Event('navigate'));
       setIsMenuOpen(false);
@@ -102,6 +125,50 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
     window.dispatchEvent(new Event('navigate'));
   };
 
+  const handleLoginSuccess = (authData) => {
+    const userData = authData.user || authData;
+    const token = authData.token;
+
+    // Store in localStorage
+    localStorage.setItem('userData', JSON.stringify(userData));
+    localStorage.setItem('userId', userData._id || userData.id);
+    localStorage.setItem('user', JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('authToken', token);
+    }
+
+    // Update state
+    setCurrentUser(userData);
+    setShowLogin(false);
+
+    // Call parent callback
+    if (onLoginSuccess) {
+      onLoginSuccess(authData);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    // Clear localStorage
+    localStorage.removeItem('userData');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
+
+    // Update state
+    setCurrentUser(null);
+
+    // Call parent callback
+    if (onLogout) {
+      onLogout();
+    }
+
+    // Redirect to home
+    window.history.pushState({}, '', '/');
+    window.dispatchEvent(new Event('navigate'));
+  };
+
   return (
     <header className={`header ${scrolled ? 'scrolled' : ''} ${isDashboard ? 'dashboard' : ''}`}>
       <div className="container">
@@ -112,52 +179,86 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
           
           {!isDashboard && (
             <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
-              <li><a href="#home" onClick={(e) => handleSmoothScroll(e, '#home')}>Home</a></li>
+              <li><a href="/" onClick={(e) => handleSmoothScroll(e, '#home')}>Home</a></li>
               <li><a href="#about" onClick={(e) => handleSmoothScroll(e, '#about')}>About Us</a></li>
               <li><a href="#shop" onClick={(e) => handleSmoothScroll(e, '#shop')}>Shop</a></li>
               <li><a href="#blog" onClick={(e) => handleSmoothScroll(e, '#blog')}>Blog</a></li>
               <li><a href="#contact" onClick={(e) => handleSmoothScroll(e, '#contact')}>Contact Us</a></li>
-              {/* <li><a href="#create" className="create-link" onClick={(e) => handleSmoothScroll(e, '#create')}>Create Free QR</a></li> */}
-              {user && (
+              {currentUser && (
                 <li><a href="#dashboard" onClick={(e) => handleSmoothScroll(e, '#dashboard')}>Dashboard</a></li>
               )}
             </ul>
           )}
           
           <div style={{display:'contents'}} className="header-actions">
-           
             {isDashboard ? (
               <button className="btn-secondary" onClick={handleViewSite}>View Website</button>
             ) : (
               <button style={{textWrap:'nowrap'}} className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
             )}
-            {user && !isDashboard && (
-              <button
-                className="btn-primary"
-                onClick={() => {
-                  window.history.pushState({}, '', '/dashboard');
-                  window.dispatchEvent(new Event('navigate'));
-                }}
-              >
-                My Account
-              </button>
-            )}
-           {user ? (
-  <div className="profile-section">
-    <img
-      src={user.profileImage || "/default-profile.png"}
-      alt="Profile"
-      className="profile-icon"
-      onClick={() => {
-        window.history.pushState({}, '', '/dashboard');
-        window.dispatchEvent(new Event('navigate'));
-      }}
-    />
-  </div>
+            
+           {currentUser ? (
+  <>
+    {!isDashboard && (
+      <button
+        className="btn-primary"
+        onClick={() => {
+          window.history.pushState({}, '', '/dashboard');
+          window.dispatchEvent(new Event('navigate'));
+        }}
+      >
+        My Account
+      </button>
+    )}
+    <div className="profile-section">
+      <img
+        src={currentUser.profileImage || "/default-profile.png"}
+        alt="Profile"
+        className="profile-icon"
+        title={currentUser.name || currentUser.email}
+      />
+      <div className="user-dropdown">
+        <div className="user-name">{currentUser.name || 'User'}</div>
+        <div className="user-email">{currentUser.email}</div>
+        <button 
+          className="dropdown-item"
+          onClick={() => {
+            window.history.pushState({}, '', '/dashboard');
+            window.dispatchEvent(new Event('navigate'));
+          }}
+        >
+          <span>📊</span> Dashboard
+        </button>
+        <button 
+          className="dropdown-item"
+          onClick={() => {
+            window.history.pushState({}, '', '/profile');
+            window.dispatchEvent(new Event('navigate'));
+          }}
+        >
+          <span>👤</span> My Profile
+        </button>
+        <button 
+          className="dropdown-item"
+          onClick={() => {
+            window.history.pushState({}, '', '/orders');
+            window.dispatchEvent(new Event('navigate'));
+          }}
+        >
+          <span>📦</span> Orders
+        </button>
+        <hr style={{ border: '1px solid rgba(212, 175, 55, 0.2)', margin: '12px 0' }} />
+        <button className="logout-btn" onClick={handleLogoutClick}>
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </div>
+  </>
 ) : (
-  <button className="btn-primary" onClick={() => setShowLogin(true)}>Login</button>
+  <button className="btn-primary" onClick={() => setShowLogin(true)}>
+    Login
+  </button>
 )}
-
           </div>
           
           {!isDashboard && (
@@ -173,15 +274,11 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
           )}
         </nav>
       </div>
+      
       {showLogin && (
         <Login 
           onClose={() => setShowLogin(false)} 
-          onLogin={(authData) => {
-            setShowLogin(false);
-            if (onLoginSuccess) {
-              onLoginSuccess(authData);
-            }
-          }}
+          onLogin={handleLoginSuccess}
         />
       )}
     </header>
@@ -189,5 +286,3 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
 };
 
 export default Header;
-
-

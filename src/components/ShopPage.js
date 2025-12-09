@@ -1,54 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { getUserId } from './Utils';
-import axios from 'axios';
-import Login from './Login';
-import toast from 'react-hot-toast';
 
 const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
   const [productTypeFilter, setProductTypeFilter] = useState('all');
   const [materialFilter, setMaterialFilter] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [maxPrice, setMaxPrice] = useState(100000);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-
- const handleAddToCart = async (productId) => {
-  const userId = getUserId();
-
-  if (!userId) {
-  //  alert("hhdvg")
-    setShowLogin(true);   // ⬅️ Open login modal
-    return;
-  }
-
-  try {
-    const response = await axios.post(
-      "https://pg-cards.vercel.app/cart/addToCart",
-      {
-        userId,
-        productId
-      }
-    );
-
-    if (response.status === 200) {
-      toast.success("Added to cart successfully!");
-    }
-  } catch (error) {
-    console.error("Cart error:", error);
-    alert("Something went wrong");
-  }
-};
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
   useEffect(() => {
-    // Update slider fill area dynamically
     const sliderWrappers = document.querySelectorAll('.slider-wrapper');
     sliderWrappers.forEach(wrapper => {
       const min = parseFloat(wrapper.getAttribute('data-min')) || 0;
@@ -74,7 +39,6 @@ const ShopPage = () => {
       const data = await response.json();
       if (data.status === 'SUCCESS') {
         setProducts(data.data);
-        // Calculate max price for slider
         const calculatedMaxPrice = Math.max(...data.data.flatMap(p => p.variants.map(v => v.price || p.basePrice || 0)));
         const roundedMax = Math.max(100000, Math.ceil(calculatedMaxPrice / 10000) * 10000);
         setMaxPrice(roundedMax);
@@ -87,15 +51,18 @@ const ShopPage = () => {
     }
   };
 
-  const openProductModal = (product) => {
-    setSelectedProduct(product);
-    setSelectedVariant(product.variants[0]);
-  };
-
-  const closeModal = () => {
-    setSelectedProduct(null);
-    setSelectedVariant(null);
-  };
+const handleProductClick = (product) => {
+  // Store product ID in localStorage
+  localStorage.setItem('selectedProductId', product._id);
+  
+  // Create URL-friendly product name
+  const productSlug = product.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  // Navigate to product detail page using pushState
+  const newUrl = `/product/${productSlug}/${product._id}`;
+  window.history.pushState({}, '', newUrl);
+  // Trigger a custom event to notify App.js of the navigation
+  window.dispatchEvent(new Event('popstate'));
+};
 
   const calculateDiscount = (originalPrice, currentPrice) => {
     if (!originalPrice || originalPrice <= currentPrice) return null;
@@ -119,19 +86,15 @@ const ShopPage = () => {
     return colorMap[color] || '#999999';
   };
 
-  // Filter products
   const filteredProducts = products.filter(product => {
-    // Product type filter
     if (productTypeFilter !== 'all' && product.category?.toLowerCase() !== productTypeFilter.toLowerCase()) {
       return false;
     }
     
-    // Material filter
     if (materialFilter !== 'all' && product.material?.toLowerCase() !== materialFilter.toLowerCase()) {
       return false;
     }
     
-    // Price range filter
     const minPrice = Math.min(...product.variants.map(v => v.price || product.basePrice || 0));
     if (minPrice < priceRange[0] || minPrice > priceRange[1]) {
       return false;
@@ -154,14 +117,15 @@ const ShopPage = () => {
 
   return (
     <div style={styles.container}>
-      {/* Breadcrumbs */}
       <div style={styles.breadcrumbs}>
-        <span style={styles.breadcrumbLink}>Home</span>
+        <span style={styles.breadcrumbLink} onClick={() => {
+          window.history.pushState({}, '', '/');
+          window.dispatchEvent(new Event('popstate'));
+        }}>Home</span>
         <span style={styles.breadcrumbSeparator}>/</span>
         <span style={styles.breadcrumbActive}>All products</span>
       </div>
 
-      {/* Filter Toggle Button (Mobile Only) */}
       <button 
         style={styles.filterToggleBtn}
         className="filter-toggle-btn"
@@ -171,9 +135,7 @@ const ShopPage = () => {
         Filters
       </button>
 
-      {/* Main Content */}
       <div style={styles.mainContent} className="main-content">
-        {/* Sidebar Overlay (Mobile) */}
         {sidebarOpen && (
           <div 
             style={styles.sidebarOverlay} 
@@ -182,7 +144,6 @@ const ShopPage = () => {
           />
         )}
 
-        {/* Left Sidebar - Filters */}
         <div 
           style={{
             ...styles.sidebar,
@@ -190,7 +151,6 @@ const ShopPage = () => {
           }}
           className="sidebar"
         >
-          {/* Close Button (Mobile Only) */}
           <button
             style={styles.sidebarCloseBtn}
             className="sidebar-close-btn"
@@ -201,7 +161,6 @@ const ShopPage = () => {
 
           <h3 style={styles.sidebarTitle}>FILTER BY</h3>
           
-          {/* Product Type Filter */}
           <div style={styles.filterGroup}>
             <h4 style={styles.filterLabel}>Product Type</h4>
             <div style={styles.radioGroup}>
@@ -223,7 +182,6 @@ const ShopPage = () => {
             </div>
           </div>
 
-          {/* Material Type Filter */}
           <div style={styles.filterGroup}>
             <h4 style={styles.filterLabel}>Material Type</h4>
             <select
@@ -240,11 +198,9 @@ const ShopPage = () => {
             </select>
           </div>
 
-          {/* Price Range Filter */}
           <div style={styles.filterGroup}>
             <h4 style={styles.filterLabel}>Price Range</h4>
             <div style={styles.priceRangeContainer}>
-              {/* Range Slider */}
               <div style={styles.sliderContainer}>
                 <div 
                   style={styles.sliderWrapper} 
@@ -284,7 +240,6 @@ const ShopPage = () => {
                 </div>
               </div>
               
-              {/* Input Fields */}
               <div style={styles.priceInputs}>
                 <input
                   type="number"
@@ -317,7 +272,6 @@ const ShopPage = () => {
                 />
               </div>
               
-              {/* Price Labels */}
               <div style={styles.priceLabels}>
                 <span style={styles.priceLabel}>INR {priceRange[0].toLocaleString()}</span>
                 <span style={styles.priceLabel}>INR {priceRange[1].toLocaleString()}</span>
@@ -326,7 +280,6 @@ const ShopPage = () => {
           </div>
         </div>
 
-        {/* Products Section */}
         <div style={styles.productsSection}>
           <h2 style={styles.productsTitle}>
             ALL PRODUCTS (Showing {filteredProducts.length} Products of {products.length} Products)
@@ -342,7 +295,12 @@ const ShopPage = () => {
               const uniqueColors = [...new Set(allColors)];
 
               return (
-                <div key={product._id} style={styles.productCard} className="product-card">
+                <div 
+                  key={product._id} 
+                  style={styles.productCard} 
+                  className="product-card"
+                  onClick={() => handleProductClick(product)}
+                >
                   <div style={styles.productImageContainer} className="product-image-container">
                     <img
                       src={firstVariant?.frontImage || 'https://via.placeholder.com/400x250?text=Product+Image'}
@@ -360,7 +318,6 @@ const ShopPage = () => {
                       {firstVariant?.color || 'Standard'} - {firstVariant?.finish || 'Standard'}
                     </p>
                     
-                    {/* Color Swatches */}
                     {uniqueColors.length > 0 && (
                       <div style={styles.colorSwatches}>
                         {uniqueColors.map((color, idx) => (
@@ -378,7 +335,6 @@ const ShopPage = () => {
                       </div>
                     )}
 
-                    {/* Price Section */}
                     <div style={styles.priceSection}>
                       {originalPrice && discount ? (
                         <>
@@ -399,13 +355,16 @@ const ShopPage = () => {
                       )}
                     </div>
 
-                   <button
-  onClick={() => handleAddToCart(product._id)}
-  style={styles.addToCartButton}
-  className="add-to-cart-btn"
->
-  Add to Cart
-</button>
+                    <button
+                      style={styles.viewDetailsButton}
+                      className="view-details-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProductClick(product);
+                      }}
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               );
@@ -420,133 +379,9 @@ const ShopPage = () => {
           )}
         </div>
       </div>
-
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <div style={styles.modalOverlay} onClick={closeModal}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <button style={styles.closeButton} onClick={closeModal}>×</button>
-            
-            <div style={styles.modalContent}>
-              <div style={styles.modalLeft}>
-                <div style={styles.modalImageContainer}>
-                  <img
-                    src={selectedVariant?.frontImage || 'https://via.placeholder.com/500x300?text=Product+Image'}
-                    alt={selectedProduct.title}
-                    style={styles.modalImage}
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/500x300?text=Product+Image';
-                    }}
-                  />
-                </div>
-                
-                <div style={styles.variantsSection}>
-                  <h4 style={styles.variantsTitle}>Available Variants</h4>
-                  <div style={styles.variantsGrid}>
-                    {selectedProduct.variants.map((variant, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => setSelectedVariant(variant)}
-                        style={{
-                          ...styles.variantCard,
-                          ...(selectedVariant === variant ? styles.variantCardActive : {})
-                        }}
-                      >
-                        <div style={styles.variantColor}>
-                          <div style={{
-                            ...styles.colorCircle,
-                            backgroundColor: getColorCode(variant.color)
-                          }}></div>
-                          <span style={styles.variantColorName}>{variant.color}</span>
-                        </div>
-                        <span style={styles.variantFinish}>{variant.finish}</span>
-                        <span style={styles.variantPrice}>
-                          {selectedProduct.currency === 'INR' ? '₹' : '$'}{variant.price}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div style={styles.modalRight}>
-                <h2 style={styles.modalTitle}>{selectedProduct.title}</h2>
-                <p style={styles.modalDescription}>{selectedProduct.description}</p>
-                
-                <div style={styles.modalInfoGrid}>
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Material</span>
-                    <span style={styles.infoValue}>{selectedProduct.material}</span>
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Category</span>
-                    <span style={styles.infoValue}>{selectedProduct.category}</span>
-                  </div>
-                </div>
-
-                <div style={styles.featuresSection}>
-                  <h4 style={styles.featuresTitle}>Features</h4>
-                  <ul style={styles.featuresList}>
-                    {selectedProduct.features?.map((feature, idx) => (
-                      <li key={idx} style={styles.featureItem}>
-                        <span style={styles.featureIcon}>✓</span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-
-                <div style={styles.selectedVariantInfo}>
-                  <div style={styles.selectedVariantHeader}>
-                    <span style={styles.selectedVariantLabel}>Selected:</span>
-                    <span style={styles.selectedVariantDetail}>
-                      {selectedVariant?.color} - {selectedVariant?.finish}
-                    </span>
-                  </div>
-                  <div style={styles.modalPriceSection}>
-                    {selectedVariant?.originalPrice && calculateDiscount(selectedVariant.originalPrice, selectedVariant.price) ? (
-                      <>
-                        <span style={styles.modalOriginalPrice}>
-                          {selectedProduct.currency === 'INR' ? '₹' : '$'}{selectedVariant.originalPrice}
-                        </span>
-                        <span style={styles.modalPrice}>
-                          {selectedProduct.currency === 'INR' ? '₹' : '$'}{selectedVariant.price}
-                        </span>
-                        <span style={styles.modalDiscount}>
-                          ({calculateDiscount(selectedVariant.originalPrice, selectedVariant.price)}% off)
-                        </span>
-                      </>
-                    ) : (
-                      <span style={styles.modalPrice}>
-                        {selectedProduct.currency === 'INR' ? '₹' : '$'}{selectedVariant?.price}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <button 
-  style={styles.buyButton}
-  onClick={() => handleAddToCart(selectedProduct._id)}
->
-  Add to Cart
-</button>
-
-              </div>
-            </div>
-          </div>
-        </div>
-        
-      )}
-                      {showLogin && (
-  <Login onClose={() => setShowLogin(false)} />
-)}
     </div>
-    
-    
   );
 };
-
 
 const styles = {
   container: {
@@ -891,7 +726,7 @@ const styles = {
     color: '#000',
     lineHeight: '1.2',
   },
-  addToCartButton: {
+  viewDetailsButton: {
     width: '100%',
     padding: '10px 20px',
     fontSize: '13px',
@@ -918,247 +753,8 @@ const styles = {
     fontSize: '18px',
     color: '#666',
   },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px',
-    overflowY: 'auto',
-  },
-  modal: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: '20px',
-    maxWidth: '1000px',
-    width: '100%',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    position: 'relative',
-    border: '1px solid #333',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: '20px',
-    right: '20px',
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    backgroundColor: '#000',
-    color: '#fff',
-    border: '1px solid #333',
-    fontSize: '24px',
-    cursor: 'pointer',
-    zIndex: 10,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalContent: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '40px',
-    padding: '40px',
-  },
-  modalLeft: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  modalImageContainer: {
-    width: '100%',
-    height: '320px',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    backgroundColor: '#0a0a0a',
-  },
-  modalImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  variantsSection: {
-    marginTop: '8px',
-  },
-  variantsTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    marginBottom: '16px',
-    color: '#fff',
-  },
-  variantsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-    gap: '12px',
-  },
-  variantCard: {
-    padding: '12px',
-    backgroundColor: '#0a0a0a',
-    border: '2px solid #333',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.3s',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  variantCardActive: {
-    borderColor: '#fff',
-    backgroundColor: '#1a1a1a',
-  },
-  variantColor: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  colorCircle: {
-    width: '20px',
-    height: '20px',
-    borderRadius: '50%',
-    border: '1px solid #666',
-  },
-  variantColorName: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#fff',
-  },
-  variantFinish: {
-    fontSize: '11px',
-    color: '#999',
-  },
-  variantPrice: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#fff',
-  },
-  modalRight: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  modalTitle: {
-    fontSize: '28px',
-    fontWeight: '700',
-    marginBottom: '12px',
-    color: '#fff',
-  },
-  modalDescription: {
-    fontSize: '15px',
-    color: '#999',
-    lineHeight: '1.6',
-    marginBottom: '24px',
-  },
-  modalInfoGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '16px',
-    marginBottom: '24px',
-  },
-  infoItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-  },
-  infoLabel: {
-    fontSize: '12px',
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-  },
-  infoValue: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#fff',
-  },
-  featuresSection: {
-    marginBottom: '24px',
-  },
-  featuresTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    marginBottom: '12px',
-    color: '#fff',
-  },
-  featuresList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  featureItem: {
-    fontSize: '14px',
-    color: '#ccc',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  featureIcon: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
-  },
-  selectedVariantInfo: {
-    padding: '16px',
-    backgroundColor: '#0a0a0a',
-    borderRadius: '8px',
-    marginBottom: '20px',
-  },
-  selectedVariantHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '12px',
-  },
-  selectedVariantLabel: {
-    fontSize: '13px',
-    color: '#999',
-  },
-  selectedVariantDetail: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#fff',
-  },
-  modalPriceSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  modalOriginalPrice: {
-    fontSize: '18px',
-    color: '#999',
-    textDecoration: 'line-through',
-  },
-  modalPrice: {
-    fontSize: '32px',
-    fontWeight: '700',
-    color: '#fff',
-  },
-  modalDiscount: {
-    fontSize: '14px',
-    color: '#4CAF50',
-    fontWeight: '600',
-  },
-  buyButton: {
-    width: '100%',
-    padding: '16px 32px',
-    fontSize: '16px',
-    fontWeight: '600',
-    backgroundColor: '#fff',
-    color: '#000',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    transition: 'transform 0.2s',
-    marginTop: 'auto',
-  },
 };
 
-// Add keyframe animation for loader and hover effects
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {
@@ -1170,11 +766,11 @@ styleSheet.textContent = `
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: #ccc;
   }
-  .add-to-cart-btn:hover {
+  .view-details-btn:hover {
     background-color: #333 !important;
     transform: translateY(-1px);
   }
-  .add-to-cart-btn:active {
+  .view-details-btn:active {
     transform: translateY(0);
   }
   .color-swatch:hover {
@@ -1273,9 +869,6 @@ styleSheet.textContent = `
     .products-grid {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
     }
-    .modal-content {
-      grid-template-columns: 1fr !important;
-    }
   }
   @media (max-width: 768px) {
     .breadcrumbs {
@@ -1292,7 +885,6 @@ styleSheet.textContent = `
       height: 200px !important;
     }
   }
-    
 `;
 
 document.head.appendChild(styleSheet);

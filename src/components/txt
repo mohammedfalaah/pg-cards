@@ -1,0 +1,1002 @@
+import React, { useState, useEffect } from 'react';
+
+// Utility function to get user ID from your authentication system
+const getUserId = () => {
+  try {
+    // Try to get from localStorage
+    const userId = localStorage.getItem('userId');
+    if (userId) return userId;
+    
+    // Try to get from userData object
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const parsedData = JSON.parse(userData);
+      return parsedData._id || parsedData.id || null;
+    }
+    
+    // Try to get from pgcards-auth
+    const authData = localStorage.getItem('pgcards-auth');
+    if (authData) {
+      const parsedAuth = JSON.parse(authData);
+      return parsedAuth._id || parsedAuth.id || parsedAuth.userId || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting user ID:', error);
+    return null;
+  }
+};
+
+// Check if user is authenticated
+const isUserAuthenticated = () => {
+  const authToken = localStorage.getItem('authToken');
+  const userId = getUserId();
+  return !!(authToken && userId);
+};
+
+// Checkout Component (without Stripe Elements - using direct API)
+const CheckoutModal = ({ product, variant, onSuccess, onClose }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvc, setCvc] = useState('');
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    createPaymentIntent();
+  }, []);
+
+  const createPaymentIntent = async () => {
+    try {
+      const userId = getUserId();
+      const authToken = localStorage.getItem('authToken');
+      const amount = variant?.price || product.basePrice || 0;
+      
+      const response = await fetch('https://pg-cards.vercel.app/payment/createPayment', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken || ''}`
+        },
+        body: JSON.stringify({
+          amount: amount,
+          userId: userId,
+          productId: product._id,
+          variantId: variant?._id
+        })
+      });
+
+      const data = await response.json();
+      if (data.code === 200) {
+        setPaymentData(data.data);
+      } else {
+        setError(data.msg || 'Failed to initialize payment');
+      }
+    } catch (err) {
+      setError('Network error: ' + err.message);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!cardNumber || !expiry || !cvc || !name) {
+      setError('Please fill all card details');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // In production, you would use Stripe.js here
+      // For now, showing the structure
+      alert('Payment integration ready! In production, this will process payment through Stripe.\n\nPayment Intent ID: ' + paymentData?.paymentIntentId);
+      onSuccess({ id: paymentData?.paymentIntentId });
+    } catch (err) {
+      setError('Payment failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCardNumber = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const matches = v.match(/\d{4,16}/g);
+    const match = (matches && matches[0]) || '';
+    const parts = [];
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4));
+    }
+    return parts.length ? parts.join(' ') : value;
+  };
+
+  const formatExpiry = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      return v.substring(0, 2) + (v.length > 2 ? '/' + v.substring(2, 4) : '');
+    }
+    return v;
+  };
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.checkoutModal} onClick={(e) => e.stopPropagation()}>
+        <button style={styles.closeButton} onClick={onClose}>×</button>
+        
+        <div style={styles.checkoutContent}>
+          {/* Product Summary */}
+          <div style={styles.productSummary}>
+            <img
+              src={variant?.frontImage || 'https://via.placeholder.com/100'}
+              alt={product.title}
+              style={styles.summaryImage}
+            />
+            <div style={styles.summaryDetails}>
+              <h3 style={styles.summaryTitle}>{product.title}</h3>
+              <p style={styles.summaryVariant}>
+                {variant?.color || 'Standard'} - {variant?.finish || 'Standard'}
+              </p>
+              <p style={styles.summaryPrice}>
+                ₹{variant?.price || product.basePrice}
+              </p>
+            </div>
+          </div>
+
+          {/* Payment Form */}
+          <div style={styles.paymentSection}>
+            <h3 style={styles.sectionTitle}>Payment Details</h3>
+            
+            {paymentData && (
+              <div style={styles.paymentInfo}>
+                <p style={styles.infoText}>Order ID: {paymentData.orderId}</p>
+                <p style={styles.infoText}>Payment Intent: {paymentData.paymentIntentId}</p>
+              </div>
+            )}
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Card Holder Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Card Number</label>
+              <input
+                type="text"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                placeholder="1234 5678 9012 3456"
+                maxLength="19"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.formRow}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Expiry Date</label>
+                <input
+                  type="text"
+                  value={expiry}
+                  onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+                  placeholder="MM/YY"
+                  maxLength="5"
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>CVC</label>
+                <input
+                  type="text"
+                  value={cvc}
+                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').substring(0, 3))}
+                  placeholder="123"
+                  maxLength="3"
+                  style={styles.input}
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div style={styles.errorMessage}>{error}</div>
+            )}
+
+            <div style={styles.buttonGroup}>
+              <button
+                onClick={onClose}
+                style={styles.cancelButton}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePayment}
+                style={styles.payButton}
+                disabled={loading || !paymentData}
+              >
+                {loading ? 'Processing...' : `Pay ₹${variant?.price || product.basePrice}`}
+              </button>
+            </div>
+
+            <div style={styles.secureInfo}>
+              <span style={styles.lockIcon}>🔒</span>
+              <span style={styles.secureText}>Secured by Stripe</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main Shop Page Component
+const ShopPage = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [checkoutProduct, setCheckoutProduct] = useState(null);
+  const [checkoutVariant, setCheckoutVariant] = useState(null);
+  const [productTypeFilter, setProductTypeFilter] = useState('all');
+  const [materialFilter, setMaterialFilter] = useState('all');
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [maxPrice, setMaxPrice] = useState(100000);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('https://pg-cards.vercel.app/card/getProducts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      if (data.status === 'SUCCESS') {
+        setProducts(data.data);
+        const calculatedMaxPrice = Math.max(...data.data.flatMap(p => p.variants.map(v => v.price || p.basePrice || 0)));
+        const roundedMax = Math.max(100000, Math.ceil(calculatedMaxPrice / 10000) * 10000);
+        setMaxPrice(roundedMax);
+        setPriceRange([0, roundedMax]);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuyNow = (product, variant) => {
+    if (!isUserAuthenticated()) {
+      alert('Please login to make a purchase');
+      // You can redirect to login page here if needed
+      // window.location.href = '/login';
+      return;
+    }
+    setCheckoutProduct(product);
+    setCheckoutVariant(variant || product.variants[0]);
+  };
+
+  const handlePaymentSuccess = (paymentData) => {
+    alert('Payment successful!\nTransaction ID: ' + paymentData.id);
+    setCheckoutProduct(null);
+    setCheckoutVariant(null);
+  };
+
+  const handleAddToCart = async (productId) => {
+    if (!isUserAuthenticated()) {
+      alert('Please login to add items to cart');
+      // You can redirect to login page here if needed
+      // window.location.href = '/login';
+      return;
+    }
+
+    const userId = getUserId();
+    try {
+      const response = await fetch('https://pg-cards.vercel.app/cart/addToCart', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
+        body: JSON.stringify({ userId, productId })
+      });
+
+      const data = await response.json();
+      if (response.status === 200 || data.status === 'SUCCESS') {
+        alert('Added to cart successfully!');
+      } else {
+        alert(data.message || 'Failed to add to cart');
+      }
+    } catch (error) {
+      console.error('Cart error:', error);
+      alert('Failed to add to cart');
+    }
+  };
+
+  const calculateDiscount = (originalPrice, currentPrice) => {
+    if (!originalPrice || originalPrice <= currentPrice) return null;
+    return Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
+  };
+
+  const getColorCode = (colorName) => {
+    const colorMap = {
+      'black': '#000000', 'white': '#FFFFFF', 'grey': '#808080',
+      'gray': '#808080', 'gold': '#FFD700', 'purple': '#800080',
+      'dark blue': '#00008B', 'blue': '#0000FF', 'silver': '#C0C0C0',
+    };
+    return colorMap[colorName?.toLowerCase()] || '#999999';
+  };
+
+  const filteredProducts = products.filter(product => {
+    if (productTypeFilter !== 'all' && product.category?.toLowerCase() !== productTypeFilter.toLowerCase()) {
+      return false;
+    }
+    if (materialFilter !== 'all' && product.material?.toLowerCase() !== materialFilter.toLowerCase()) {
+      return false;
+    }
+    const minPrice = Math.min(...product.variants.map(v => v.price || product.basePrice || 0));
+    if (minPrice < priceRange[0] || minPrice > priceRange[1]) {
+      return false;
+    }
+    return true;
+  });
+
+  const productTypes = ['all', 'NFC Business QR Card', 'NFC Review QR Card', 'Digital Interface Card', 'Table Talker'];
+  const materials = ['all', ...new Set(products.map(p => p.material).filter(Boolean))];
+
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div style={styles.loader}></div>
+        <p style={styles.loadingText}>Loading products...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.breadcrumbs}>
+        <span style={styles.breadcrumbLink}>Home</span>
+        <span style={styles.breadcrumbSeparator}>/</span>
+        <span style={styles.breadcrumbActive}>All products</span>
+      </div>
+
+      <button 
+        style={styles.filterToggleBtn}
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        <span style={styles.filterIcon}>☰</span>
+        Filters
+      </button>
+
+      <div style={styles.mainContent}>
+        {sidebarOpen && (
+          <div 
+            style={styles.sidebarOverlay} 
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        <div 
+          style={{
+            ...styles.sidebar,
+            ...(sidebarOpen ? styles.sidebarOpen : {})
+          }}
+        >
+          <button
+            style={styles.sidebarCloseBtn}
+            onClick={() => setSidebarOpen(false)}
+          >
+            ×
+          </button>
+
+          <h3 style={styles.sidebarTitle}>FILTER BY</h3>
+          
+          <div style={styles.filterGroup}>
+            <h4 style={styles.filterLabel}>Product Type</h4>
+            <div style={styles.radioGroup}>
+              {productTypes.map(type => (
+                <label key={type} style={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="productType"
+                    value={type}
+                    checked={productTypeFilter === type}
+                    onChange={(e) => setProductTypeFilter(e.target.value)}
+                    style={styles.radioInput}
+                  />
+                  <span style={styles.radioText}>
+                    {type === 'all' ? 'All' : type}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <h4 style={styles.filterLabel}>Material Type</h4>
+            <select
+              value={materialFilter}
+              onChange={(e) => setMaterialFilter(e.target.value)}
+              style={styles.select}
+            >
+              {materials.map(material => (
+                <option key={material} value={material}>
+                  {material === 'all' ? 'All' : material}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <h4 style={styles.filterLabel}>Price Range</h4>
+            <div style={styles.priceRangeContainer}>
+              <div style={styles.priceInputs}>
+                <input
+                  type="number"
+                  value={priceRange[0]}
+                  onChange={(e) => {
+                    const newMin = parseInt(e.target.value) || 0;
+                    if (newMin >= 0 && newMin <= priceRange[1]) {
+                      setPriceRange([newMin, priceRange[1]]);
+                    }
+                  }}
+                  style={styles.priceInput}
+                />
+                <span style={styles.priceSeparator}>-</span>
+                <input
+                  type="number"
+                  value={priceRange[1]}
+                  onChange={(e) => {
+                    const newMax = parseInt(e.target.value) || maxPrice;
+                    if (newMax >= priceRange[0] && newMax <= maxPrice) {
+                      setPriceRange([priceRange[0], newMax]);
+                    }
+                  }}
+                  style={styles.priceInput}
+                />
+              </div>
+              <div style={styles.priceLabels}>
+                <span style={styles.priceLabel}>INR {priceRange[0].toLocaleString()}</span>
+                <span style={styles.priceLabel}>INR {priceRange[1].toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={styles.productsSection}>
+          <h2 style={styles.productsTitle}>
+            ALL PRODUCTS ({filteredProducts.length} of {products.length})
+          </h2>
+          
+          <div style={styles.productsGrid}>
+            {filteredProducts.map((product) => {
+              const firstVariant = product.variants[0];
+              const currentPrice = firstVariant?.price || product.basePrice || 0;
+              const originalPrice = firstVariant?.originalPrice || product.originalPrice;
+              const discount = calculateDiscount(originalPrice, currentPrice);
+              const uniqueColors = [...new Set(product.variants.map(v => v.color).filter(Boolean))];
+
+              return (
+                <div key={product._id} style={styles.productCard}>
+                  <div style={styles.productImageContainer}>
+                    <img
+                      src={firstVariant?.frontImage || 'https://via.placeholder.com/400x250'}
+                      alt={product.title}
+                      style={styles.productImage}
+                    />
+                  </div>
+                  
+                  <div style={styles.productContent}>
+                    <h3 style={styles.productTitle}>{product.title}</h3>
+                    <p style={styles.productDescription}>
+                      {firstVariant?.color || 'Standard'} - {firstVariant?.finish || 'Standard'}
+                    </p>
+                    
+                    {uniqueColors.length > 0 && (
+                      <div style={styles.colorSwatches}>
+                        {uniqueColors.map((color, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              ...styles.colorSwatch,
+                              backgroundColor: getColorCode(color),
+                            }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={styles.priceSection}>
+                      {originalPrice && discount ? (
+                        <>
+                          <div style={styles.priceRow}>
+                            <span style={styles.originalPrice}>₹{originalPrice}</span>
+                            <span style={styles.discountBadge}>({discount}% off)</span>
+                          </div>
+                          <span style={styles.currentPrice}>₹{currentPrice}</span>
+                        </>
+                      ) : (
+                        <span style={styles.currentPrice}>₹{currentPrice}</span>
+                      )}
+                    </div>
+
+                    <div style={styles.actionButtons}>
+                      <button
+                        onClick={() => handleAddToCart(product._id)}
+                        style={styles.addToCartButton}
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={() => handleBuyNow(product, firstVariant)}
+                        style={styles.buyButton}
+                      >
+                        Buy Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div style={styles.emptyState}>
+              <div style={styles.emptyIcon}>📦</div>
+              <p style={styles.emptyText}>No products found</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {checkoutProduct && checkoutVariant && (
+        <CheckoutModal
+          product={checkoutProduct}
+          variant={checkoutVariant}
+          onSuccess={handlePaymentSuccess}
+          onClose={() => {
+            setCheckoutProduct(null);
+            setCheckoutVariant(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    backgroundColor: '#ffffff',
+    paddingTop: '80px',
+  },
+  loadingContainer: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loader: {
+    width: '50px',
+    height: '50px',
+    border: '3px solid #ddd',
+    borderTop: '3px solid #000',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  loadingText: {
+    marginTop: '20px',
+    color: '#666',
+  },
+  breadcrumbs: {
+    padding: '16px 40px',
+    backgroundColor: '#f5f5f5',
+    borderBottom: '1px solid #e0e0e0',
+    fontSize: '14px',
+  },
+  breadcrumbLink: { color: '#666', cursor: 'pointer' },
+  breadcrumbSeparator: { margin: '0 8px', color: '#999' },
+  breadcrumbActive: { color: '#000', fontWeight: '500' },
+  filterToggleBtn: {
+    display: 'none',
+    padding: '12px 24px',
+    backgroundColor: '#000',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    margin: '20px',
+    cursor: 'pointer',
+  },
+  filterIcon: { fontSize: '18px', marginRight: '8px' },
+  sidebarOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 998,
+  },
+  mainContent: {
+    display: 'flex',
+    maxWidth: '1400px',
+    margin: '0 auto',
+    padding: '30px 20px',
+    gap: '30px',
+  },
+  sidebar: {
+    width: '260px',
+    flexShrink: 0,
+    padding: '24px 20px',
+    borderRight: '1px solid #e0e0e0',
+    position: 'sticky',
+    top: '100px',
+    height: 'fit-content',
+  },
+  sidebarOpen: { transform: 'translateX(0)' },
+  sidebarCloseBtn: {
+    display: 'none',
+  },
+  sidebarTitle: {
+    fontSize: '16px',
+    fontWeight: '700',
+    marginBottom: '24px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid #e0e0e0',
+  },
+  filterGroup: {
+    marginBottom: '28px',
+    paddingBottom: '24px',
+    borderBottom: '1px solid #f0f0f0',
+  },
+  filterLabel: {
+    fontSize: '13px',
+    fontWeight: '600',
+    marginBottom: '16px',
+    textTransform: 'uppercase',
+  },
+  radioGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  radioLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  radioInput: { cursor: 'pointer' },
+  radioText: { userSelect: 'none' },
+  select: {
+    width: '100%',
+    padding: '10px',
+    fontSize: '14px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
+  priceRangeContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  priceInputs: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  priceInput: {
+    flex: 1,
+    padding: '8px',
+    fontSize: '13px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    textAlign: 'center',
+  },
+  priceSeparator: { color: '#666' },
+  priceLabels: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '12px',
+    color: '#666',
+  },
+  priceLabel: { fontSize: '12px', color: '#666' },
+  productsSection: { flex: 1 },
+  productsTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    marginBottom: '24px',
+    paddingBottom: '16px',
+    borderBottom: '1px solid #e0e0e0',
+  },
+  productsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+    gap: '20px',
+  },
+  productCard: {
+    backgroundColor: '#fff',
+    border: '1px solid #e5e5e5',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+  },
+  productImageContainer: {
+    height: '240px',
+    backgroundColor: '#fafafa',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+    padding: '10px',
+  },
+  productContent: { padding: '16px' },
+  productTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    marginBottom: '6px',
+    minHeight: '44px',
+  },
+  productDescription: {
+    fontSize: '13px',
+    color: '#666',
+    marginBottom: '10px',
+  },
+  colorSwatches: {
+    display: 'flex',
+    gap: '6px',
+    marginBottom: '12px',
+  },
+  colorSwatch: {
+    width: '20px',
+    height: '20px',
+    borderRadius: '3px',
+    border: '1px solid rgba(0,0,0,0.1)',
+  },
+  priceSection: { marginBottom: '14px' },
+  priceRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '4px',
+  },
+  originalPrice: {
+    fontSize: '13px',
+    color: '#999',
+    textDecoration: 'line-through',
+  },
+  discountBadge: {
+    fontSize: '11px',
+    color: '#4CAF50',
+    fontWeight: '600',
+    backgroundColor: '#e8f5e9',
+    padding: '2px 6px',
+    borderRadius: '3px',
+  },
+  currentPrice: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#000',
+  },
+  actionButtons: {
+    display: 'flex',
+    gap: '8px',
+  },
+  addToCartButton: {
+    flex: 1,
+    padding: '10px',
+    fontSize: '12px',
+    fontWeight: '600',
+    backgroundColor: '#fff',
+    color: '#000',
+    border: '2px solid #000',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+  },
+  buyButton: {
+    flex: 1,
+    padding: '10px',
+    fontSize: '12px',
+    fontWeight: '600',
+    backgroundColor: '#000',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '80px 20px',
+  },
+  emptyIcon: { fontSize: '64px', marginBottom: '16px' },
+  emptyText: { fontSize: '18px', color: '#666' },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  checkoutModal: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: '20px',
+    maxWidth: '500px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    backgroundColor: '#000',
+    color: '#fff',
+    border: 'none',
+    fontSize: '24px',
+    cursor: 'pointer',
+    zIndex: 10,
+  },
+  checkoutContent: { padding: '40px' },
+  productSummary: {
+    display: 'flex',
+    gap: '16px',
+    marginBottom: '30px',
+    paddingBottom: '30px',
+    borderBottom: '1px solid #333',
+  },
+  summaryImage: {
+    width: '80px',
+    height: '80px',
+    objectFit: 'cover',
+    borderRadius: '8px',
+  },
+  summaryDetails: { flex: 1 },
+  summaryTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: '6px',
+  },
+  summaryVariant: {
+    fontSize: '13px',
+    color: '#999',
+    marginBottom: '6px',
+  },
+  summaryPrice: {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#4CAF50',
+  },
+  paymentSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+  sectionTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: '10px',
+  },
+  paymentInfo: {
+    padding: '12px',
+    backgroundColor: '#0a0a0a',
+    borderRadius: '8px',
+    marginBottom: '10px',
+  },
+  infoText: {
+    fontSize: '12px',
+    color: '#999',
+    marginBottom: '4px',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+  },
+  label: {
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#ccc',
+  },
+  input: {
+    padding: '12px',
+    fontSize: '14px',
+    backgroundColor: '#0a0a0a',
+    border: '1px solid #333',
+    borderRadius: '8px',
+    color: '#fff',
+    outline: 'none',
+  },
+  errorMessage: {
+    padding: '12px',
+    backgroundColor: '#ef4444',
+    color: '#fff',
+    borderRadius: '8px',
+    fontSize: '14px',
+  },
+  buttonGroup: {
+    display: 'flex',
+    gap: '12px',
+  },
+  cancelButton: {
+    flex: 1,
+    padding: '14px',
+    fontSize: '14px',
+    fontWeight: '600',
+    backgroundColor: '#333',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
+  payButton: {
+    flex: 2,
+    padding: '14px',
+    fontSize: '14px',
+    fontWeight: '600',
+    backgroundColor: '#4CAF50',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+  },
+  secureInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    marginTop: '10px',
+  },
+  lockIcon: {
+    fontSize: '16px',
+  },
+  secureText: {
+    fontSize: '12px',
+    color: '#999',
+  },
+};
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(styleSheet);
+
+export default ShopPage

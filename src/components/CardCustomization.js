@@ -31,20 +31,7 @@ const premiumThemes = [
     profilePosition: 'top-center',
     type: 'professional'
   },
-  {
-    id: 'classic',
-    name: 'Classic Custom',
-    description: 'Elegant light grey with centered logo',
-    background: 'linear-gradient(135deg, #e8e8e8 0%, #d4d4d4 100%)',
-    accent: '#000000',
-    textColor: '#000000',
-    secondaryColor: '#555555',
-    cardBg: '#f5f5f5',
-    layout: 'logo-centered',
-    hasLogoFrame: true,
-    profilePosition: 'middle-center',
-    type: 'corporate'
-  },
+
   {
     id: 'modern',
     name: 'Modern',
@@ -346,26 +333,7 @@ const CardCustomization = () => {
       </div>
 
       {/* Stats Bar */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        padding: '15px 0',
-        background: 'rgba(255,255,255,0.95)',
-        borderBottom: '1px solid #e0e0e0'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold', color: customColors.primary }}>125</div>
-          <div style={{ fontSize: 12, color: '#666' }}>Connections</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold', color: customColors.primary }}>47</div>
-          <div style={{ fontSize: 12, color: '#666' }}>Posts</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold', color: customColors.primary }}>89</div>
-          <div style={{ fontSize: 12, color: '#666' }}>Following</div>
-        </div>
-      </div>
+      
 
       {/* Contact Info */}
       <div style={{ padding: 20 }}>
