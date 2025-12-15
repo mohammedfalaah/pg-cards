@@ -1,73 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { QRCodeSVG } from 'qrcode.react';
 import Login from './Login';
 
 const UserProfile = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [qrData, setQrData] = useState('');
-  const [redirectUrl, setRedirectUrl] = useState('');
   const [showLogin, setShowLogin] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [orders, setOrders] = useState([]);
   const [qrLoading, setQrLoading] = useState(false);
+  const [qrImage, setQrImage] = useState('');
+  const [redirectUrl, setRedirectUrl] = useState('');
 
   // Get user ID from localStorage
   const userId = localStorage.getItem('userId');
-  console.log(userId,"useriduseris")
 
+  // On mount, hydrate basic user data from localStorage and stop loading
   useEffect(() => {
-    if (userId) {
-      fetchUserProfile();
-      fetchUserOrders();
-    } else {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUserData(JSON.parse(storedUser));
+      }
+    } catch (e) {
+      console.error('Failed to parse user from storage', e);
+    }
+
+    if (!userId) {
       setShowLogin(true);
     }
+
+    setLoading(false);
   }, [userId]);
 
   const handleLoginSuccess = ({ user, token }) => {
     localStorage.setItem('userId', user._id || user.id);
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
+    setUserData(user);
     setShowLogin(false);
+    setLoading(false);
     toast.success('Login successful!');
-    fetchUserProfile();
-    fetchUserOrders();
   };
 
-  const fetchUserProfile = async () => {
-    try {
-      const response = await axios.post(
-        'https://pg-cards.vercel.app/user/getUserById',
-        { userId }
-      );
-      if (response.data) {
-        setUserData(response.data.user || response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      toast.error('Failed to load profile');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUserOrders = async () => {
-    try {
-      const response = await axios.post(
-        'https://pg-cards.vercel.app/order/getUserOrders',
-        { userId }
-      );
-      if (response.data && response.data.orders) {
-        setOrders(response.data.orders);
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
-  };
-
-  // ✅ QR Code Generation Function
+  // Call backend to get QR image + redirectUrl for this user
   const generateQRCode = async () => {
     if (!userId) {
       setShowLogin(true);
@@ -78,22 +56,15 @@ const UserProfile = () => {
     try {
       const response = await axios.post(
         'https://pg-cards.vercel.app/userProfile/getUser',
-        {
-          userId:"6926bc3fea37d3588065ad39"
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        { userId },
+        { headers: { 'Content-Type': 'application/json' } }
       );
-      if (response.data.code === 200) {
-        setQrData(response.data.data.qr);
-        setRedirectUrl(response.data.data.redirectUrl);
-        localStorage.setItem('userProfileUrl', response.data.data.redirectUrl);
-        toast.success('QR code generated successfully!');
+
+      if (response.data?.code === 200 && response.data.data) {
+        setQrImage(response.data.data.qr || '');
+        setRedirectUrl(response.data.data.redirectUrl || '');
       } else {
-        toast.error(response.data.msg || 'Failed to generate QR');
+        toast.error(response.data?.msg || 'Failed to generate QR');
       }
     } catch (error) {
       console.error('Error generating QR:', error);
@@ -103,27 +74,13 @@ const UserProfile = () => {
     }
   };
 
-  // Auto-generate QR on component mount if user is logged in
+  // Auto-load QR when user opens the QR tab
   useEffect(() => {
-    if (userId && activeTab === 'qr') {
+    if (userId && activeTab === 'qr' && !qrImage && !redirectUrl && !qrLoading) {
       generateQRCode();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, activeTab]);
-
-  const handleProfileRedirect = () => {
-    if (redirectUrl) {
-      window.open(redirectUrl, '_blank');
-    }
-  };
-
-  const downloadQRCode = () => {
-    if (!qrData) return;
-    
-    const link = document.createElement('a');
-    link.href = qrData;
-    link.download = `${userData?.name || 'user'}-profile-qr.png`;
-    link.click();
-  };
 
   const navigateTo = (path) => {
     window.history.pushState({}, '', path);
@@ -304,48 +261,45 @@ const UserProfile = () => {
               <p className="sectionSubtitle">Share this QR code to let others view your profile</p>
               
               <div className="qrDisplay">
-                {qrData ? (
+                {qrImage || redirectUrl ? (
                   <>
                     <div className="qrImageContainer">
-                      <img 
-                        src={qrData} 
-                        alt="Profile QR Code" 
-                        className="qrCode"
-                        onClick={handleProfileRedirect}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      <p className="qrHint">👆 Click QR to open profile</p>
+                      {qrImage ? (
+                        <img
+                          src={qrImage}
+                          alt="Profile QR Code"
+                          className="qrCode"
+                        />
+                      ) : (
+                        <div className="qrCode">
+                          <QRCodeSVG value={redirectUrl} size={260} level="H" />
+                        </div>
+                      )}
+                      <p className="qrHint">Scan to open your PG Cards profile</p>
                     </div>
-                    
+
                     <div className="qrActions">
-                      <button 
-                        onClick={generateQRCode}
-                        disabled={qrLoading}
-                        className="regenerateButton"
-                      >
-                        {qrLoading ? 'Generating...' : '🔄 Regenerate QR'}
-                      </button>
-                      
-                      <button 
-                        onClick={downloadQRCode}
-                        className="downloadButton"
-                      >
-                        📥 Download QR
-                      </button>
-                      
-                      <button 
-                        onClick={handleProfileRedirect}
+                      <button
+                        onClick={() => redirectUrl && window.open(redirectUrl, '_blank')}
                         className="profileButton"
+                        disabled={!redirectUrl}
                       >
                         🔗 View My Profile
                       </button>
+                      <button
+                        onClick={generateQRCode}
+                        className="regenerateButton"
+                        disabled={qrLoading}
+                      >
+                        {qrLoading ? 'Refreshing...' : '🔄 Refresh QR'}
+                      </button>
                     </div>
-                    
+
                     <div className="profileLink">
                       <p className="linkLabel">Profile URL:</p>
-                      <a 
-                        href={redirectUrl} 
-                        target="_blank" 
+                      <a
+                        href={redirectUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="linkUrl"
                       >
@@ -356,14 +310,7 @@ const UserProfile = () => {
                 ) : (
                   <div className="qrPlaceholder">
                     <div className="qrIcon">🔳</div>
-                    <p>Generate your personal QR code to share your profile</p>
-                    <button 
-                      onClick={generateQRCode}
-                      disabled={qrLoading}
-                      className="generateButton"
-                    >
-                      {qrLoading ? 'Generating...' : 'Generate QR Code'}
-                    </button>
+                    <p>Please login to generate your QR profile link.</p>
                   </div>
                 )}
               </div>

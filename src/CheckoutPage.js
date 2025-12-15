@@ -175,7 +175,17 @@ const ProfileForm = ({ onProfileSaved }) => {
 
       const result = await response.json();
       console.log('Profile saved:', result);
-      
+
+      // Try to store the created profile ID so we can use it on the order success page
+      try {
+        const profileId = result?.data?._id || result?.data?.id;
+        if (profileId) {
+          localStorage.setItem('userProfileId', profileId);
+        }
+      } catch (e) {
+        console.warn('Unable to cache profile id', e);
+      }
+
       toast.success('Profile saved successfully!');
       if (onProfileSaved) {
         onProfileSaved();

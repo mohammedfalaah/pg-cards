@@ -19,12 +19,14 @@ import ShopPage from './components/ShopPage';
 import ProductDetailPage from './components/ProductDetailPage';
 import CheckoutPage from './CheckoutPage';
 import UserProfile from './components/userProfile';
-import './App.css';
 import OrderSuccessPage from './components/OrderSuccessPage';
+import PublicProfile from './components/PublicProfile';
+import './App.css';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
   const [productId, setProductId] = useState(null);
+  const [publicProfileUserId, setPublicProfileUserId] = useState(null);
 
   const [auth, setAuth] = useState(() => {
     if (typeof window === 'undefined') {
@@ -73,6 +75,12 @@ function App() {
       // ✅ NEW: Check for order success route
       else if (path.startsWith('/order-success')) {
         setActiveView('order-success');
+      }
+      // Public profile view via QR code: /public-profile/:userId
+      else if (path.match(/^\/public-profile\/([^/]+)$/)) {
+        const match = path.match(/^\/public-profile\/([^/]+)$/);
+        setPublicProfileUserId(match[1]);
+        setActiveView('public-profile');
       }
       // Check for product detail route
       else if (path.match(/^\/product\/[^/]+\/([^/]+)$/)) {
@@ -174,6 +182,11 @@ function App() {
 
       {/* ✅ NEW: Order Success route */}
       {activeView === 'order-success' && <OrderSuccessPage />}
+
+      {/* Public profile view for QR scans */}
+      {activeView === 'public-profile' && publicProfileUserId && (
+        <PublicProfile userId={publicProfileUserId} />
+      )}
 
       {activeView === 'dashboard' && (
         <Dashboard

@@ -1,9 +1,20 @@
 // OrderSuccessPage.js - Order Confirmation Page
 import React, { useEffect, useState } from 'react';
 
+const TEMPLATE_OPTIONS = [
+  { id: 'standard', label: 'Standard' },
+  { id: 'modern', label: 'Modern' },
+  { id: 'linkedin', label: 'Classic' },
+  { id: 'map', label: 'Location Map' },
+  { id: 'epic', label: 'Epic' },
+];
+
 const OrderSuccessPage = () => {
   const [orderDetails, setOrderDetails] = useState(null);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState('');
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     // Animation delay
@@ -20,9 +31,229 @@ const OrderSuccessPage = () => {
     });
   }, []);
 
+  // Load user profile for preview using profileId stored during checkout
+  useEffect(() => {
+    const profileId = localStorage.getItem('userProfileId');
+    if (!profileId) {
+      setLoadingProfile(false);
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(
+          `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
+        );
+        const result = await res.json();
+        if (!res.ok || !result?.data) {
+          throw new Error(result?.message || 'Unable to load profile details');
+        }
+        setProfile(result.data);
+      } catch (e) {
+        console.error('Error loading profile for success page:', e);
+        setProfileError(e.message || 'Unable to load profile details.');
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const navigateTo = (path) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new Event('popstate'));
+  };
+
+  const renderProfilePreview = (templateId) => {
+    if (!profile) return null;
+
+    const primary = '#f7d27c';
+    const secondary = '#888';
+    const text = '#ffffff';
+
+    const commonText = {
+      color: text,
+      margin: 0,
+    };
+
+    const fullName = profile.fullName || 'Your Name';
+    const designation = profile.companyDesignation || 'Your Designation';
+    const company = profile.companyName || 'Company Name';
+    const phone = profile.phoneNumbers?.[0]?.number || '';
+    const email = profile.emails?.[0]?.emailAddress || '';
+    const address = profile.contactDetails?.address || '';
+    const mapLink = profile.contactDetails?.googleMapLink;
+    const profilePic = profile.profilePicture;
+    const cover = profile.backgroundImage || '';
+
+    if (templateId === 'epic') {
+      return (
+        <div
+          style={{
+            borderRadius: 24,
+            padding: 24,
+            background:
+              'linear-gradient(135deg, #000000 0%, #1c1c1c 100%)',
+            border: `2px solid ${primary}`,
+            color: '#fff',
+            textAlign: 'center',
+          }}
+        >
+          {profilePic && (
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: `3px solid ${primary}`,
+                marginBottom: 16,
+              }}
+            />
+          )}
+          <h2 style={{ ...commonText, fontSize: 22, fontWeight: 700 }}>
+            {fullName}
+          </h2>
+          <p style={{ ...commonText, color: primary, fontWeight: 600 }}>
+            {designation}
+          </p>
+          <p style={{ ...commonText, opacity: 0.7 }}>{company}</p>
+          <div
+            style={{
+              width: '60%',
+              height: 1,
+              background: `linear-gradient(90deg, transparent, ${primary}, transparent)`,
+              margin: '16px auto',
+            }}
+          />
+          {phone && (
+            <p style={commonText}>
+              📞 <span style={{ color: primary }}>{phone}</span>
+            </p>
+          )}
+          {email && (
+            <p style={commonText}>
+              📧 <span style={{ color: primary }}>{email}</span>
+            </p>
+          )}
+          {address && (
+            <p style={{ ...commonText, fontSize: 12, marginTop: 8 }}>
+              📍 {address}
+            </p>
+          )}
+          {mapLink && (
+            <button
+              onClick={() => window.open(mapLink, '_blank')}
+              style={{
+                marginTop: 16,
+                padding: '10px 20px',
+                borderRadius: 20,
+                border: 'none',
+                background: primary,
+                color: '#000',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              View Location
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    // Simple variations for other templates
+    const templateStyles = {
+      standard: {
+        background: '#ffffff',
+        color: '#000',
+        border: '1px solid #e0e0e0',
+      },
+      modern: {
+        background: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
+        color: '#ffffff',
+      },
+      linkedin: {
+        background: 'linear-gradient(135deg,#0077b5 0%,#00a0dc 100%)',
+        color: '#ffffff',
+      },
+      map: {
+        background: 'linear-gradient(135deg,#4285F4 0%,#34A853 100%)',
+        color: '#ffffff',
+      },
+    }[templateId] || {
+      background: '#ffffff',
+      color: '#000000',
+      border: '1px solid #e0e0e0',
+    };
+
+    return (
+      <div
+        style={{
+          borderRadius: 24,
+          padding: 24,
+          ...templateStyles,
+          textAlign: 'center',
+        }}
+      >
+        {cover && (
+          <div
+            style={{
+              width: '100%',
+              height: 120,
+              borderRadius: 16,
+              overflow: 'hidden',
+              marginBottom: 16,
+            }}
+          >
+            <img
+              src={cover}
+              alt="Cover"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+        )}
+        {profilePic && (
+          <img
+            src={profilePic}
+            alt="Profile"
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: `3px solid ${primary}`,
+              marginBottom: 16,
+            }}
+          />
+        )}
+        <h2 style={{ ...commonText, color: templateStyles.color, fontSize: 20, fontWeight: 700 }}>
+          {fullName}
+        </h2>
+        <p style={{ ...commonText, color: secondary, fontSize: 14 }}>
+          {designation}
+        </p>
+        <p style={{ ...commonText, opacity: 0.8 }}>{company}</p>
+        {phone && (
+          <p style={{ ...commonText, marginTop: 12 }}>
+            📞 {phone}
+          </p>
+        )}
+        {email && (
+          <p style={{ ...commonText }}>
+            📧 {email}
+          </p>
+        )}
+        {address && (
+          <p style={{ ...commonText, fontSize: 12, marginTop: 8 }}>
+            📍 {address}
+          </p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -57,13 +288,31 @@ const OrderSuccessPage = () => {
               
               <div style={styles.infoRow}>
                 <span style={styles.infoLabel}>Estimated Delivery:</span>
-                <span style={styles.infoValue}>{orderDetails.estimatedDelivery}</span>
+                <span style={styles.infoValue}>{orderDetails.expectedDelivery || orderDetails.estimatedDelivery}</span>
               </div>
               
               <div style={styles.infoRow}>
                 <span style={styles.infoLabel}>Confirmation Email:</span>
                 <span style={styles.infoValue}>{orderDetails.email}</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Profile template selection */}
+        {!loadingProfile && profile && (
+          <div style={styles.nextStepsCard}>
+            <h3 style={styles.nextStepsTitle}>Preview Your Card Styles</h3>
+            <p style={styles.subtitle}>
+              Here are all the available templates generated from your profile: Standard, Modern, Classic, Location Map and Epic.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
+              {TEMPLATE_OPTIONS.map((t) => (
+                <div key={t.id}>
+                  <h4 style={{ fontSize: 14, marginBottom: 8 }}>{t.label}</h4>
+                  {renderProfilePreview(t.id)}
+                </div>
+              ))}
             </div>
           </div>
         )}
