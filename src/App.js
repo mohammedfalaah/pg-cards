@@ -1,4 +1,4 @@
-// App.js - Fixed with proper User Profile routing
+// App.js - Fixed with proper User Profile and Order Success routing
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -17,9 +17,10 @@ import ContactUs from './components/ContactUs';
 import WhatsappChat from './components/WhatsappChat';
 import ShopPage from './components/ShopPage';
 import ProductDetailPage from './components/ProductDetailPage';
-import './App.css';
 import CheckoutPage from './CheckoutPage';
 import UserProfile from './components/userProfile';
+import './App.css';
+import OrderSuccessPage from './components/OrderSuccessPage';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
@@ -65,9 +66,13 @@ function App() {
           window.history.replaceState({}, '', '/');
         }
       }
-      // ✅ FIXED: Check for user profile route
+      // Check for user profile route
       else if (path.startsWith('/user-profile') || path.startsWith('/profile')) {
         setActiveView('user-profile');
+      }
+      // ✅ NEW: Check for order success route
+      else if (path.startsWith('/order-success')) {
+        setActiveView('order-success');
       }
       // Check for product detail route
       else if (path.match(/^\/product\/[^/]+\/([^/]+)$/)) {
@@ -132,10 +137,11 @@ function App() {
 
   return (
     <div className="App">
-      {/* HEADER (hide on dashboard, admin panel, and user profile) */}
+      {/* HEADER (hide on dashboard, admin panel, user profile, and order success) */}
       {activeView !== 'dashboard' && 
        activeView !== 'admin' && 
-       activeView !== 'user-profile' && (
+       activeView !== 'user-profile' &&
+       activeView !== 'order-success' && (
         <Header
           user={auth.user}
           onLoginSuccess={handleLoginSuccess}
@@ -163,8 +169,11 @@ function App() {
       {activeView === 'contact' && <ContactUs />}
       {activeView === 'create-qr' && <CreateQR />}
       
-      {/* ✅ FIXED: User Profile route */}
+      {/* User Profile route */}
       {activeView === 'user-profile' && <UserProfile />}
+
+      {/* ✅ NEW: Order Success route */}
+      {activeView === 'order-success' && <OrderSuccessPage />}
 
       {activeView === 'dashboard' && (
         <Dashboard
@@ -182,16 +191,18 @@ function App() {
         />
       )}
 
-      {/* WHATSAPP → SHOW ON ALL PAGES except admin and user profile */}
+      {/* WHATSAPP → SHOW ON ALL PAGES except admin, user profile, and order success */}
       {activeView !== 'admin' && 
-       activeView !== 'user-profile' && 
+       activeView !== 'user-profile' &&
+       activeView !== 'order-success' && 
        <WhatsappChat />}
 
-      {/* FOOTER → HIDE on dashboard, reset-password, admin, and user profile */}
+      {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, and order success */}
       {activeView !== 'dashboard' && 
        activeView !== 'reset-password' && 
        activeView !== 'admin' && 
-       activeView !== 'user-profile' && 
+       activeView !== 'user-profile' &&
+       activeView !== 'order-success' && 
        <Footer />}
     </div>
   );
