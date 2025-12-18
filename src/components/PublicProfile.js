@@ -19,9 +19,10 @@ const renderProfileTemplate = (templateId, profile) => {
     
     return (
       <div
+        className="public-profile-template"
         style={{
           borderRadius: 0,
-          padding: '40px',
+          padding: '40px 20px',
           background: '#ffffff',
           width: '100%',
           minHeight: '100vh',
@@ -29,50 +30,108 @@ const renderProfileTemplate = (templateId, profile) => {
           flexDirection: 'column',
           justifyContent: 'center',
           maxWidth: '100%',
+          boxSizing: 'border-box',
         }}
       >
         <div
           style={{
             border: '3px solid #81C784',
             borderRadius: '12px',
-            padding: '40px',
+            padding: '40px 24px',
             backgroundColor: '#ffffff',
             marginBottom: '40px',
             maxWidth: '800px',
             margin: '0 auto 40px',
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
-          <h1 style={{ color: '#000', fontSize: 42, fontWeight: 700, margin: '0 0 16px 0', textAlign: 'center' }}>
+          <h1 style={{ 
+            color: '#000', 
+            fontSize: 'clamp(28px, 5vw, 42px)', 
+            fontWeight: 700, 
+            margin: '0 0 16px 0', 
+            textAlign: 'center' 
+          }}>
             {fullName}
           </h1>
-          <p style={{ color: '#666', fontSize: 28, margin: '0 0 16px 0', textAlign: 'center' }}>
+          <p style={{ 
+            color: '#666', 
+            fontSize: 'clamp(18px, 3vw, 28px)', 
+            margin: '0 0 16px 0', 
+            textAlign: 'center' 
+          }}>
             {designation}
           </p>
-          <p style={{ color: '#000', fontSize: 24, margin: 0, textAlign: 'center' }}>
+          <p style={{ 
+            color: '#000', 
+            fontSize: 'clamp(16px, 2.5vw, 24px)', 
+            margin: 0, 
+            textAlign: 'center' 
+          }}>
             {company}
           </p>
         </div>
 
-        <div style={{ marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px' }}>
-          <h3 style={{ color: '#000', fontSize: 32, fontWeight: 700, margin: '0 0 24px 0', textAlign: 'left' }}>
+        <div style={{ 
+          marginBottom: '40px', 
+          maxWidth: '800px', 
+          margin: '0 auto 40px',
+          width: '100%',
+          padding: '0 20px',
+          boxSizing: 'border-box',
+        }}>
+          <h3 style={{ 
+            color: '#000', 
+            fontSize: 'clamp(20px, 3.5vw, 32px)', 
+            fontWeight: 700, 
+            margin: '0 0 24px 0', 
+            textAlign: 'left' 
+          }}>
             Contact Info
           </h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', fontSize: 24 }}>
-            <span style={{ fontSize: 32 }}>📞</span>
-            <span style={{ color: '#000' }}>{phone}</span>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            marginBottom: '20px', 
+            fontSize: 'clamp(16px, 2.5vw, 24px)',
+            flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 'clamp(20px, 3vw, 32px)' }}>📞</span>
+            <span style={{ color: '#000', wordBreak: 'break-word' }}>{phone}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: 24 }}>
-            <span style={{ fontSize: 32 }}>📧</span>
-            <span style={{ color: '#000' }}>{email}</span>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            fontSize: 'clamp(16px, 2.5vw, 24px)',
+            flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 'clamp(20px, 3vw, 32px)' }}>📧</span>
+            <span style={{ color: '#000', wordBreak: 'break-word' }}>{email}</span>
           </div>
         </div>
 
         {socialMedia.length > 0 && (
-          <div style={{ marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px' }}>
-            <h3 style={{ color: '#000', fontSize: 32, fontWeight: 700, margin: '0 0 24px 0', textAlign: 'left' }}>
+          <div style={{ 
+            marginBottom: '40px', 
+            maxWidth: '800px', 
+            margin: '0 auto 40px',
+            width: '100%',
+            padding: '0 20px',
+            boxSizing: 'border-box',
+          }}>
+            <h3 style={{ 
+              color: '#000', 
+              fontSize: 'clamp(20px, 3.5vw, 32px)', 
+              fontWeight: 700, 
+              margin: '0 0 24px 0', 
+              textAlign: 'left' 
+            }}>
               Social Media
             </h3>
-            <div style={{ display: 'flex', gap: '20px' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {socialLabels.map((label, idx) => (
                 <a
                   key={idx}
@@ -80,14 +139,14 @@ const renderProfileTemplate = (templateId, profile) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    width: '80px',
-                    height: '80px',
+                    width: 'clamp(60px, 12vw, 80px)',
+                    height: 'clamp(60px, 12vw, 80px)',
                     border: '2px solid #81C784',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 20,
+                    fontSize: 'clamp(14px, 2vw, 20px)',
                     fontWeight: 600,
                     color: '#000',
                     backgroundColor: '#fff',
@@ -101,16 +160,22 @@ const renderProfileTemplate = (templateId, profile) => {
           </div>
         )}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ 
+          maxWidth: '800px', 
+          margin: '0 auto',
+          width: '100%',
+          padding: '0 20px',
+          boxSizing: 'border-box',
+        }}>
           <button
             style={{
               width: '100%',
-              padding: '24px',
+              padding: 'clamp(16px, 3vw, 24px)',
               backgroundColor: '#4CAF50',
               color: '#fff',
               border: 'none',
               borderRadius: '12px',
-              fontSize: 24,
+              fontSize: 'clamp(18px, 2.5vw, 24px)',
               fontWeight: 600,
               cursor: 'pointer',
             }}
@@ -140,9 +205,10 @@ const renderProfileTemplate = (templateId, profile) => {
     
     return (
       <div
+        className="public-profile-template"
         style={{
           borderRadius: 0,
-          padding: '60px 40px',
+          padding: '60px 20px',
           background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
           color: '#ffffff',
           width: '100%',
@@ -151,40 +217,100 @@ const renderProfileTemplate = (templateId, profile) => {
           flexDirection: 'column',
           justifyContent: 'center',
           maxWidth: '100%',
+          boxSizing: 'border-box',
         }}
       >
-          <div style={{ textAlign: 'center', marginBottom: '60px', maxWidth: '1000px', margin: '0 auto 60px' }}>
-            <h1 style={{ color: '#fff', fontSize: 48, fontWeight: 700, margin: '0 0 16px 0' }}>
+          <div style={{ 
+            textAlign: 'center', 
+            marginBottom: '60px', 
+            maxWidth: '1000px', 
+            margin: '0 auto 60px',
+            width: '100%',
+            padding: '0 20px',
+            boxSizing: 'border-box',
+          }}>
+            <h1 style={{ 
+              color: '#fff', 
+              fontSize: 'clamp(32px, 6vw, 48px)', 
+              fontWeight: 700, 
+              margin: '0 0 16px 0' 
+            }}>
               {fullName}
             </h1>
-            <p style={{ color: '#fff', fontSize: 32, margin: '0 0 16px 0' }}>
+            <p style={{ 
+              color: '#fff', 
+              fontSize: 'clamp(20px, 3.5vw, 32px)', 
+              margin: '0 0 16px 0' 
+            }}>
               {designation}
             </p>
-            <p style={{ color: '#fff', fontSize: 28, margin: 0 }}>
+            <p style={{ 
+              color: '#fff', 
+              fontSize: 'clamp(18px, 3vw, 28px)', 
+              margin: 0 
+            }}>
               {company}
             </p>
           </div>
 
-          <div style={{ marginBottom: '60px', maxWidth: '1000px', margin: '0 auto 60px' }}>
-            <h3 style={{ color: '#fff', fontSize: 36, fontWeight: 700, margin: '0 0 24px 0', textAlign: 'left' }}>
+          <div style={{ 
+            marginBottom: '60px', 
+            maxWidth: '1000px', 
+            margin: '0 auto 60px',
+            width: '100%',
+            padding: '0 20px',
+            boxSizing: 'border-box',
+          }}>
+            <h3 style={{ 
+              color: '#fff', 
+              fontSize: 'clamp(22px, 4vw, 36px)', 
+              fontWeight: 700, 
+              margin: '0 0 24px 0', 
+              textAlign: 'left' 
+            }}>
               Contact Information
             </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', fontSize: 28 }}>
-              <span style={{ fontSize: 36, opacity: 0.9 }}>📞</span>
-              <span style={{ color: '#fff' }}>{phone}</span>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px', 
+              marginBottom: '24px', 
+              fontSize: 'clamp(18px, 3vw, 28px)',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.9 }}>📞</span>
+              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: 28 }}>
-              <span style={{ fontSize: 36, opacity: 0.9 }}>📧</span>
-              <span style={{ color: '#fff' }}>{email}</span>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px', 
+              fontSize: 'clamp(18px, 3vw, 28px)',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.9 }}>📧</span>
+              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{email}</span>
             </div>
           </div>
 
           {socialMedia.length > 0 && (
-            <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-              <h3 style={{ color: '#fff', fontSize: 36, fontWeight: 700, margin: '0 0 24px 0', textAlign: 'left' }}>
+            <div style={{ 
+              maxWidth: '1000px', 
+              margin: '0 auto',
+              width: '100%',
+              padding: '0 20px',
+              boxSizing: 'border-box',
+            }}>
+              <h3 style={{ 
+                color: '#fff', 
+                fontSize: 'clamp(22px, 4vw, 36px)', 
+                fontWeight: 700, 
+                margin: '0 0 24px 0', 
+                textAlign: 'left' 
+              }}>
                 Social Media
               </h3>
-              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 {socialMedia.slice(0, 3).map((social, idx) => (
                   <a
                     key={idx}
@@ -192,12 +318,12 @@ const renderProfileTemplate = (templateId, profile) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      padding: '20px 32px',
+                      padding: 'clamp(14px, 2.5vw, 20px) clamp(20px, 4vw, 32px)',
                       backgroundColor: '#0077b5',
                       color: '#fff',
                       border: 'none',
                       borderRadius: '12px',
-                      fontSize: 24,
+                      fontSize: 'clamp(16px, 2.5vw, 24px)',
                       fontWeight: 600,
                       textDecoration: 'none',
                     }}
@@ -216,9 +342,10 @@ const renderProfileTemplate = (templateId, profile) => {
   if (templateId === 'epic') {
     return (
       <div
+        className="public-profile-template"
         style={{
           borderRadius: 0,
-          padding: '60px 40px',
+          padding: '60px 20px',
           background: '#000000',
           border: '4px solid #ffeb3b',
           color: '#fff',
@@ -228,23 +355,48 @@ const renderProfileTemplate = (templateId, profile) => {
           flexDirection: 'column',
           justifyContent: 'center',
           maxWidth: '100%',
+          boxSizing: 'border-box',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '60px', maxWidth: '1000px', margin: '0 auto 60px' }}>
-          <h1 style={{ color: '#fff', fontSize: 48, fontWeight: 700, margin: '0 0 16px 0' }}>
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: '60px', 
+          maxWidth: '1000px', 
+          margin: '0 auto 60px',
+          width: '100%',
+          padding: '0 20px',
+          boxSizing: 'border-box',
+        }}>
+          <h1 style={{ 
+            color: '#fff', 
+            fontSize: 'clamp(32px, 6vw, 48px)', 
+            fontWeight: 700, 
+            margin: '0 0 16px 0' 
+          }}>
             {fullName}
           </h1>
-          <p style={{ color: '#ffeb3b', fontSize: 36, fontWeight: 700, margin: '0 0 16px 0' }}>
+          <p style={{ 
+            color: '#ffeb3b', 
+            fontSize: 'clamp(22px, 4vw, 36px)', 
+            fontWeight: 700, 
+            margin: '0 0 16px 0' 
+          }}>
             {designation}
           </p>
-          <p style={{ color: '#fff', fontSize: 28, opacity: 0.8, margin: 0, fontStyle: 'italic' }}>
+          <p style={{ 
+            color: '#fff', 
+            fontSize: 'clamp(18px, 3vw, 28px)', 
+            opacity: 0.8, 
+            margin: 0, 
+            fontStyle: 'italic' 
+          }}>
             {company}
           </p>
         </div>
 
           <div
             style={{
-              width: '100%',
+              width: 'calc(100% - 40px)',
               maxWidth: '1000px',
               height: '3px',
               backgroundColor: '#ffeb3b',
@@ -252,44 +404,77 @@ const renderProfileTemplate = (templateId, profile) => {
             }}
           />
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '60px', fontSize: 28, maxWidth: '1000px', margin: '0 auto 60px', flexWrap: 'wrap', gap: '40px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ fontSize: 36, opacity: 0.8 }}>📞</span>
-              <span style={{ color: '#fff' }}>{phone}</span>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            marginBottom: '60px', 
+            fontSize: 'clamp(18px, 3vw, 28px)', 
+            maxWidth: '1000px', 
+            margin: '0 auto 60px', 
+            flexWrap: 'wrap', 
+            gap: '24px',
+            width: '100%',
+            padding: '0 20px',
+            boxSizing: 'border-box',
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              flex: '1 1 auto',
+              minWidth: '200px',
+            }}>
+              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.8 }}>📞</span>
+              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ fontSize: 36, opacity: 0.8 }}>📧</span>
-              <span style={{ color: '#fff' }}>{email}</span>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              flex: '1 1 auto',
+              minWidth: '200px',
+            }}>
+              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.8 }}>📧</span>
+              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{email}</span>
             </div>
           </div>
 
-        {socialMedia.length > 0 && (
-          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', maxWidth: '1000px', margin: '0 auto' }}>
-            {socialMedia.slice(0, 3).map((social, idx) => (
-              <a
-                key={idx}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  flex: 1,
-                  padding: '24px 32px',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  border: '3px solid #ffeb3b',
-                  borderRadius: '12px',
-                  fontSize: 24,
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  textDecoration: 'none',
-                  minWidth: '200px',
-                }}
-              >
-                {social.platform || 'Link'}
-              </a>
-            ))}
-          </div>
-        )}
+          {socialMedia.length > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              flexWrap: 'wrap', 
+              maxWidth: '1000px', 
+              margin: '0 auto',
+              width: '100%',
+              padding: '0 20px',
+              boxSizing: 'border-box',
+            }}>
+              {socialMedia.slice(0, 3).map((social, idx) => (
+                <a
+                  key={idx}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: '1 1 auto',
+                    padding: 'clamp(16px, 3vw, 24px) clamp(20px, 4vw, 32px)',
+                    backgroundColor: '#000',
+                    color: '#fff',
+                    border: '3px solid #ffeb3b',
+                    borderRadius: '12px',
+                    fontSize: 'clamp(16px, 2.5vw, 24px)',
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    minWidth: 'clamp(150px, 25vw, 200px)',
+                  }}
+                >
+                  {social.platform || 'Link'}
+                </a>
+              ))}
+            </div>
+          )}
       </div>
     );
   }
@@ -436,6 +621,34 @@ const PublicProfile = ({ userId }) => {
         html {
           margin: 0;
           padding: 0;
+        }
+        @media (max-width: 768px) {
+          .public-profile-template > div {
+            padding: 20px !important;
+          }
+          .public-profile-template h1 {
+            font-size: 32px !important;
+          }
+          .public-profile-template h3 {
+            font-size: 24px !important;
+          }
+          .public-profile-template p {
+            font-size: 18px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .public-profile-template > div {
+            padding: 16px !important;
+          }
+          .public-profile-template h1 {
+            font-size: 28px !important;
+          }
+          .public-profile-template h3 {
+            font-size: 20px !important;
+          }
+          .public-profile-template p {
+            font-size: 16px !important;
+          }
         }
       `}</style>
     </div>

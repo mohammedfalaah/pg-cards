@@ -288,41 +288,41 @@ const OrderSuccessPage = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.content}>
+    <div style={styles.container} className="order-success-container">
+      <div style={styles.content} className="order-success-content">
         {/* Success Animation */}
         <div style={{
           ...styles.checkmarkCircle,
           ...(animationComplete ? styles.checkmarkCircleAnimated : {})
-        }}>
-          <div style={styles.checkmark}>✓</div>
+        }} className="order-success-checkmark-circle">
+          <div style={styles.checkmark} className="order-success-checkmark">✓</div>
         </div>
 
         {/* Success Message */}
-        <h1 style={styles.title}>Order Placed Successfully!</h1>
-        <p style={styles.subtitle}>
+        <h1 style={styles.title} className="order-success-title">Order Placed Successfully!</h1>
+        <p style={styles.subtitle} className="order-success-subtitle">
           Thank you for your purchase. Your order has been confirmed and is being processed.
         </p>
 
         {/* Order Details Card */}
         {orderDetails && (
-          <div style={styles.orderCard}>
+          <div style={styles.orderCard} className="order-success-card">
             <div style={styles.orderHeader}>
               <h2 style={styles.orderTitle}>Order Details</h2>
             </div>
             
             <div style={styles.orderInfo}>
-              <div style={styles.infoRow}>
+              <div style={styles.infoRow} className="order-success-info-row">
                 <span style={styles.infoLabel}>Order Number:</span>
                 <span style={styles.infoValue}>{orderDetails.orderNumber}</span>
               </div>
               
-              <div style={styles.infoRow}>
+              <div style={styles.infoRow} className="order-success-info-row">
                 <span style={styles.infoLabel}>Estimated Delivery:</span>
                 <span style={styles.infoValue}>{orderDetails.expectedDelivery || orderDetails.estimatedDelivery}</span>
               </div>
               
-              <div style={styles.infoRow}>
+              <div style={styles.infoRow} className="order-success-info-row">
                 <span style={styles.infoLabel}>Confirmation Email:</span>
                 <span style={styles.infoValue}>{orderDetails.email}</span>
               </div>
@@ -332,7 +332,7 @@ const OrderSuccessPage = () => {
 
         {/* QR from backend (POST /userProfile/getUser) */}
         {!qrLoading && (qrImage || redirectUrl) && (
-          <div style={styles.nextStepsCard}>
+          <div style={styles.nextStepsCard} className="order-success-card">
             <h3 style={styles.nextStepsTitle}>Your Profile QR Code</h3>
             <p style={styles.subtitle}>
               This QR is generated from your profile. Scan it to open your public profile page.
@@ -564,12 +564,67 @@ const styles = {
   },
 };
 
-// Add CSS animation for spinning loader
+// Add CSS animation for spinning loader and responsive styles
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+  }
+  @media (max-width: 768px) {
+    .order-success-container {
+      padding-top: 100px !important;
+      padding-bottom: 40px !important;
+    }
+    .order-success-content {
+      padding: 0 16px !important;
+    }
+    .order-success-title {
+      font-size: 28px !important;
+    }
+    .order-success-subtitle {
+      font-size: 16px !important;
+    }
+    .order-success-card {
+      padding: 24px 20px !important;
+    }
+    .order-success-checkmark-circle {
+      width: 100px !important;
+      height: 100px !important;
+    }
+    .order-success-checkmark {
+      font-size: 50px !important;
+    }
+    .order-success-actions {
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .order-success-btn {
+      width: 100% !important;
+    }
+    .order-success-info-row {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+    }
+  }
+  @media (max-width: 480px) {
+    .order-success-container {
+      padding-top: 90px !important;
+    }
+    .order-success-title {
+      font-size: 24px !important;
+    }
+    .order-success-card {
+      padding: 20px 16px !important;
+    }
+    .order-success-checkmark-circle {
+      width: 80px !important;
+      height: 80px !important;
+    }
+    .order-success-checkmark {
+      font-size: 40px !important;
+    }
   }
 `;
 document.head.appendChild(styleSheet);

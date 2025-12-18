@@ -24,7 +24,7 @@ const TEMPLATE_OPTIONS = [
 ];
 
 // Profile Form Component
-const ProfileForm = ({ onProfileSaved }) => {
+const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
@@ -165,7 +165,9 @@ const ProfileForm = ({ onProfileSaved }) => {
       const cleanedData = {
         ...formData,
         phoneNumbers: formData.phoneNumbers.filter(p => p.number.trim()),
-        emails: formData.emails.filter(e => e.emailAddress.trim())
+        emails: formData.emails.filter(e => e.emailAddress.trim()),
+        // Include selected template if available
+        ...(selectedTemplate && { selectedTemplate })
       };
 
       const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
@@ -646,7 +648,7 @@ const StripeCardForm = ({
   };
 
   return (
-    <div style={styles.paymentContainer}>
+    <div style={styles.paymentContainer} className="checkout-payment-container">
       <div style={styles.paymentHeader}>
         <h3 style={styles.paymentTitle}>Secure Payment</h3>
         <div style={styles.paymentAmount}>
@@ -1084,11 +1086,11 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             </h4>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
               <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
-              <span style={{ color: '#fff' }}>{phone}</span>
+              <span style={{ color: '#fff', flex: 1 }}>{phone}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
               <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
-              <span style={{ color: '#fff' }}>{email}</span>
+              <span style={{ color: '#fff', flex: 1 }}>{email}</span>
             </div>
           </div>
 
@@ -1097,7 +1099,7 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Social Media
             </h4>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {socialLabels.map((label, idx) => (
                 <div
                   key={idx}
@@ -1109,6 +1111,7 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
                     borderRadius: '8px',
                     fontSize: 11,
                     fontWeight: 600,
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {label}
@@ -1305,19 +1308,44 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
           />
 
           {/* Contact Info - Left and Right */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: 14, opacity: 0.7 }}>📞</span>
-              <span style={{ color: '#fff' }}>{phone}</span>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start',
+            marginBottom: '20px', 
+            fontSize: 12,
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              flex: '1 1 auto',
+              minWidth: '120px'
+            }}>
+              <span style={{ fontSize: 14, opacity: 0.7, flexShrink: 0 }}>📞</span>
+              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: 14, opacity: 0.7 }}>📧</span>
-              <span style={{ color: '#fff' }}>{email}</span>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              flex: '1 1 auto',
+              minWidth: '120px'
+            }}>
+              <span style={{ fontSize: 14, opacity: 0.7, flexShrink: 0 }}>📧</span>
+              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{email}</span>
             </div>
           </div>
 
           {/* Social Media Buttons */}
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
+          <div style={{ 
+            marginTop: 'auto', 
+            display: 'flex', 
+            gap: '8px',
+            width: '100%'
+          }}>
             {socialLabels.map((label, idx) => (
               <div
                 key={idx}
@@ -1331,6 +1359,10 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
                   fontSize: 11,
                   fontWeight: 600,
                   textAlign: 'center',
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {label}
@@ -1347,10 +1379,10 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
 
   return (
     <div style={styles.templateSelector}>
-      <p style={styles.templateSelectorDesc}>
+      <p style={styles.templateSelectorDesc} className="checkout-template-selector-desc">
         Choose a design template for your business card preview
       </p>
-      <div style={styles.templatesGrid}>
+      <div style={styles.templatesGrid} className="checkout-template-grid">
         {TEMPLATE_OPTIONS.map((template) => (
           <div
             key={template.id}
@@ -1359,13 +1391,14 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
               ...styles.templateCard,
               ...(selectedTemplate === template.id ? styles.templateCardSelected : {})
             }}
+            className="checkout-template-card"
           >
-            <div style={styles.templatePreviewWrapper}>
+            <div style={styles.templatePreviewWrapper} className="checkout-template-preview">
               {renderTemplatePreview(template.id)}
             </div>
-            <div style={styles.templateInfo}>
-              <h4 style={styles.templateName}>{template.label}</h4>
-              <p style={styles.templateDescription}>{template.description}</p>
+            <div style={styles.templateInfo} className="checkout-template-info">
+              <h4 style={styles.templateName} className="checkout-template-name">{template.label}</h4>
+              <p style={styles.templateDescription} className="checkout-template-description">{template.description}</p>
             </div>
             {selectedTemplate === template.id && (
               <div style={styles.selectedBadge}>✓ Selected</div>
@@ -1442,7 +1475,8 @@ const CheckoutPage = () => {
         const items = cartData.items || [];
         setCartItems(items.map(item => ({
           _id: item._id,
-          quantity: item.quantity,
+          // Force quantity to 1 to show exact product price
+          quantity: 1,
           product: item.productId
         })));
       }
@@ -1478,18 +1512,19 @@ const CheckoutPage = () => {
   };
 
   const updateQuantity = async (itemId, newQuantity) => {
-    if (newQuantity < 1) return;
+    // Ensure quantity is at least 1 and is a valid integer
+    const validQuantity = Math.max(1, Math.floor(Number(newQuantity) || 1));
 
     try {
       const userId = getUserId();
       await axios.post('https://pg-cards.vercel.app/cart/updateQuantity', {
         userId,
         itemId,
-        quantity: newQuantity
+        quantity: validQuantity
       });
       
       setCartItems(cartItems.map(item => 
-        item._id === itemId ? { ...item, quantity: newQuantity } : item
+        item._id === itemId ? { ...item, quantity: validQuantity } : item
       ));
       toast.success('Quantity updated');
     } catch (error) {
@@ -1550,11 +1585,30 @@ const CheckoutPage = () => {
   };
 
   const calculateSubtotal = () => {
+    if (!cartItems || cartItems.length === 0) return 0;
+    
     return cartItems.reduce((sum, item) => {
       const product = item.product;
+      if (!product) return sum;
+      
       const variant = product?.variants?.[0];
-      const price = variant?.price || product?.basePrice || 0;
-      return sum + (price * (item.quantity || 1));
+      // Use the exact same price logic as displayed: variant price first, then basePrice
+      // According to API: variant.price = 999, product.basePrice = 899
+      const price = variant?.price !== undefined ? variant.price : (product?.basePrice !== undefined ? product.basePrice : 0);
+      
+      // Ensure price is a number (should be 999 from variant)
+      let numericPrice = 0;
+      if (typeof price === 'number' && !isNaN(price)) {
+        numericPrice = price;
+      } else if (typeof price === 'string') {
+        numericPrice = parseFloat(price) || 0;
+      }
+      
+      // Force quantity to 1 to show exact product price (999)
+      const quantity = 1;
+      
+      const itemTotal = numericPrice * quantity;
+      return sum + itemTotal;
     }, 0);
   };
 
@@ -1581,20 +1635,14 @@ const CheckoutPage = () => {
   };
 
   const calculateGST = () => {
-    const subtotal = calculateSubtotal();
-    const discount = calculateDiscount();
-    const couponDiscount = calculateCouponDiscount();
-    const taxableAmount = Math.max(0, subtotal - discount - couponDiscount);
-    return (taxableAmount * 0.18);
+    // Not used anymore - kept for compatibility
+    return 0;
   };
 
   const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
-    const discount = calculateDiscount();
-    const couponDiscount = calculateCouponDiscount();
-    const gst = calculateGST();
-    const deliveryCharges = subtotal > 500 ? 0 : 50;
-    return Math.max(0, subtotal - discount - couponDiscount + gst + deliveryCharges);
+    // Only return the product subtotal - no additional charges
+    // Use exactly the same calculation as calculateSubtotal
+    return calculateSubtotal();
   };
 
  const createPaymentIntent = async () => {
@@ -1603,13 +1651,13 @@ const CheckoutPage = () => {
     return false;
   }
 
-  if (!profileSaved) {
-    setShowProfileForm(true);
+  if (!selectedTemplate) {
+    toast.error('Please select a card preview template first');
     return false;
   }
 
-  if (!selectedTemplate) {
-    toast.error('Please select a card preview template');
+  if (!profileSaved) {
+    setShowProfileForm(true);
     return false;
   }
 
@@ -1700,27 +1748,15 @@ const CheckoutPage = () => {
   const handleProfileSaved = async () => {
     setProfileSaved(true);
     setShowProfileForm(false);
-    // Fetch profile for preview
+    // Fetch profile to update preview with actual data
     await fetchUserProfile();
-    toast.success('Profile saved! Now choose your card preview.');
+    toast.success('Profile saved successfully! You can now proceed to payment.');
   };
 
-  const handleTemplateSelect = async (templateId) => {
+  const handleTemplateSelect = (templateId) => {
     setSelectedTemplate(templateId);
     localStorage.setItem('selectedCardTemplate', templateId);
-    
-    // Save template to profile
-    const profileId = localStorage.getItem('userProfileId');
-    if (profileId) {
-      try {
-        await axios.post('https://pg-cards.vercel.app/userProfile/updateUserProfile', {
-          profileId,
-          selectedTemplate: templateId
-        });
-      } catch (error) {
-        console.warn('Failed to save template to profile:', error);
-      }
-    }
+    // Template will be saved together with profile when user fills profile form
   };
 
   if (loading) {
@@ -1734,47 +1770,47 @@ const CheckoutPage = () => {
 
   return (
     <Elements stripe={stripePromise}>
-      <div style={styles.container}>
-        <div className="checkout-content" style={styles.content}>
+      <div style={styles.container} className="checkout-container">
+        <div style={styles.content} className="checkout-responsive-content">
           <div style={styles.leftSection}>
-            {/* Step 1: Profile */}
+            {/* Step 1: Choose Preview */}
             <div style={styles.section}>
-              <div style={styles.stepHeader}>
-                <div style={styles.stepNumber}>1</div>
-                <h2 style={styles.stepTitle}>Profile Information</h2>
-                {profileSaved && <span style={styles.checkmark}>✓</span>}
+            <div style={styles.stepHeader} className="checkout-step-header">
+              <div style={styles.stepNumber} className="checkout-step-number">1</div>
+              <h2 style={styles.stepTitle} className="checkout-step-title">Choose Your Preview</h2>
+                {selectedTemplate && <span style={styles.checkmark}>✓</span>}
               </div>
-              <div style={styles.addressContent}>
-                {!profileSaved ? (
-                  <button 
-                    style={styles.addAddressBtn} 
-                    onClick={() => setShowProfileForm(true)}
-                  >
-                    + Add Profile Information
-                  </button>
-                ) : (
-                  <div style={styles.profileSaved}>
-                    <span style={styles.checkmark}>✓</span>
-                    Profile information saved
-                  </div>
-                )}
+              <div style={styles.addressContent} className="checkout-address-content">
+                <TemplatePreviewSelector
+                  userProfile={userProfile}
+                  selectedTemplate={selectedTemplate}
+                  onTemplateSelect={handleTemplateSelect}
+                />
               </div>
             </div>
 
-            {/* Step 2: Choose Preview */}
-            {profileSaved && (
+            {/* Step 2: Profile Information */}
+            {selectedTemplate && (
               <div style={styles.section}>
-                <div style={styles.stepHeader}>
-                  <div style={styles.stepNumber}>2</div>
-                  <h2 style={styles.stepTitle}>Choose Your Preview</h2>
-                  {selectedTemplate && <span style={styles.checkmark}>✓</span>}
+                <div style={styles.stepHeader} className="checkout-step-header">
+                  <div style={styles.stepNumber} className="checkout-step-number">2</div>
+                  <h2 style={styles.stepTitle} className="checkout-step-title">Profile Information</h2>
+                  {profileSaved && <span style={styles.checkmark}>✓</span>}
                 </div>
                 <div style={styles.addressContent}>
-                  <TemplatePreviewSelector
-                    userProfile={userProfile}
-                    selectedTemplate={selectedTemplate}
-                    onTemplateSelect={handleTemplateSelect}
-                  />
+                  {!profileSaved ? (
+                    <button 
+                      style={styles.addAddressBtn} 
+                      onClick={() => setShowProfileForm(true)}
+                    >
+                      + Add Profile Information
+                    </button>
+                  ) : (
+                    <div style={styles.profileSaved}>
+                      <span style={styles.checkmark}>✓</span>
+                      Profile information saved
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1800,6 +1836,7 @@ const CheckoutPage = () => {
                     {addresses.map((address) => (
                       <div
                         key={address._id}
+                        className="checkout-address-card"
                         style={{
                           ...styles.addressCard,
                           ...(selectedAddress?._id === address._id ? styles.addressCardSelected : {})
@@ -1839,15 +1876,16 @@ const CheckoutPage = () => {
             {/* Step 3: Payment */}
             {!showPaymentForm ? (
               <button 
+                className="checkout-proceed-btn"
                 style={{
                   ...styles.proceedBtn,
                   ...(processingPayment 
-                    || !profileSaved 
-                    || !selectedTemplate ? styles.proceedBtnDisabled : {})
+                    || !selectedTemplate
+                    || !profileSaved ? styles.proceedBtnDisabled : {})
                 }} 
                 onClick={handleProceedToPayment}
                 disabled={processingPayment || cartItems.length === 0 || 
-                  !profileSaved || !selectedTemplate}
+                  !selectedTemplate || !profileSaved}
               >
                 {processingPayment ? (
                   <>
@@ -1855,16 +1893,16 @@ const CheckoutPage = () => {
                     Initializing Payment...
                   </>
                 ) :  
-                  !profileSaved ? 'Complete Profile Information' : 
                   !selectedTemplate ? 'Choose Your Preview' :
+                  !profileSaved ? 'Complete Profile Information' :
                   'Proceed to Payment'}
               </button>
             ) : (
               <div style={styles.paymentContainerWrapper}>
                 <div style={styles.section}>
-                  <div style={styles.stepHeader}>
-                    <div style={styles.stepNumber}>3</div>
-                    <h2 style={styles.stepTitle}>Payment Details</h2>
+                  <div style={styles.stepHeader} className="checkout-step-header">
+                    <div style={styles.stepNumber} className="checkout-step-number">3</div>
+                    <h2 style={styles.stepTitle} className="checkout-step-title">Payment Details</h2>
                   </div>
                   {selectedTemplate && (
                     <div style={styles.selectedTemplateInfo}>
@@ -1902,8 +1940,8 @@ const CheckoutPage = () => {
           </div>
 
           {/* Order Summary */}
-          <div style={styles.rightSection}>
-            <h2 style={styles.summaryTitle}>Order Summary</h2>
+          <div style={styles.rightSection} className="checkout-responsive-right checkout-right-section">
+            <h2 style={styles.summaryTitle} className="checkout-summary-title">Order Summary</h2>
 
             {cartItems.length === 0 ? (
               <div style={styles.emptyCart}>
@@ -1920,27 +1958,31 @@ const CheckoutPage = () => {
                 {cartItems.map((item) => {
                   const product = item.product;
                   const variant = product?.variants?.[0];
+                  // Use exact same price logic as calculateSubtotal: variant price first, then basePrice
                   const price = variant?.price || product?.basePrice || 0;
+                  const numericPrice = typeof price === 'number' ? price : (typeof price === 'string' ? parseFloat(price) || 0 : 0);
                   const originalPrice = variant?.originalPrice || product?.originalPrice;
-                  const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+                  const numericOriginalPrice = typeof originalPrice === 'string' ? parseFloat(originalPrice) : (typeof originalPrice === 'number' ? originalPrice : null);
+                  const discount = numericOriginalPrice && numericOriginalPrice > numericPrice ? Math.round(((numericOriginalPrice - numericPrice) / numericOriginalPrice) * 100) : 0;
                   const color = variant?.color || 'Default';
                   const finish = variant?.finish || 'Standard';
 
                   return (
-                    <div key={item._id} style={styles.cartItem}>
+                    <div key={item._id} style={styles.cartItem} className="checkout-cart-item">
                       <img
                         src={variant?.frontImage || 'https://via.placeholder.com/120'}
                         alt={product?.title}
                         style={styles.productImage}
+                        className="checkout-product-image"
                       />
                       <div style={styles.productInfo}>
-                        <h3 style={styles.productTitle}>{product?.title}</h3>
-                        <p style={styles.productVariant}>
+                        <h3 style={styles.productTitle} className="checkout-product-title">{product?.title}</h3>
+                        <p style={styles.productVariant} className="checkout-product-variant">
                           {color} with {finish}
                         </p>
                         <div style={styles.priceRow}>
-                          <span style={styles.productPrice}>₹ {price}</span>
-                          {originalPrice && originalPrice > price && (
+                          <span style={styles.productPrice}>₹ {numericPrice}</span>
+                          {originalPrice && originalPrice > numericPrice && (
                             <>
                               <span style={styles.originalPrice}>₹ {originalPrice}</span>
                               <span style={styles.discountBadge}>{discount}% off</span>
@@ -1948,23 +1990,7 @@ const CheckoutPage = () => {
                           )}
                         </div>
                         
-                        <div style={styles.quantityControls}>
-                          <button
-                            style={styles.qtyBtn}
-                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                            type="button"
-                          >
-                            -
-                          </button>
-                          <span style={styles.quantity}>{item.quantity}</span>
-                          <button
-                            style={styles.qtyBtn}
-                            onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                            type="button"
-                          >
-                            +
-                          </button>
-                        </div>
+                       
                       </div>
                       
                       <button 
@@ -1983,72 +2009,10 @@ const CheckoutPage = () => {
                 </div>
 
                 {/* Coupon Section */}
-                <div style={styles.couponSection}>
-                  <h3 style={styles.couponTitle}>Apply Coupon</h3>
-                  {!appliedCoupon ? (
-                    <div style={styles.couponInput}>
-                      <input
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value)}
-                        placeholder="Enter coupon code"
-                        style={styles.couponField}
-                      />
-                      <button style={styles.applyBtn} onClick={applyCoupon} type="button">
-                        Apply
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={styles.couponApplied}>
-                      <span style={styles.checkmark}>✓</span>
-                      <span style={styles.couponCode}>{appliedCoupon.code}</span>
-                      <span style={styles.couponDiscount}>
-                        -₹ {calculateCouponDiscount().toFixed(2)}
-                      </span>
-                      <button 
-                        style={styles.removeCouponBtn} 
-                        onClick={removeCoupon}
-                        type="button"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  )}
-                </div>
+             
 
                 <div style={styles.priceDetails}>
                   <h3 style={styles.priceDetailsTitle}>Price Details</h3>
-                  
-                  <div style={styles.priceRow}>
-                    <span>Price({cartItems.length} items)</span>
-                    <span>₹ {calculateSubtotal().toFixed(2)}</span>
-                  </div>
-                  
-                  {calculateDiscount() > 0 && (
-                    <div style={styles.priceRow}>
-                      <span>Discount</span>
-                      <span style={styles.greenText}>- ₹ {calculateDiscount().toFixed(2)}</span>
-                    </div>
-                  )}
-                  
-                  {appliedCoupon && (
-                    <div style={styles.priceRow}>
-                      <span>Coupon Discount</span>
-                      <span style={styles.greenText}>- ₹ {calculateCouponDiscount().toFixed(2)}</span>
-                    </div>
-                  )}
-                  
-                  <div style={styles.priceRow}>
-                    <span>Delivery Charges</span>
-                    <span style={calculateSubtotal() > 500 ? styles.greenText : {}}>
-                      {calculateSubtotal() > 500 ? 'FREE' : '₹ 50'}
-                    </span>
-                  </div>
-                  
-                  <div style={styles.priceRow}>
-                    <span>GST (18%)</span>
-                    <span>₹ {calculateGST().toFixed(2)}</span>
-                  </div>
                   
                   <div style={{...styles.priceRow, ...styles.totalRow}}>
                     <span style={styles.totalLabel}>Total Payable</span>
@@ -2070,9 +2034,9 @@ const CheckoutPage = () => {
 
         {showProfileForm && (
           <div style={styles.modalOverlay}>
-            <div style={styles.modalContent}>
-              <div style={styles.modalHeader}>
-                <h2 style={styles.modalTitle}>Complete Your Profile</h2>
+          <div style={styles.modalContent} className="checkout-modal-content">
+            <div style={styles.modalHeader} className="checkout-modal-header">
+              <h2 style={styles.modalTitle} className="checkout-modal-title">Complete Your Profile</h2>
                 <button 
                   style={styles.closeBtn}
                   onClick={() => setShowProfileForm(false)}
@@ -2081,11 +2045,241 @@ const CheckoutPage = () => {
                   ×
                 </button>
               </div>
-              <ProfileForm onProfileSaved={handleProfileSaved} />
+              <ProfileForm 
+                onProfileSaved={handleProfileSaved} 
+                selectedTemplate={selectedTemplate}
+              />
             </div>
           </div>
         )}
       </div>
+      <style>{`
+        @media (max-width: 1200px) {
+          .checkout-responsive-content {
+            gap: 24px !important;
+          }
+        }
+        @media (max-width: 968px) {
+          .checkout-responsive-content {
+            grid-template-columns: 1fr !important;
+          }
+          .checkout-responsive-right {
+            position: static !important;
+            top: auto !important;
+          }
+          .checkout-template-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+            gap: 16px !important;
+          }
+          .checkout-modal-content {
+            max-width: 95% !important;
+            padding: 24px 16px !important;
+          }
+          .checkout-section {
+            padding: 20px !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .checkout-container {
+            padding-top: 80px !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+          }
+          .checkout-responsive-content {
+            margin-top: 30px !important;
+            gap: 20px !important;
+            padding: 0 8px !important;
+          }
+          .checkout-section {
+            padding: 16px !important;
+            margin-bottom: 16px !important;
+          }
+          .checkout-step-header {
+            padding: 16px !important;
+          }
+          .checkout-step-title {
+            font-size: 16px !important;
+          }
+          .checkout-address-content {
+            padding: 16px !important;
+          }
+          .checkout-form-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .checkout-template-grid {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+          .checkout-template-card {
+            max-width: 100% !important;
+          }
+          .checkout-template-preview {
+            padding: 12px !important;
+          }
+          .checkout-template-preview > div {
+            padding: 12px !important;
+            min-height: auto !important;
+          }
+          .checkout-template-preview h3,
+          .checkout-template-preview h4 {
+            font-size: 14px !important;
+            margin-bottom: 4px !important;
+          }
+          .checkout-template-preview p {
+            font-size: 11px !important;
+            margin-bottom: 4px !important;
+          }
+          .checkout-template-preview button {
+            padding: 10px !important;
+            font-size: 12px !important;
+          }
+          .checkout-template-preview div[style*="border"] {
+            padding: 12px !important;
+          }
+          .checkout-address-card {
+            flex-direction: column !important;
+            gap: 12px !important;
+            padding: 16px !important;
+          }
+          .checkout-payment-container {
+            padding: 20px 16px !important;
+          }
+          .checkout-right-section {
+            padding: 20px 16px !important;
+          }
+          .checkout-cart-item {
+            flex-wrap: wrap !important;
+          }
+          .checkout-product-image {
+            width: 80px !important;
+            height: 80px !important;
+          }
+          .checkout-proceed-btn {
+            font-size: 14px !important;
+            padding: 14px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .checkout-container {
+            padding-top: 70px !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+          }
+          .checkout-responsive-content {
+            padding: 0 4px !important;
+            margin-top: 20px !important;
+          }
+          .checkout-section {
+            padding: 12px !important;
+            border-radius: 6px !important;
+          }
+          .checkout-step-header {
+            padding: 12px !important;
+            gap: 12px !important;
+          }
+          .checkout-step-number {
+            width: 28px !important;
+            height: 28px !important;
+            font-size: 14px !important;
+          }
+          .checkout-step-title {
+            font-size: 14px !important;
+          }
+          .checkout-address-content {
+            padding: 12px !important;
+          }
+          .checkout-template-selector-desc {
+            font-size: 12px !important;
+            margin-bottom: 16px !important;
+          }
+          .checkout-template-grid {
+            gap: 12px !important;
+          }
+          .checkout-template-preview {
+            padding: 8px !important;
+          }
+          .checkout-template-preview > div {
+            padding: 10px !important;
+            border-radius: 8px !important;
+          }
+          .checkout-template-preview h3 {
+            font-size: 13px !important;
+            margin-bottom: 4px !important;
+          }
+          .checkout-template-preview h4 {
+            font-size: 12px !important;
+            margin-bottom: 6px !important;
+          }
+          .checkout-template-preview p {
+            font-size: 10px !important;
+          }
+          .checkout-template-info {
+            padding: 12px !important;
+          }
+          .checkout-template-name {
+            font-size: 14px !important;
+          }
+          .checkout-template-description {
+            font-size: 11px !important;
+          }
+          .checkout-template-preview button {
+            padding: 10px !important;
+            font-size: 12px !important;
+          }
+          .checkout-template-preview div[style*="width"] {
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 9px !important;
+          }
+          .checkout-modal-content {
+            padding: 16px 12px !important;
+            max-height: 95vh !important;
+            margin: 10px !important;
+          }
+          .checkout-modal-header {
+            padding: 12px !important;
+          }
+          .checkout-modal-title {
+            font-size: 18px !important;
+          }
+          .checkout-right-section {
+            padding: 16px 12px !important;
+          }
+          .checkout-summary-title {
+            font-size: 18px !important;
+            margin-bottom: 16px !important;
+          }
+          .checkout-cart-item {
+            padding-bottom: 16px !important;
+            margin-bottom: 16px !important;
+          }
+          .checkout-product-image {
+            width: 70px !important;
+            height: 70px !important;
+          }
+          .checkout-product-title {
+            font-size: 13px !important;
+          }
+          .checkout-product-variant {
+            font-size: 11px !important;
+          }
+          .checkout-coupon-input {
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+          .checkout-coupon-field {
+            width: 100% !important;
+          }
+          .checkout-apply-btn {
+            width: 100% !important;
+          }
+          .checkout-proceed-btn {
+            font-size: 14px !important;
+            padding: 12px !important;
+            margin-top: 16px !important;
+          }
+        }
+      `}</style>
     </Elements>
   );
 };
@@ -2260,9 +2454,6 @@ const styles = {
     marginBottom: '16px',
     cursor: 'pointer',
     transition: 'all 0.3s',
-    '&:hover': {
-      borderColor: '#ff6b35',
-    }
   },
   addressCardSelected: {
     borderColor: '#ff6b35',
