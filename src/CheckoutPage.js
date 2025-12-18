@@ -1705,9 +1705,22 @@ const CheckoutPage = () => {
     toast.success('Profile saved! Now choose your card preview.');
   };
 
-  const handleTemplateSelect = (templateId) => {
+  const handleTemplateSelect = async (templateId) => {
     setSelectedTemplate(templateId);
     localStorage.setItem('selectedCardTemplate', templateId);
+    
+    // Save template to profile
+    const profileId = localStorage.getItem('userProfileId');
+    if (profileId) {
+      try {
+        await axios.post('https://pg-cards.vercel.app/userProfile/updateUserProfile', {
+          profileId,
+          selectedTemplate: templateId
+        });
+      } catch (error) {
+        console.warn('Failed to save template to profile:', error);
+      }
+    }
   };
 
   if (loading) {
@@ -3050,8 +3063,6 @@ const styles = {
   // Template Selector Styles
   templateSelector: {
     width: '100%',
-    maxWidth: '1024px',
-    margin: '0 auto',
   },
   templateSelectorDesc: {
     fontSize: '14px',
@@ -3060,17 +3071,12 @@ const styles = {
     textAlign: 'center',
   },
   templatesGrid: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'stretch',
-    gap: '24px',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '20px',
   },
   templateCard: {
     position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    width: '320px',
     cursor: 'pointer',
     transition: 'all 0.3s',
     borderRadius: '12px',
@@ -3084,9 +3090,8 @@ const styles = {
     transform: 'translateY(-4px)',
   },
   templatePreviewWrapper: {
-    padding: '20px',
+    padding: '16px',
     backgroundColor: '#f8f9fa',
-    flex: 1,
   },
   templateInfo: {
     padding: '16px',

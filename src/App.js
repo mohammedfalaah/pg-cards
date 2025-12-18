@@ -68,19 +68,22 @@ function App() {
           window.history.replaceState({}, '', '/');
         }
       }
-      // Check for user profile route
-      else if (path.startsWith('/user-profile') || path.startsWith('/profile')) {
+      // Check for user profile route (authenticated user dashboard)
+      else if ((path.startsWith('/user-profile') && !path.match(/^\/user-profile\/([^/]+)$/)) || 
+               (path.startsWith('/profile') && !path.match(/^\/profile\/([^/]+)$/))) {
         setActiveView('user-profile');
       }
       // ✅ NEW: Check for order success route
       else if (path.startsWith('/order-success')) {
         setActiveView('order-success');
       }
-      // Public profile view via QR code: /public-profile/:userId
-      else if (path.match(/^\/public-profile\/([^/]+)$/)) {
-        const match = path.match(/^\/public-profile\/([^/]+)$/);
-        setPublicProfileUserId(match[1]);
-        setActiveView('public-profile');
+      // Public profile view via QR code: /public-profile/:userId or /user_profile/:userId
+      else if (path.match(/^\/public-profile\/([^/]+)$/) || path.match(/^\/user_profile\/([^/]+)$/)) {
+        const match = path.match(/^\/(?:public-profile|user_profile)\/([^/]+)$/);
+        if (match && match[1]) {
+          setPublicProfileUserId(match[1]);
+          setActiveView('public-profile');
+        }
       }
       // Check for product detail route
       else if (path.match(/^\/product\/[^/]+\/([^/]+)$/)) {
@@ -145,11 +148,12 @@ function App() {
 
   return (
     <div className="App">
-      {/* HEADER (hide on dashboard, admin panel, user profile, and order success) */}
+      {/* HEADER (hide on dashboard, admin panel, user profile, order success, and public profile) */}
       {activeView !== 'dashboard' && 
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
-       activeView !== 'order-success' && (
+       activeView !== 'order-success' &&
+       activeView !== 'public-profile' && (
         <Header
           user={auth.user}
           onLoginSuccess={handleLoginSuccess}
@@ -204,18 +208,20 @@ function App() {
         />
       )}
 
-      {/* WHATSAPP → SHOW ON ALL PAGES except admin, user profile, and order success */}
+      {/* WHATSAPP → SHOW ON ALL PAGES except admin, user profile, order success, and public profile */}
       {activeView !== 'admin' && 
        activeView !== 'user-profile' &&
-       activeView !== 'order-success' && 
+       activeView !== 'order-success' &&
+       activeView !== 'public-profile' && 
        <WhatsappChat />}
 
-      {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, and order success */}
+      {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, order success, and public profile */}
       {activeView !== 'dashboard' && 
        activeView !== 'reset-password' && 
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
-       activeView !== 'order-success' && 
+       activeView !== 'order-success' &&
+       activeView !== 'public-profile' && 
        <Footer />}
     </div>
   );
