@@ -16,13 +16,11 @@ import { getUserId } from './components/Utils';
 // Initialize Stripe
 const stripePromise = loadStripe('pk_test_51SYlQeCt0GZs5TLdv40gy5CFNFZQwjJBKKafhRcRkAteocPEM5UVtYrXtiOMGeuFrci9HUgwn8rPIua4wuqysHsw00cCrrypSt');
 
-// Template Options
+// Template Options - Only 3 distinct designs
 const TEMPLATE_OPTIONS = [
-  { id: 'standard', label: 'Standard', description: 'Clean white background' },
-  { id: 'modern', label: 'Modern', description: 'Gradient purple design' },
-  { id: 'linkedin', label: 'Classic', description: 'Professional LinkedIn style' },
-  { id: 'map', label: 'Location Map', description: 'Google Maps integration' },
-  { id: 'epic', label: 'Epic', description: 'Dark theme with gold accents' },
+  { id: 'standard', label: 'Standard', description: 'Clean white background with green accents' },
+  { id: 'modern', label: 'Modern', description: 'Purple-blue gradient design' },
+  { id: 'epic', label: 'Epic', description: 'Dark theme with yellow accents' },
 ];
 
 // Profile Form Component
@@ -946,98 +944,99 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     const profilePic = userProfile?.profilePicture || '';
     const socialMedia = userProfile?.socialMedia || [];
 
-    // Standard Template - White card with green-bordered header, sections for contact info and social media
+    // Standard Template - Exact match to image: White card with light green-bordered header section
     if (templateId === 'standard') {
+      const socialLabels = socialMedia.length >= 3 
+        ? [socialMedia[0]?.platform?.substring(0, 2) || 'Li', socialMedia[1]?.platform?.substring(0, 2) || 'In', socialMedia[2]?.platform?.substring(0, 2) || 'Tw']
+        : ['Li', 'In', 'Tw'];
+      
       return (
         <div
           style={{
             borderRadius: 12,
-            padding: 0,
+            padding: '16px',
             background: '#ffffff',
-            border: '1px solid #e0e0e0',
-            overflow: 'hidden',
             minHeight: '280px',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          {/* Green-bordered header section */}
+          {/* Light green-bordered header section with rounded corners */}
           <div
             style={{
-              border: '2px solid #4CAF50',
-              borderRadius: '8px 8px 0 0',
+              border: '2px solid #81C784',
+              borderRadius: '8px',
               padding: '16px',
               backgroundColor: '#ffffff',
+              marginBottom: '16px',
             }}
           >
-            <h3 style={{ color: '#000', fontSize: 14, fontWeight: 700, margin: '0 0 4px 0', textAlign: 'center' }}>
+            <h3 style={{ color: '#000', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0', textAlign: 'center' }}>
               {fullName}
             </h3>
-            <p style={{ color: '#666', fontSize: 11, margin: '0 0 4px 0', textAlign: 'center' }}>
+            <p style={{ color: '#666', fontSize: 12, margin: '0 0 6px 0', textAlign: 'center' }}>
               {designation}
             </p>
-            <p style={{ color: '#000', fontSize: 11, margin: 0, textAlign: 'center' }}>
+            <p style={{ color: '#000', fontSize: 12, margin: 0, textAlign: 'center' }}>
               {company}
             </p>
           </div>
 
           {/* Contact Info Section */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-            <h4 style={{ color: '#000', fontSize: 11, fontWeight: 700, margin: '0 0 8px 0' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Contact Info
             </h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: 10 }}>
-              <span>📞</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14 }}>📞</span>
               <span style={{ color: '#000' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 10 }}>
-              <span>📧</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14 }}>📧</span>
               <span style={{ color: '#000' }}>{email}</span>
             </div>
           </div>
 
           {/* Social Media Section */}
-          {socialMedia.length > 0 && (
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-              <h4 style={{ color: '#000', fontSize: 11, fontWeight: 700, margin: '0 0 8px 0' }}>
-                Social Media
-              </h4>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {socialMedia.slice(0, 3).map((social, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      width: '28px',
-                      height: '28px',
-                      border: '1px solid #4CAF50',
-                      borderRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 9,
-                      fontWeight: 600,
-                      color: '#000',
-                      backgroundColor: '#fff',
-                    }}
-                  >
-                    {social.platform.charAt(0).toUpperCase()}
-                  </div>
-                ))}
-              </div>
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+              Social Media
+            </h4>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {socialLabels.map((label, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    border: '1px solid #81C784',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#000',
+                    backgroundColor: '#fff',
+                  }}
+                >
+                  {label}
+                </div>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Add to Contacts Button */}
-          <div style={{ padding: '12px 16px', marginTop: 'auto' }}>
+          <div style={{ marginTop: 'auto' }}>
             <button
               style={{
                 width: '100%',
-                padding: '8px',
+                padding: '12px',
                 backgroundColor: '#4CAF50',
                 color: '#fff',
                 border: 'none',
-                borderRadius: '6px',
-                fontSize: 10,
+                borderRadius: '8px',
+                fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
@@ -1049,53 +1048,72 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
       );
     }
 
-    // Modern Template - Purple gradient with centered layout
+    // Modern Template - Exact match: Purple-blue gradient (lighter to darker)
     if (templateId === 'modern') {
+      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
+      
       return (
         <div
           style={{
             borderRadius: 16,
-            padding: 20,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '20px',
+            background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
             color: '#ffffff',
-            textAlign: 'center',
             minHeight: '280px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
           }}
         >
-          {profilePic && (
-            <img
-              src={profilePic}
-              alt="Profile"
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '3px solid rgba(255,255,255,0.3)',
-                margin: '0 auto 12px',
-              }}
-            />
-          )}
-          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
-            {fullName}
-          </h3>
-          <p style={{ color: '#fff', fontSize: 12, opacity: 0.9, margin: '0 0 4px 0' }}>
-            {designation}
-          </p>
-          <p style={{ color: '#fff', fontSize: 11, opacity: 0.8, margin: '0 0 16px 0' }}>
-            {company}
-          </p>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '12px', marginTop: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
-              <span>📞</span>
-              <span>{phone}</span>
+          {/* Personal Information - Centered */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
+              {fullName}
+            </h3>
+            <p style={{ color: '#fff', fontSize: 13, margin: '0 0 6px 0' }}>
+              {designation}
+            </p>
+            <p style={{ color: '#fff', fontSize: 12, margin: 0 }}>
+              {company}
+            </p>
+          </div>
+
+          {/* Contact Information Section */}
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+              Contact Information
+            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
+              <span style={{ color: '#fff' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
-              <span>📧</span>
-              <span>{email}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
+              <span style={{ color: '#fff' }}>{email}</span>
+            </div>
+          </div>
+
+          {/* Social Media Section */}
+          <div style={{ marginTop: 'auto' }}>
+            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+              Social Media
+            </h4>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {socialLabels.map((label, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: '#0077b5',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {label}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1104,51 +1122,70 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
 
     // Classic/LinkedIn Template - Blue gradient with professional layout
     if (templateId === 'linkedin') {
+      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
+      
       return (
         <div
           style={{
             borderRadius: 16,
-            padding: 20,
+            padding: '20px',
             background: 'linear-gradient(135deg, #0077b5 0%, #00a0dc 100%)',
             color: '#ffffff',
-            textAlign: 'center',
             minHeight: '280px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
           }}
         >
-          {profilePic && (
-            <img
-              src={profilePic}
-              alt="Profile"
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '3px solid rgba(255,255,255,0.3)',
-                margin: '0 auto 12px',
-              }}
-            />
-          )}
-          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
-            {fullName}
-          </h3>
-          <p style={{ color: '#fff', fontSize: 12, opacity: 0.9, margin: '0 0 4px 0' }}>
-            {designation}
-          </p>
-          <p style={{ color: '#fff', fontSize: 11, opacity: 0.8, margin: '0 0 16px 0' }}>
-            {company}
-          </p>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '12px', marginTop: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
-              <span>📞</span>
-              <span>{phone}</span>
+          {/* Personal Information - Centered */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
+              {fullName}
+            </h3>
+            <p style={{ color: '#fff', fontSize: 13, margin: '0 0 6px 0' }}>
+              {designation}
+            </p>
+            <p style={{ color: '#fff', fontSize: 12, margin: 0 }}>
+              {company}
+            </p>
+          </div>
+
+          {/* Contact Information Section */}
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+              Contact Information
+            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
+              <span style={{ color: '#fff' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
-              <span>📧</span>
-              <span>{email}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
+              <span style={{ color: '#fff' }}>{email}</span>
+            </div>
+          </div>
+
+          {/* Social Media Section */}
+          <div style={{ marginTop: 'auto' }}>
+            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+              Social Media
+            </h4>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {socialLabels.map((label, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: '#005885',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {label}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1157,114 +1194,148 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
 
     // Location Map Template - Green/Blue gradient
     if (templateId === 'map') {
+      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
+      
       return (
         <div
           style={{
             borderRadius: 16,
-            padding: 20,
+            padding: '20px',
             background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
             color: '#ffffff',
-            textAlign: 'center',
             minHeight: '280px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
           }}
         >
-          {profilePic && (
-            <img
-              src={profilePic}
-              alt="Profile"
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '3px solid rgba(255,255,255,0.3)',
-                margin: '0 auto 12px',
-              }}
-            />
-          )}
-          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
-            {fullName}
-          </h3>
-          <p style={{ color: '#fff', fontSize: 12, opacity: 0.9, margin: '0 0 4px 0' }}>
-            {designation}
-          </p>
-          <p style={{ color: '#fff', fontSize: 11, opacity: 0.8, margin: '0 0 16px 0' }}>
-            {company}
-          </p>
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '12px', marginTop: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
-              <span>📞</span>
-              <span>{phone}</span>
+          {/* Personal Information - Centered */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
+              {fullName}
+            </h3>
+            <p style={{ color: '#fff', fontSize: 13, margin: '0 0 6px 0' }}>
+              {designation}
+            </p>
+            <p style={{ color: '#fff', fontSize: 12, margin: 0 }}>
+              {company}
+            </p>
+          </div>
+
+          {/* Contact Information Section */}
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+              Contact Information
+            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
+              <span style={{ color: '#fff' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
-              <span>📧</span>
-              <span>{email}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
+              <span style={{ color: '#fff' }}>{email}</span>
+            </div>
+          </div>
+
+          {/* Social Media Section */}
+          <div style={{ marginTop: 'auto' }}>
+            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+              Social Media
+            </h4>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {socialLabels.map((label, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: '#2E7D32',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {label}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       );
     }
 
-    // Epic Template - Black background with yellow border and accents
+    // Epic Template - Exact match: Black card with bright yellow border, yellow accents, horizontal separator
     if (templateId === 'epic') {
+      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
+      
       return (
         <div
           style={{
-            borderRadius: 16,
-            padding: 20,
+            borderRadius: 12,
+            padding: '20px',
             background: '#000000',
-            border: '2px solid #f7d27c',
+            border: '2px solid #ffeb3b',
             color: '#fff',
-            textAlign: 'center',
             minHeight: '280px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
           }}
         >
-          {profilePic && (
-            <img
-              src={profilePic}
-              alt="Profile"
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '2px solid #f7d27c',
-                margin: '0 auto 12px',
-              }}
-            />
-          )}
-          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
-            {fullName}
-          </h3>
-          <p style={{ color: '#f7d27c', fontSize: 12, fontWeight: 600, margin: '0 0 4px 0' }}>
-            {designation}
-          </p>
-          <p style={{ color: '#fff', fontSize: 11, opacity: 0.7, margin: '0 0 12px 0', fontStyle: 'italic' }}>
-            {company}
-          </p>
+          {/* Personal Information - Centered */}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: '0 0 6px 0' }}>
+              {fullName}
+            </h3>
+            <p style={{ color: '#ffeb3b', fontSize: 14, fontWeight: 700, margin: '0 0 6px 0' }}>
+              {designation}
+            </p>
+            <p style={{ color: '#fff', fontSize: 12, opacity: 0.8, margin: 0, fontStyle: 'italic' }}>
+              {company}
+            </p>
+          </div>
+
+          {/* Yellow separator line */}
           <div
             style={{
-              width: '60%',
+              width: '100%',
               height: '1px',
-              background: 'linear-gradient(90deg, transparent, #f7d27c, transparent)',
-              margin: '0 auto 12px',
+              backgroundColor: '#ffeb3b',
+              margin: '0 auto 16px',
             }}
           />
-          <div style={{ marginTop: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
-              <span>📞</span>
-              <span>{phone}</span>
+
+          {/* Contact Info - Left and Right */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: 14, opacity: 0.7 }}>📞</span>
+              <span style={{ color: '#fff' }}>{phone}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
-              <span>📧</span>
-              <span>{email}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: 14, opacity: 0.7 }}>📧</span>
+              <span style={{ color: '#fff' }}>{email}</span>
             </div>
+          </div>
+
+          {/* Social Media Buttons */}
+          <div style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
+            {socialLabels.map((label, idx) => (
+              <div
+                key={idx}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  border: '1px solid #ffeb3b',
+                  borderRadius: '8px',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textAlign: 'center',
+                }}
+              >
+                {label}
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -2979,6 +3050,8 @@ const styles = {
   // Template Selector Styles
   templateSelector: {
     width: '100%',
+    maxWidth: '1024px',
+    margin: '0 auto',
   },
   templateSelectorDesc: {
     fontSize: '14px',
@@ -2987,12 +3060,17 @@ const styles = {
     textAlign: 'center',
   },
   templatesGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '20px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'stretch',
+    gap: '24px',
   },
   templateCard: {
     position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    width: '320px',
     cursor: 'pointer',
     transition: 'all 0.3s',
     borderRadius: '12px',
@@ -3006,8 +3084,9 @@ const styles = {
     transform: 'translateY(-4px)',
   },
   templatePreviewWrapper: {
-    padding: '16px',
+    padding: '20px',
     backgroundColor: '#f8f9fa',
+    flex: 1,
   },
   templateInfo: {
     padding: '16px',
