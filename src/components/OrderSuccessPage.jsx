@@ -15,6 +15,9 @@ const OrderSuccessPage = () => {
   const [profile, setProfile] = useState(null);
   const [profileError, setProfileError] = useState('');
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [qrImage, setQrImage] = useState('');
+  const [redirectUrl, setRedirectUrl] = useState('');
+  const [qrLoading, setQrLoading] = useState(true);
 
   useEffect(() => {
     // Animation delay
@@ -60,14 +63,42 @@ const OrderSuccessPage = () => {
     fetchProfile();
   }, []);
 
+  // Also load QR + redirectUrl for this user so the success page shows the QR code
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      setQrLoading(false);
+      return;
+    }
+
+    const fetchQr = async () => {
+      try {
+        const res = await fetch('https://pg-cards.vercel.app/userProfile/getUser', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+        const result = await res.json();
+        if (result?.code === 200 && result.data) {
+          setQrImage(result.data.qr || '');
+          setRedirectUrl(result.data.redirectUrl || '');
+        }
+      } catch (e) {
+        console.error('Error loading QR for success page:', e);
+      } finally {
+        setQrLoading(false);
+      }
+    };
+
+    fetchQr();
+  }, []);
+
   const navigateTo = (path) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new Event('popstate'));
   };
 
   const renderProfilePreview = (templateId) => {
-    if (!profile) return null;
-
     const primary = '#f7d27c';
     const secondary = '#888';
     const text = '#ffffff';
@@ -77,15 +108,15 @@ const OrderSuccessPage = () => {
       margin: 0,
     };
 
-    const fullName = profile.fullName || 'Your Name';
-    const designation = profile.companyDesignation || 'Your Designation';
-    const company = profile.companyName || 'Company Name';
-    const phone = profile.phoneNumbers?.[0]?.number || '';
-    const email = profile.emails?.[0]?.emailAddress || '';
-    const address = profile.contactDetails?.address || '';
-    const mapLink = profile.contactDetails?.googleMapLink;
-    const profilePic = profile.profilePicture;
-    const cover = profile.backgroundImage || '';
+    const fullName = profile?.fullName || 'John Doe';
+    const designation = profile?.companyDesignation || 'Senior Software Developer';
+    const company = profile?.companyName || 'TechCorp';
+    const phone = profile?.phoneNumbers?.[0]?.number || '+91 9876543210';
+    const email = profile?.emails?.[0]?.emailAddress || 'john@company.com';
+    const address = profile?.contactDetails?.address || 'MG Road, Kerala, India';
+    const mapLink = profile?.contactDetails?.googleMapLink;
+    const profilePic = profile?.profilePicture || '';
+    const cover = profile?.backgroundImage || '';
 
     if (templateId === 'epic') {
       return (
@@ -299,8 +330,32 @@ const OrderSuccessPage = () => {
           </div>
         )}
 
+        {/* QR from backend (POST /userProfile/getUser) */}
+        {!qrLoading && (qrImage || redirectUrl) && (
+          <div style={styles.nextStepsCard}>
+            <h3 style={styles.nextStepsTitle}>Your Profile QR Code</h3>
+            <p style={styles.subtitle}>
+              This QR is generated from your profile. Scan it to open your public profile page.
+            </p>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              {qrImage ? (
+                <img
+                  src={qrImage}
+                  alt="Profile QR"
+                  style={{ width: 180, height: 180, borderRadius: 12, background: '#fff' }}
+                />
+              ) : null}
+            </div>
+            {redirectUrl && (
+              <p style={{ fontSize: 14, wordBreak: 'break-all' }}>
+                <strong>Profile URL:</strong> {redirectUrl}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Profile template selection */}
-        {!loadingProfile && profile && (
+        {!loadingProfile && (
           <div style={styles.nextStepsCard}>
             <h3 style={styles.nextStepsTitle}>Preview Your Card Styles</h3>
             <p style={styles.subtitle}>

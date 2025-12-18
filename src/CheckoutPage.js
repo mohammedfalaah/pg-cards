@@ -16,6 +16,15 @@ import { getUserId } from './components/Utils';
 // Initialize Stripe
 const stripePromise = loadStripe('pk_test_51SYlQeCt0GZs5TLdv40gy5CFNFZQwjJBKKafhRcRkAteocPEM5UVtYrXtiOMGeuFrci9HUgwn8rPIua4wuqysHsw00cCrrypSt');
 
+// Template Options
+const TEMPLATE_OPTIONS = [
+  { id: 'standard', label: 'Standard', description: 'Clean white background' },
+  { id: 'modern', label: 'Modern', description: 'Gradient purple design' },
+  { id: 'linkedin', label: 'Classic', description: 'Professional LinkedIn style' },
+  { id: 'map', label: 'Location Map', description: 'Google Maps integration' },
+  { id: 'epic', label: 'Epic', description: 'Dark theme with gold accents' },
+];
+
 // Profile Form Component
 const ProfileForm = ({ onProfileSaved }) => {
   const [loading, setLoading] = useState(false);
@@ -926,6 +935,377 @@ const AddressForm = ({
   );
 };
 
+// Template Preview Component
+const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSelect }) => {
+  const renderTemplatePreview = (templateId) => {
+    const fullName = userProfile?.fullName || 'John Doe';
+    const designation = userProfile?.companyDesignation || 'Software Engineer';
+    const company = userProfile?.companyName || 'Tech Company Inc.';
+    const phone = userProfile?.phoneNumbers?.[0]?.number || '+1 (555) 123-4567';
+    const email = userProfile?.emails?.[0]?.emailAddress || 'john.doe@company.com';
+    const profilePic = userProfile?.profilePicture || '';
+    const socialMedia = userProfile?.socialMedia || [];
+
+    // Standard Template - White card with green-bordered header, sections for contact info and social media
+    if (templateId === 'standard') {
+      return (
+        <div
+          style={{
+            borderRadius: 12,
+            padding: 0,
+            background: '#ffffff',
+            border: '1px solid #e0e0e0',
+            overflow: 'hidden',
+            minHeight: '280px',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* Green-bordered header section */}
+          <div
+            style={{
+              border: '2px solid #4CAF50',
+              borderRadius: '8px 8px 0 0',
+              padding: '16px',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <h3 style={{ color: '#000', fontSize: 14, fontWeight: 700, margin: '0 0 4px 0', textAlign: 'center' }}>
+              {fullName}
+            </h3>
+            <p style={{ color: '#666', fontSize: 11, margin: '0 0 4px 0', textAlign: 'center' }}>
+              {designation}
+            </p>
+            <p style={{ color: '#000', fontSize: 11, margin: 0, textAlign: 'center' }}>
+              {company}
+            </p>
+          </div>
+
+          {/* Contact Info Section */}
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
+            <h4 style={{ color: '#000', fontSize: 11, fontWeight: 700, margin: '0 0 8px 0' }}>
+              Contact Info
+            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: 10 }}>
+              <span>📞</span>
+              <span style={{ color: '#000' }}>{phone}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 10 }}>
+              <span>📧</span>
+              <span style={{ color: '#000' }}>{email}</span>
+            </div>
+          </div>
+
+          {/* Social Media Section */}
+          {socialMedia.length > 0 && (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
+              <h4 style={{ color: '#000', fontSize: 11, fontWeight: 700, margin: '0 0 8px 0' }}>
+                Social Media
+              </h4>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {socialMedia.slice(0, 3).map((social, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      border: '1px solid #4CAF50',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 9,
+                      fontWeight: 600,
+                      color: '#000',
+                      backgroundColor: '#fff',
+                    }}
+                  >
+                    {social.platform.charAt(0).toUpperCase()}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Add to Contacts Button */}
+          <div style={{ padding: '12px 16px', marginTop: 'auto' }}>
+            <button
+              style={{
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#4CAF50',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: 10,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Add to Contacts
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Modern Template - Purple gradient with centered layout
+    if (templateId === 'modern') {
+      return (
+        <div
+          style={{
+            borderRadius: 16,
+            padding: 20,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: '#ffffff',
+            textAlign: 'center',
+            minHeight: '280px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          {profilePic && (
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '3px solid rgba(255,255,255,0.3)',
+                margin: '0 auto 12px',
+              }}
+            />
+          )}
+          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
+            {fullName}
+          </h3>
+          <p style={{ color: '#fff', fontSize: 12, opacity: 0.9, margin: '0 0 4px 0' }}>
+            {designation}
+          </p>
+          <p style={{ color: '#fff', fontSize: 11, opacity: 0.8, margin: '0 0 16px 0' }}>
+            {company}
+          </p>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '12px', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
+              <span>📞</span>
+              <span>{phone}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
+              <span>📧</span>
+              <span>{email}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Classic/LinkedIn Template - Blue gradient with professional layout
+    if (templateId === 'linkedin') {
+      return (
+        <div
+          style={{
+            borderRadius: 16,
+            padding: 20,
+            background: 'linear-gradient(135deg, #0077b5 0%, #00a0dc 100%)',
+            color: '#ffffff',
+            textAlign: 'center',
+            minHeight: '280px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          {profilePic && (
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '3px solid rgba(255,255,255,0.3)',
+                margin: '0 auto 12px',
+              }}
+            />
+          )}
+          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
+            {fullName}
+          </h3>
+          <p style={{ color: '#fff', fontSize: 12, opacity: 0.9, margin: '0 0 4px 0' }}>
+            {designation}
+          </p>
+          <p style={{ color: '#fff', fontSize: 11, opacity: 0.8, margin: '0 0 16px 0' }}>
+            {company}
+          </p>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '12px', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
+              <span>📞</span>
+              <span>{phone}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
+              <span>📧</span>
+              <span>{email}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Location Map Template - Green/Blue gradient
+    if (templateId === 'map') {
+      return (
+        <div
+          style={{
+            borderRadius: 16,
+            padding: 20,
+            background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
+            color: '#ffffff',
+            textAlign: 'center',
+            minHeight: '280px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          {profilePic && (
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '3px solid rgba(255,255,255,0.3)',
+                margin: '0 auto 12px',
+              }}
+            />
+          )}
+          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
+            {fullName}
+          </h3>
+          <p style={{ color: '#fff', fontSize: 12, opacity: 0.9, margin: '0 0 4px 0' }}>
+            {designation}
+          </p>
+          <p style={{ color: '#fff', fontSize: 11, opacity: 0.8, margin: '0 0 16px 0' }}>
+            {company}
+          </p>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '12px', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
+              <span>📞</span>
+              <span>{phone}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
+              <span>📧</span>
+              <span>{email}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Epic Template - Black background with yellow border and accents
+    if (templateId === 'epic') {
+      return (
+        <div
+          style={{
+            borderRadius: 16,
+            padding: 20,
+            background: '#000000',
+            border: '2px solid #f7d27c',
+            color: '#fff',
+            textAlign: 'center',
+            minHeight: '280px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          {profilePic && (
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2px solid #f7d27c',
+                margin: '0 auto 12px',
+              }}
+            />
+          )}
+          <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0' }}>
+            {fullName}
+          </h3>
+          <p style={{ color: '#f7d27c', fontSize: 12, fontWeight: 600, margin: '0 0 4px 0' }}>
+            {designation}
+          </p>
+          <p style={{ color: '#fff', fontSize: 11, opacity: 0.7, margin: '0 0 12px 0', fontStyle: 'italic' }}>
+            {company}
+          </p>
+          <div
+            style={{
+              width: '60%',
+              height: '1px',
+              background: 'linear-gradient(90deg, transparent, #f7d27c, transparent)',
+              margin: '0 auto 12px',
+            }}
+          />
+          <div style={{ marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', fontSize: 10 }}>
+              <span>📞</span>
+              <span>{phone}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: 10 }}>
+              <span>📧</span>
+              <span>{email}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Default fallback
+    return null;
+  };
+
+  return (
+    <div style={styles.templateSelector}>
+      <p style={styles.templateSelectorDesc}>
+        Choose a design template for your business card preview
+      </p>
+      <div style={styles.templatesGrid}>
+        {TEMPLATE_OPTIONS.map((template) => (
+          <div
+            key={template.id}
+            onClick={() => onTemplateSelect(template.id)}
+            style={{
+              ...styles.templateCard,
+              ...(selectedTemplate === template.id ? styles.templateCardSelected : {})
+            }}
+          >
+            <div style={styles.templatePreviewWrapper}>
+              {renderTemplatePreview(template.id)}
+            </div>
+            <div style={styles.templateInfo}>
+              <h4 style={styles.templateName}>{template.label}</h4>
+              <p style={styles.templateDescription}>{template.description}</p>
+            </div>
+            {selectedTemplate === template.id && (
+              <div style={styles.selectedBadge}>✓ Selected</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Main Checkout Component
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -942,11 +1322,36 @@ const CheckoutPage = () => {
   const [paymentIntentId, setPaymentIntentId] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     fetchCartItems();
     fetchAddresses();
+    fetchUserProfile();
+    // Load selected template from localStorage if exists
+    const savedTemplate = localStorage.getItem('selectedCardTemplate');
+    if (savedTemplate) {
+      setSelectedTemplate(savedTemplate);
+    }
   }, []);
+
+  const fetchUserProfile = async () => {
+    const profileId = localStorage.getItem('userProfileId');
+    if (!profileId) return;
+
+    try {
+      const response = await fetch(
+        `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
+      );
+      const result = await response.json();
+      if (response.ok && result?.data) {
+        setUserProfile(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const fetchCartItems = async () => {
     const userId = getUserId();
@@ -1132,6 +1537,11 @@ const CheckoutPage = () => {
     return false;
   }
 
+  if (!selectedTemplate) {
+    toast.error('Please select a card preview template');
+    return false;
+  }
+
   setProcessingPayment(true);
 
   try {
@@ -1216,10 +1626,17 @@ const CheckoutPage = () => {
     await createPaymentIntent();
   };
 
-  const handleProfileSaved = () => {
+  const handleProfileSaved = async () => {
     setProfileSaved(true);
     setShowProfileForm(false);
-    toast.success('Profile saved! You can now proceed to payment.');
+    // Fetch profile for preview
+    await fetchUserProfile();
+    toast.success('Profile saved! Now choose your card preview.');
+  };
+
+  const handleTemplateSelect = (templateId) => {
+    setSelectedTemplate(templateId);
+    localStorage.setItem('selectedCardTemplate', templateId);
   };
 
   if (loading) {
@@ -1260,7 +1677,25 @@ const CheckoutPage = () => {
               </div>
             </div>
 
-            {/* Step 2: Delivery Address */}
+            {/* Step 2: Choose Preview */}
+            {profileSaved && (
+              <div style={styles.section}>
+                <div style={styles.stepHeader}>
+                  <div style={styles.stepNumber}>2</div>
+                  <h2 style={styles.stepTitle}>Choose Your Preview</h2>
+                  {selectedTemplate && <span style={styles.checkmark}>✓</span>}
+                </div>
+                <div style={styles.addressContent}>
+                  <TemplatePreviewSelector
+                    userProfile={userProfile}
+                    selectedTemplate={selectedTemplate}
+                    onTemplateSelect={handleTemplateSelect}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Delivery Address - Commented out */}
             {/* <div style={styles.section}>
               <div style={styles.stepHeader}>
                 <div style={styles.stepNumber}>2</div>
@@ -1323,13 +1758,12 @@ const CheckoutPage = () => {
                 style={{
                   ...styles.proceedBtn,
                   ...(processingPayment 
-                    // || !selectedAddress
-                     || !profileSaved ? styles.proceedBtnDisabled : {})
+                    || !profileSaved 
+                    || !selectedTemplate ? styles.proceedBtnDisabled : {})
                 }} 
                 onClick={handleProceedToPayment}
                 disabled={processingPayment || cartItems.length === 0 || 
-                  // !selectedAddress || 
-                  !profileSaved}
+                  !profileSaved || !selectedTemplate}
               >
                 {processingPayment ? (
                   <>
@@ -1338,6 +1772,7 @@ const CheckoutPage = () => {
                   </>
                 ) :  
                   !profileSaved ? 'Complete Profile Information' : 
+                  !selectedTemplate ? 'Choose Your Preview' :
                   'Proceed to Payment'}
               </button>
             ) : (
@@ -1347,6 +1782,14 @@ const CheckoutPage = () => {
                     <div style={styles.stepNumber}>3</div>
                     <h2 style={styles.stepTitle}>Payment Details</h2>
                   </div>
+                  {selectedTemplate && (
+                    <div style={styles.selectedTemplateInfo}>
+                      <span style={styles.selectedTemplateLabel}>Selected Template: </span>
+                      <span style={styles.selectedTemplateValue}>
+                        {TEMPLATE_OPTIONS.find(t => t.id === selectedTemplate)?.label || selectedTemplate}
+                      </span>
+                    </div>
+                  )}
                   <div style={styles.paymentContent}>
                     {clientSecret && (
                       <StripeCardForm
@@ -2532,6 +2975,90 @@ const styles = {
   },
   errorText: {
     flex: 1,
+  },
+  // Template Selector Styles
+  templateSelector: {
+    width: '100%',
+  },
+  templateSelectorDesc: {
+    fontSize: '14px',
+    color: '#666',
+    marginBottom: '24px',
+    textAlign: 'center',
+  },
+  templatesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '20px',
+  },
+  templateCard: {
+    position: 'relative',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    border: '2px solid #e0e0e0',
+    backgroundColor: '#fff',
+  },
+  templateCardSelected: {
+    borderColor: '#ff6b35',
+    boxShadow: '0 4px 12px rgba(255, 107, 53, 0.2)',
+    transform: 'translateY(-4px)',
+  },
+  templatePreviewWrapper: {
+    padding: '16px',
+    backgroundColor: '#f8f9fa',
+  },
+  templateInfo: {
+    padding: '16px',
+    textAlign: 'center',
+  },
+  templateName: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#000',
+    margin: '0 0 6px 0',
+  },
+  templateDescription: {
+    fontSize: '12px',
+    color: '#666',
+    margin: 0,
+  },
+  selectedBadge: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    backgroundColor: '#ff6b35',
+    color: '#fff',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '600',
+    boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
+  },
+  loadingTemplate: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '40px',
+    gap: '16px',
+  },
+  selectedTemplateInfo: {
+    padding: '12px 24px',
+    backgroundColor: '#fff5f2',
+    borderLeft: '4px solid #ff6b35',
+    marginBottom: '16px',
+    fontSize: '14px',
+  },
+  selectedTemplateLabel: {
+    fontWeight: '600',
+    color: '#666',
+  },
+  selectedTemplateValue: {
+    fontWeight: '700',
+    color: '#ff6b35',
+    textTransform: 'capitalize',
   },
 };
 
