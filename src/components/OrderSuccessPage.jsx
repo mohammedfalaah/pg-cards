@@ -354,87 +354,11 @@ const OrderSuccessPage = () => {
           </div>
         )}
 
-        {/* Profile template selection */}
-        {!loadingProfile && (
-          <div style={styles.nextStepsCard}>
-            <h3 style={styles.nextStepsTitle}>Preview Your Card Styles</h3>
-            <p style={styles.subtitle}>
-              Here are all the available templates generated from your profile: Standard, Modern, Classic, Location Map and Epic.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
-              {TEMPLATE_OPTIONS.map((t) => (
-                <div key={t.id}>
-                  <h4 style={{ fontSize: 14, marginBottom: 8 }}>{t.label}</h4>
-                  {renderProfilePreview(t.id)}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        
 
         {/* What's Next Section */}
-        <div style={styles.nextStepsCard}>
-          <h3 style={styles.nextStepsTitle}>What happens next?</h3>
-          
-          <div style={styles.stepsList}>
-            <div style={styles.step}>
-              <div style={styles.stepIcon}>📧</div>
-              <div style={styles.stepContent}>
-                <h4 style={styles.stepTitle}>Order Confirmation</h4>
-                <p style={styles.stepText}>
-                  You'll receive an email confirmation with your order details and card profile information.
-                </p>
-              </div>
-            </div>
-
-            <div style={styles.step}>
-              <div style={styles.stepIcon}>🎨</div>
-              <div style={styles.stepContent}>
-                <h4 style={styles.stepTitle}>Design Processing</h4>
-                <p style={styles.stepText}>
-                  Our design team will prepare your custom business card based on your profile.
-                </p>
-              </div>
-            </div>
-
-            <div style={styles.step}>
-              <div style={styles.stepIcon}>📞</div>
-              <div style={styles.stepContent}>
-                <h4 style={styles.stepTitle}>Sales Team Contact</h4>
-                <p style={styles.stepText}>
-                  Our sales team will reach out to you shortly to confirm details and answer any questions.
-                </p>
-              </div>
-            </div>
-
-            <div style={styles.step}>
-              <div style={styles.stepIcon}>🚚</div>
-              <div style={styles.stepContent}>
-                <h4 style={styles.stepTitle}>Shipping & Delivery</h4>
-                <p style={styles.stepText}>
-                  Your order will be shipped within 5-7 working days to your delivery address.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div style={styles.actionsContainer}>
-          <button 
-            style={styles.primaryBtn}
-            onClick={() => navigateTo('/orders')}
-          >
-            View My Orders
-          </button>
-          
-          <button 
-            style={styles.secondaryBtn}
-            onClick={() => navigateTo('/products')}
-          >
-            Continue Shopping
-          </button>
-        </div>
+      
+      
 
         {/* Support Section */}
         <div style={styles.supportSection}>
