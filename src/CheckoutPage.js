@@ -166,8 +166,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
         ...formData,
         phoneNumbers: formData.phoneNumbers.filter(p => p.number.trim()),
         emails: formData.emails.filter(e => e.emailAddress.trim()),
-        // Include selected template if available
-        ...(selectedTemplate && { selectedTemplate })
+        // Include theme (backend expects 'theme' not 'selectedTemplate')
+        ...(selectedTemplate && { theme: selectedTemplate })
       };
 
       const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {

@@ -491,30 +491,26 @@ const PublicProfile = ({ userId }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Directly use getUserProfile API with the userId (which is actually profileId in the route)
-        // Route: /user_profile/:userId where userId is the profileId
-        const profileRes = await axios.get(
-          `https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`
-        );
+        let theme = 'standard'; // default theme
+        let profileData = null;
 
-        if (profileRes.data?.status === true && profileRes.data?.data) {
-          const profileData = profileRes.data.data;
-          
-          // Ensure selectedTemplate is set (default to 'standard' if not found)
-          profileData.selectedTemplate = profileData.selectedTemplate || 'standard';
-          
-          setProfile(profileData);
-        } else if (profileRes.data?.code === 200 && profileRes.data?.data) {
-          // Alternative response format
-          const profileData = profileRes.data.data;
-          profileData.selectedTemplate = profileData.selectedTemplate || 'standard';
-          setProfile(profileData);
-        } else {
-          setError(profileRes.data?.msg || 'Profile not found');
+        // Step 1: Try to get profile data from getUserProfile API first
+        try {
+          const profileRes = await axios.get(
+            `https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`
+          );
+
+          if (profileRes.data?.status === true && profileRes.data?.data) {
+            profileData = profileRes.data.data;
+          } else if (profileRes.data?.code === 200 && profileRes.data?.data) {
+            profileData = profileRes.data.data;
+          }
+        } catch (profileErr) {
+          console.warn('Could not fetch from getUserProfile:', profileErr);
         }
-      } catch (err) {
-        console.error('Public profile fetch error:', err);
-        // If getUserProfile fails, try fallback to getUser endpoint
+
+        // Step 2: Get theme from getUser API (this is the primary source for theme)
+        // Try with userId first (in case userId is actually a userId)
         try {
           const userRes = await axios.post(
             'https://pg-cards.vercel.app/userProfile/getUser',
@@ -523,25 +519,79 @@ const PublicProfile = ({ userId }) => {
           );
           
           if (userRes.data?.code === 200 && userRes.data.data) {
-            const userData = userRes.data.data;
-            const profileId = userData.profileId || userData._id;
-            
-            if (profileId) {
-              const profileRes = await axios.get(
-                `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
-              );
-              
-              if (profileRes.data?.data || profileRes.data?.status === true) {
-                const profileData = profileRes.data.data || profileRes.data.data;
-                profileData.selectedTemplate = profileData.selectedTemplate || 'standard';
-                setProfile(profileData);
-                return;
-              }
+            // Get theme from getUser response - this is the primary source
+            const userTheme = userRes.data.data.theme || userRes.data.data.selectedTemplate;
+            if (userTheme) {
+              theme = userTheme;
+              console.log('✅ Theme from getUser API:', theme);
             }
           }
-        } catch (fallbackErr) {
-          console.error('Fallback fetch error:', fallbackErr);
+        } catch (getUserErr) {
+          console.warn('Could not fetch theme from getUser API with userId:', getUserErr);
+          
+          // If userId might be a profileId, try to get the actual userId from profile
+          if (profileData?.userId) {
+            try {
+              const userRes2 = await axios.post(
+                'https://pg-cards.vercel.app/userProfile/getUser',
+                { userId: profileData.userId },
+                { headers: { 'Content-Type': 'application/json' } }
+              );
+              
+              if (userRes2.data?.code === 200 && userRes2.data.data) {
+                const userTheme = userRes2.data.data.theme || userRes2.data.data.selectedTemplate;
+                if (userTheme) {
+                  theme = userTheme;
+                  console.log('✅ Theme from getUser API (using profile.userId):', theme);
+                }
+              }
+            } catch (getUserErr2) {
+              console.warn('Could not fetch theme from getUser API with profile.userId:', getUserErr2);
+            }
+          }
         }
+
+        // Step 3: Use profile data if we have it, otherwise try fallback
+        if (profileData) {
+          // Prioritize theme from getUser API, then profile theme, then selectedTemplate
+          profileData.theme = theme || profileData.theme || profileData.selectedTemplate || 'standard';
+          console.log('🎨 Final theme applied:', profileData.theme);
+          setProfile(profileData);
+        } else {
+          // Fallback: try getUser endpoint to get profileId
+          try {
+            const userRes = await axios.post(
+              'https://pg-cards.vercel.app/userProfile/getUser',
+              { userId },
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+            
+            if (userRes.data?.code === 200 && userRes.data.data) {
+              const userData = userRes.data.data;
+              const profileId = userData.profileId || userData._id;
+              theme = userData.theme || userData.selectedTemplate || 'standard';
+              
+              if (profileId) {
+                const profileRes = await axios.get(
+                  `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
+                );
+                
+                if (profileRes.data?.data || profileRes.data?.status === true) {
+                  profileData = profileRes.data.data || profileRes.data.data;
+                  profileData.theme = theme || profileData.theme || profileData.selectedTemplate || 'standard';
+                  console.log('🎨 Final theme applied (fallback):', profileData.theme);
+                  setProfile(profileData);
+                  return;
+                }
+              }
+            }
+          } catch (fallbackErr) {
+            console.error('Fallback fetch error:', fallbackErr);
+          }
+          setError('Profile not found');
+        }
+      } catch (err) {
+        console.error('Public profile fetch error:', err);
         setError('Unable to load profile');
       } finally {
         setLoading(false);
@@ -586,12 +636,27 @@ const PublicProfile = ({ userId }) => {
     );
   }
 
-  // Get selected template from profile, default to 'standard'
-  const selectedTemplate = profile?.selectedTemplate || 'standard';
+  // Get theme from profile (from getUser API), default to 'standard'
+  // Support both 'theme' and 'selectedTemplate' for backward compatibility
+  let theme = profile?.theme || profile?.selectedTemplate || 'standard';
+  
+  // Normalize theme values: handle variations
+  if (theme === 'epi') theme = 'epic';
+  if (theme === 'standard' || theme === 'modern' || theme === 'epic') {
+    // Valid theme, use as is
+  } else {
+    // Invalid theme, default to standard
+    console.warn('Invalid theme detected:', theme, '- defaulting to standard');
+    theme = 'standard';
+  }
+  
+  const normalizedTheme = theme;
+  
+  console.log('🎨 Rendering profile with theme:', normalizedTheme);
 
-  // Set background color based on template
-  const getBackgroundColor = (template) => {
-    switch(template) {
+  // Set background color based on theme
+  const getBackgroundColor = (theme) => {
+    switch(theme) {
       case 'modern':
         return 'linear-gradient(180deg, #f0ebff 0%, #e8e0f5 100%)';
       case 'epic':
@@ -601,13 +666,21 @@ const PublicProfile = ({ userId }) => {
     }
   };
 
+  // Debug: Log theme information
+  console.log('🎨 PublicProfile Render:', {
+    theme: normalizedTheme,
+    profileTheme: profile?.theme,
+    profileSelectedTemplate: profile?.selectedTemplate,
+    profileId: profile?._id || profile?.id
+  });
+
   return (
     <div style={{
       width: '100%',
       margin: 0,
       padding: 0,
     }}>
-      {renderProfileTemplate(selectedTemplate, profile)}
+      {renderProfileTemplate(normalizedTheme, profile)}
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

@@ -374,7 +374,7 @@ const Login = ({ onClose, onLogin }) => {
                 {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
               </div>
               <div className="form-group">
-                <label htmlFor="phone">Phone (optional)</label>
+                <label htmlFor="phone">Phone</label>
                 <input
                   type="text"
                   id="phone"
