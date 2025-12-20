@@ -1,7 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+/**
+ * PublicProfile Component
+ * 
+ * Displays user profile based on theme from getUser API
+ * 
+ * THEME SYSTEM:
+ * - Fetches theme from getUser API: POST /userProfile/getUser { userId }
+ * - Theme values: 'standard', 'modern', 'epic'
+ * - Theme priority:
+ *   1. getUser API response (data.theme) - PRIMARY SOURCE
+ *   2. Profile data (profile.theme)
+ *   3. Profile data (profile.selectedTemplate) - backward compatibility
+ *   4. Default: 'standard'
+ * 
+ * THEME DESIGNS:
+ * - 'standard': White background, green borders, clean design
+ * - 'modern': Purple gradient background, white text, modern design
+ * - 'epic': Black background, yellow borders, bold design
+ */
+
 // Template rendering function - matches CheckoutPage templates exactly
+// Supports three themes: 'standard', 'modern', 'epic'
+// Theme is determined by getUser API response
 const renderProfileTemplate = (templateId, profile) => {
   const fullName = profile?.fullName || 'John Doe';
   const designation = profile?.companyDesignation || 'Software Engineer';
@@ -11,7 +33,7 @@ const renderProfileTemplate = (templateId, profile) => {
   const profilePic = profile?.profilePicture || '';
   const socialMedia = profile?.socialMedia || [];
 
-  // Standard Template
+  // Standard Template - White background with green borders
   if (templateId === 'standard') {
     const socialLabels = socialMedia.length >= 3 
       ? [socialMedia[0]?.platform?.substring(0, 2) || 'Li', socialMedia[1]?.platform?.substring(0, 2) || 'In', socialMedia[2]?.platform?.substring(0, 2) || 'Tw']
@@ -197,7 +219,7 @@ const renderProfileTemplate = (templateId, profile) => {
     );
   }
 
-  // Modern Template
+  // Modern Template - Purple gradient background
   if (templateId === 'modern') {
     const socialLabels = socialMedia.length >= 3 
       ? ['Linkedin', 'Instagram', 'Twitter']
@@ -338,7 +360,7 @@ const renderProfileTemplate = (templateId, profile) => {
     );
   }
 
-  // Epic Template
+  // Epic Template - Black background with yellow borders
   if (templateId === 'epic') {
     return (
       <div
@@ -479,7 +501,8 @@ const renderProfileTemplate = (templateId, profile) => {
     );
   }
 
-  // Default fallback
+  // Default fallback - if theme doesn't match any of the above, show standard
+  console.warn('Unknown theme:', templateId, '- falling back to standard');
   return renderProfileTemplate('standard', profile);
 };
 
@@ -509,7 +532,8 @@ const PublicProfile = ({ userId }) => {
           console.warn('Could not fetch from getUserProfile:', profileErr);
         }
 
-        // Step 2: Get theme from getUser API (this is the primary source for theme)
+        // Step 2: Get theme from getUser API (this is the PRIMARY source for theme)
+        // The getUser API returns: { code: 200, data: { theme: 'standard'|'modern'|'epic', ... } }
         // Try with userId first (in case userId is actually a userId)
         try {
           const userRes = await axios.post(
@@ -519,10 +543,10 @@ const PublicProfile = ({ userId }) => {
           );
           
           if (userRes.data?.code === 200 && userRes.data.data) {
-            // Get theme from getUser response - this is the primary source
+            // Get theme from getUser response - this is the PRIMARY source
             const userTheme = userRes.data.data.theme || userRes.data.data.selectedTemplate;
             if (userTheme) {
-              theme = userTheme;
+              theme = userTheme.toLowerCase().trim(); // Normalize theme value
               console.log('✅ Theme from getUser API:', theme);
             }
           }
@@ -541,7 +565,7 @@ const PublicProfile = ({ userId }) => {
               if (userRes2.data?.code === 200 && userRes2.data.data) {
                 const userTheme = userRes2.data.data.theme || userRes2.data.data.selectedTemplate;
                 if (userTheme) {
-                  theme = userTheme;
+                  theme = userTheme.toLowerCase().trim(); // Normalize theme value
                   console.log('✅ Theme from getUser API (using profile.userId):', theme);
                 }
               }
@@ -638,21 +662,24 @@ const PublicProfile = ({ userId }) => {
 
   // Get theme from profile (from getUser API), default to 'standard'
   // Support both 'theme' and 'selectedTemplate' for backward compatibility
-  let theme = profile?.theme || profile?.selectedTemplate || 'standard';
+  let theme = (profile?.theme || profile?.selectedTemplate || 'standard').toLowerCase().trim();
   
-  // Normalize theme values: handle variations
+  // Normalize theme values: handle variations and typos
   if (theme === 'epi') theme = 'epic';
-  if (theme === 'standard' || theme === 'modern' || theme === 'epic') {
-    // Valid theme, use as is
-  } else {
-    // Invalid theme, default to standard
-    console.warn('Invalid theme detected:', theme, '- defaulting to standard');
+  
+  // Validate theme - only allow: 'standard', 'modern', 'epic'
+  const validThemes = ['standard', 'modern', 'epic'];
+  if (!validThemes.includes(theme)) {
+    console.warn('⚠️ Invalid theme detected:', theme, '- defaulting to standard');
     theme = 'standard';
   }
   
   const normalizedTheme = theme;
   
-  console.log('🎨 Rendering profile with theme:', normalizedTheme);
+  console.log('🎨 Rendering PublicProfile with theme:', normalizedTheme, {
+    availableThemes: validThemes,
+    selectedTheme: normalizedTheme
+  });
 
   // Set background color based on theme
   const getBackgroundColor = (theme) => {
