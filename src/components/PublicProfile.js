@@ -28,9 +28,32 @@ const renderProfileTemplate = (templateId, profile) => {
   const fullName = profile?.fullName || 'John Doe';
   const designation = profile?.companyDesignation || 'Software Engineer';
   const company = profile?.companyName || 'Tech Company Inc.';
-  const phone = profile?.phoneNumbers?.[0]?.number || '+1 (555) 123-4567';
-  const email = profile?.emails?.[0]?.emailAddress || 'john.doe@company.com';
-  const profilePic = profile?.profilePicture || '';
+  
+  // Get all phone numbers
+  const allPhones = (profile?.phoneNumbers || []).map(phoneObj => {
+    if (phoneObj.number && phoneObj.number.startsWith('+') && !phoneObj.countryCode) {
+      return phoneObj.number;
+    }
+    return phoneObj.countryCode 
+      ? `${phoneObj.countryCode} ${phoneObj.number || ''}`.trim()
+      : phoneObj.number || '';
+  }).filter(p => p);
+  
+  const phone = allPhones[0] || '+971 50 000 0000';
+  
+  // Get all emails
+  const allEmails = (profile?.emails || []).map(e => e.emailAddress).filter(e => e);
+  const email = allEmails[0] || 'john.doe@company.com';
+  
+  const about = profile?.about || '';
+  const contactDetails = profile?.contactDetails || {};
+  const address = contactDetails.address || '';
+  const emirates = contactDetails.state || '';
+  const country = contactDetails.country || '';
+  const googleMapLink = contactDetails.googleMapLink || '';
+  const profilePic = profile?.profilePicture || profile?.profileImage || '';
+  const coverImage = profile?.coverImage || '';
+  const companyLogo = profile?.companyLogo || '';
   const socialMedia = profile?.socialMedia || [];
 
   // Standard Template - White background with green borders
@@ -45,7 +68,7 @@ const renderProfileTemplate = (templateId, profile) => {
         style={{
           borderRadius: 0,
           padding: '40px 20px',
-          background: '#ffffff',
+          background: coverImage ? `url(${coverImage}) center/cover no-repeat` : '#ffffff',
           width: '100%',
           minHeight: '100vh',
           display: 'flex',
@@ -53,8 +76,20 @@ const renderProfileTemplate = (templateId, profile) => {
           justifyContent: 'center',
           maxWidth: '100%',
           boxSizing: 'border-box',
+          position: 'relative',
         }}
       >
+        {coverImage && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(255, 255, 255, 0.95)',
+            zIndex: 0,
+          }} />
+        )}
         <div
           style={{
             border: '3px solid #81C784',
@@ -66,8 +101,57 @@ const renderProfileTemplate = (templateId, profile) => {
             margin: '0 auto 40px',
             width: '100%',
             boxSizing: 'border-box',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
+          {/* Company Logo */}
+          {companyLogo && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '20px' 
+            }}>
+              <img
+                src={companyLogo}
+                alt={company}
+                style={{
+                  maxWidth: 'clamp(120px, 20vw, 200px)',
+                  maxHeight: '80px',
+                  objectFit: 'contain',
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
+          {/* Profile Picture */}
+          {profilePic && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '24px' 
+            }}>
+              <img
+                src={profilePic}
+                alt={fullName}
+                style={{
+                  width: 'clamp(120px, 20vw, 180px)',
+                  height: 'clamp(120px, 20vw, 180px)',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '4px solid #81C784',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
           <h1 style={{ 
             color: '#000', 
             fontSize: 'clamp(28px, 5vw, 42px)', 
@@ -89,11 +173,42 @@ const renderProfileTemplate = (templateId, profile) => {
             color: '#000', 
             fontSize: 'clamp(16px, 2.5vw, 24px)', 
             margin: 0, 
-            textAlign: 'center' 
+            textAlign: 'center',
+            fontWeight: 600
           }}>
             {company}
           </p>
         </div>
+
+        {/* About Section */}
+        {about && (
+          <div style={{ 
+            marginBottom: '40px', 
+            maxWidth: '800px', 
+            margin: '0 auto 40px',
+            width: '100%',
+            padding: '0 20px',
+            boxSizing: 'border-box',
+          }}>
+            <h3 style={{ 
+              color: '#000', 
+              fontSize: 'clamp(20px, 3.5vw, 32px)', 
+              fontWeight: 700, 
+              margin: '0 0 16px 0', 
+              textAlign: 'left' 
+            }}>
+              About
+            </h3>
+            <p style={{ 
+              color: '#666', 
+              fontSize: 'clamp(14px, 2vw, 20px)', 
+              lineHeight: '1.6',
+              margin: 0
+            }}>
+              {about}
+            </p>
+          </div>
+        )}
 
         <div style={{ 
           marginBottom: '40px', 
@@ -112,27 +227,64 @@ const renderProfileTemplate = (templateId, profile) => {
           }}>
             Contact Info
           </h3>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '12px', 
-            marginBottom: '20px', 
-            fontSize: 'clamp(16px, 2.5vw, 24px)',
-            flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: 'clamp(20px, 3vw, 32px)' }}>📞</span>
-            <span style={{ color: '#000', wordBreak: 'break-word' }}>{phone}</span>
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '12px', 
-            fontSize: 'clamp(16px, 2.5vw, 24px)',
-            flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: 'clamp(20px, 3vw, 32px)' }}>📧</span>
-            <span style={{ color: '#000', wordBreak: 'break-word' }}>{email}</span>
-          </div>
+          {allPhones.map((phoneNum, idx) => (
+            <div key={idx} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px', 
+              marginBottom: '16px', 
+              fontSize: 'clamp(16px, 2.5vw, 24px)',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: 'clamp(20px, 3vw, 32px)' }}>📞</span>
+              <span style={{ color: '#000', wordBreak: 'break-word' }}>{phoneNum}</span>
+            </div>
+          ))}
+          {allEmails.map((emailAddr, idx) => (
+            <div key={idx} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px', 
+              marginBottom: '16px', 
+              fontSize: 'clamp(16px, 2.5vw, 24px)',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: 'clamp(20px, 3vw, 32px)' }}>📧</span>
+              <span style={{ color: '#000', wordBreak: 'break-word' }}>{emailAddr}</span>
+            </div>
+          ))}
+          {address && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              gap: '12px', 
+              marginBottom: '16px', 
+              fontSize: 'clamp(16px, 2.5vw, 24px)',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: 'clamp(20px, 3vw, 32px)' }}>📍</span>
+              <span style={{ color: '#000', wordBreak: 'break-word' }}>
+                {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
+              </span>
+            </div>
+          )}
+          {googleMapLink && (
+            <div style={{ marginTop: '12px' }}>
+              <a 
+                href={googleMapLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#4CAF50', 
+                  fontSize: 'clamp(14px, 2vw, 18px)', 
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
+              >
+                📍 View on Map
+              </a>
+            </div>
+          )}
         </div>
 
         {socialMedia.length > 0 && (
@@ -154,10 +306,10 @@ const renderProfileTemplate = (templateId, profile) => {
               Social Media
             </h3>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              {socialLabels.map((label, idx) => (
+              {socialMedia.map((social, idx) => (
                 <a
                   key={idx}
-                  href={socialMedia[idx]?.url || '#'}
+                  href={social.url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -174,8 +326,9 @@ const renderProfileTemplate = (templateId, profile) => {
                     backgroundColor: '#fff',
                     textDecoration: 'none',
                   }}
+                  title={social.platform}
                 >
-                  {label}
+                  {social.platform?.substring(0, 2).toUpperCase() || socialLabels[idx] || 'Li'}
                 </a>
               ))}
             </div>
@@ -202,14 +355,67 @@ const renderProfileTemplate = (templateId, profile) => {
               cursor: 'pointer',
             }}
             onClick={() => {
-              // Add to contacts functionality
-              const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${fullName}\nORG:${company}\nTITLE:${designation}\nTEL:${phone}\nEMAIL:${email}\nEND:VCARD`;
+              // Add to contacts functionality - include all phones and emails
+              // Use proper vCard format with N: field for name parsing on mobile devices
+              // N: format is LastName;FirstName;MiddleName;Prefix;Suffix
+              // For full name, we'll split it or use it as first name
+              const nameParts = fullName.trim().split(/\s+/);
+              const firstName = nameParts[0] || '';
+              const lastName = nameParts.slice(1).join(' ') || '';
+              
+              let vcard = `BEGIN:VCARD\nVERSION:3.0\n`;
+              
+              // N: field is required for proper name parsing on mobile devices
+              vcard += `N:${lastName};${firstName};;;\n`;
+              
+              // FN: (Full Name) - display name
+              vcard += `FN:${fullName}\n`;
+              
+              // ORG: (Organization/Company) - this is critical for company name
+              if (company && company.trim()) {
+                vcard += `ORG:${company.trim()}\n`;
+              }
+              
+              // TITLE: (Job Title/Designation)
+              if (designation && designation.trim()) {
+                vcard += `TITLE:${designation.trim()}\n`;
+              }
+              
+              // Add all phone numbers
+              allPhones.forEach((phoneNum, idx) => {
+                // Keep the + sign and just remove spaces for proper formatting
+                const cleanPhone = phoneNum.replace(/\s+/g, ' ').trim();
+                const phoneType = idx === 0 ? 'TEL;TYPE=CELL' : `TEL;TYPE=OTHER`;
+                vcard += `${phoneType}:${cleanPhone}\n`;
+              });
+              
+              // Add all emails
+              allEmails.forEach((emailAddr, idx) => {
+                const emailType = idx === 0 ? 'EMAIL;TYPE=WORK' : `EMAIL;TYPE=OTHER`;
+                vcard += `${emailType}:${emailAddr}\n`;
+              });
+              
+              // Add address if available
+              if (address) {
+                vcard += `ADR;TYPE=WORK:;;${address};${emirates || ''};${country || ''};;\n`;
+              }
+              
+              // Add note (about) if available
+              if (about) {
+                vcard += `NOTE:${about}\n`;
+              }
+              
+              vcard += `END:VCARD`;
+              
               const blob = new Blob([vcard], { type: 'text/vcard' });
               const url = URL.createObjectURL(blob);
               const link = document.createElement('a');
               link.href = url;
-              link.download = `${fullName}.vcf`;
+              link.download = `${fullName.replace(/\s+/g, '_')}.vcf`;
               link.click();
+              
+              // Clean up the URL after a delay
+              setTimeout(() => URL.revokeObjectURL(url), 100);
             }}
           >
             Add to Contacts
@@ -251,6 +457,54 @@ const renderProfileTemplate = (templateId, profile) => {
             padding: '0 20px',
             boxSizing: 'border-box',
           }}>
+            {/* Company Logo */}
+            {companyLogo && (
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                marginBottom: '24px' 
+              }}>
+                <img
+                  src={companyLogo}
+                  alt={company}
+                  style={{
+                    maxWidth: 'clamp(120px, 20vw, 200px)',
+                    maxHeight: '80px',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2))',
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Profile Picture */}
+            {profilePic && (
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                marginBottom: '24px' 
+              }}>
+                <img
+                  src={profilePic}
+                  alt={fullName}
+                  style={{
+                    width: 'clamp(120px, 20vw, 180px)',
+                    height: 'clamp(120px, 20vw, 180px)',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '4px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+
             <h1 style={{ 
               color: '#fff', 
               fontSize: 'clamp(32px, 6vw, 48px)', 
@@ -275,6 +529,29 @@ const renderProfileTemplate = (templateId, profile) => {
             </p>
           </div>
 
+          {/* About Section */}
+          {about && (
+            <div style={{ 
+              marginBottom: '40px', 
+              maxWidth: '1000px', 
+              margin: '0 auto 40px',
+              width: '100%',
+              padding: '0 20px',
+              boxSizing: 'border-box',
+              textAlign: 'center',
+            }}>
+              <p style={{ 
+                color: '#fff', 
+                fontSize: 'clamp(16px, 2.5vw, 24px)', 
+                lineHeight: '1.6',
+                margin: 0,
+                opacity: 0.95
+              }}>
+                {about}
+              </p>
+            </div>
+          )}
+
           <div style={{ 
             marginBottom: '60px', 
             maxWidth: '1000px', 
@@ -292,27 +569,65 @@ const renderProfileTemplate = (templateId, profile) => {
             }}>
               Contact Information
             </h3>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px', 
-              marginBottom: '24px', 
-              fontSize: 'clamp(18px, 3vw, 28px)',
-              flexWrap: 'wrap',
-            }}>
-              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.9 }}>📞</span>
-              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phone}</span>
-            </div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px', 
-              fontSize: 'clamp(18px, 3vw, 28px)',
-              flexWrap: 'wrap',
-            }}>
-              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.9 }}>📧</span>
-              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{email}</span>
-            </div>
+            {allPhones.map((phoneNum, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                marginBottom: '20px', 
+                fontSize: 'clamp(18px, 3vw, 28px)',
+                flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.9 }}>📞</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phoneNum}</span>
+              </div>
+            ))}
+            {allEmails.map((emailAddr, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                marginBottom: '20px', 
+                fontSize: 'clamp(18px, 3vw, 28px)',
+                flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.9 }}>📧</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{emailAddr}</span>
+              </div>
+            ))}
+            {address && (
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: '12px', 
+                marginBottom: '20px', 
+                fontSize: 'clamp(18px, 3vw, 28px)',
+                flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.9 }}>📍</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word' }}>
+                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
+                </span>
+              </div>
+            )}
+            {googleMapLink && (
+              <div style={{ marginTop: '16px' }}>
+                <a 
+                  href={googleMapLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: '#fff', 
+                    fontSize: 'clamp(16px, 2.5vw, 22px)', 
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    opacity: 0.95
+                  }}
+                >
+                  📍 View on Map
+                </a>
+              </div>
+            )}
           </div>
 
           {socialMedia.length > 0 && (
@@ -333,7 +648,7 @@ const renderProfileTemplate = (templateId, profile) => {
                 Social Media
               </h3>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                {socialMedia.slice(0, 3).map((social, idx) => (
+                {socialMedia.map((social, idx) => (
                   <a
                     key={idx}
                     href={social.url}
@@ -389,6 +704,54 @@ const renderProfileTemplate = (templateId, profile) => {
           padding: '0 20px',
           boxSizing: 'border-box',
         }}>
+          {/* Company Logo */}
+          {companyLogo && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '24px' 
+            }}>
+              <img
+                src={companyLogo}
+                alt={company}
+                style={{
+                  maxWidth: 'clamp(120px, 20vw, 200px)',
+                  maxHeight: '80px',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 2px 8px rgba(255, 235, 59, 0.3))',
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
+          {/* Profile Picture */}
+          {profilePic && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '24px' 
+            }}>
+              <img
+                src={profilePic}
+                alt={fullName}
+                style={{
+                  width: 'clamp(120px, 20vw, 180px)',
+                  height: 'clamp(120px, 20vw, 180px)',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '4px solid #ffeb3b',
+                  boxShadow: '0 4px 12px rgba(255, 235, 59, 0.3)',
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
           <h1 style={{ 
             color: '#fff', 
             fontSize: 'clamp(32px, 6vw, 48px)', 
@@ -416,6 +779,29 @@ const renderProfileTemplate = (templateId, profile) => {
           </p>
         </div>
 
+          {/* About Section */}
+          {about && (
+            <div style={{ 
+              marginBottom: '30px', 
+              maxWidth: '1000px', 
+              margin: '0 auto 30px',
+              width: '100%',
+              padding: '0 20px',
+              boxSizing: 'border-box',
+              textAlign: 'center',
+            }}>
+              <p style={{ 
+                color: '#fff', 
+                fontSize: 'clamp(14px, 2.5vw, 20px)', 
+                lineHeight: '1.5',
+                margin: 0,
+                opacity: 0.85
+              }}>
+                {about}
+              </p>
+            </div>
+          )}
+
           <div
             style={{
               width: 'calc(100% - 40px)',
@@ -426,39 +812,68 @@ const renderProfileTemplate = (templateId, profile) => {
             }}
           />
 
+          {/* Contact Information - All phones and emails */}
           <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            marginBottom: '60px', 
-            fontSize: 'clamp(18px, 3vw, 28px)', 
+            marginBottom: '40px', 
+            fontSize: 'clamp(16px, 2.5vw, 24px)', 
             maxWidth: '1000px', 
-            margin: '0 auto 60px', 
-            flexWrap: 'wrap', 
-            gap: '24px',
+            margin: '0 auto 40px', 
             width: '100%',
             padding: '0 20px',
             boxSizing: 'border-box',
           }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px',
-              flex: '1 1 auto',
-              minWidth: '200px',
-            }}>
-              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.8 }}>📞</span>
-              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phone}</span>
-            </div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px',
-              flex: '1 1 auto',
-              minWidth: '200px',
-            }}>
-              <span style={{ fontSize: 'clamp(24px, 4vw, 36px)', opacity: 0.8 }}>📧</span>
-              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{email}</span>
-            </div>
+            {allPhones.map((phoneNum, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                <span style={{ fontSize: 'clamp(20px, 3vw, 28px)', opacity: 0.8 }}>📞</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phoneNum}</span>
+              </div>
+            ))}
+            {allEmails.map((emailAddr, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                <span style={{ fontSize: 'clamp(20px, 3vw, 28px)', opacity: 0.8 }}>📧</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{emailAddr}</span>
+              </div>
+            ))}
+            {address && (
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                <span style={{ fontSize: 'clamp(20px, 3vw, 28px)', opacity: 0.8 }}>📍</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word', fontSize: 'clamp(14px, 2vw, 20px)' }}>
+                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
+                </span>
+              </div>
+            )}
+            {googleMapLink && (
+              <div style={{ marginTop: '12px' }}>
+                <a 
+                  href={googleMapLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: '#ffeb3b', 
+                    fontSize: 'clamp(14px, 2vw, 18px)', 
+                    textDecoration: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  📍 View on Map
+                </a>
+              </div>
+            )}
           </div>
 
           {socialMedia.length > 0 && (
@@ -472,7 +887,7 @@ const renderProfileTemplate = (templateId, profile) => {
               padding: '0 20px',
               boxSizing: 'border-box',
             }}>
-              {socialMedia.slice(0, 3).map((social, idx) => (
+              {socialMedia.map((social, idx) => (
                 <a
                   key={idx}
                   href={social.url}
@@ -542,13 +957,20 @@ const PublicProfile = ({ userId }) => {
             { headers: { 'Content-Type': 'application/json' } }
           );
           
+          console.log('📡 getUser API Response:', userRes.data);
+          
           if (userRes.data?.code === 200 && userRes.data.data) {
             // Get theme from getUser response - this is the PRIMARY source
             const userTheme = userRes.data.data.theme || userRes.data.data.selectedTemplate;
             if (userTheme) {
               theme = userTheme.toLowerCase().trim(); // Normalize theme value
               console.log('✅ Theme from getUser API:', theme);
+              console.log('📋 Full getUser data:', userRes.data.data);
+            } else {
+              console.warn('⚠️ No theme found in getUser response:', userRes.data.data);
             }
+          } else {
+            console.warn('⚠️ getUser API response format unexpected:', userRes.data);
           }
         } catch (getUserErr) {
           console.warn('Could not fetch theme from getUser API with userId:', getUserErr);
@@ -578,8 +1000,25 @@ const PublicProfile = ({ userId }) => {
         // Step 3: Use profile data if we have it, otherwise try fallback
         if (profileData) {
           // Prioritize theme from getUser API, then profile theme, then selectedTemplate
-          profileData.theme = theme || profileData.theme || profileData.selectedTemplate || 'standard';
-          console.log('🎨 Final theme applied:', profileData.theme);
+          const finalTheme = theme || profileData.theme || profileData.selectedTemplate || 'standard';
+          profileData.theme = finalTheme.toLowerCase().trim();
+          
+          // Normalize theme values: handle variations and typos
+          if (profileData.theme === 'epic') profileData.theme = 'epic';
+          
+          // Validate theme - only allow: 'standard', 'modern', 'epic'
+          const validThemes = ['standard', 'modern', 'epic'];
+          if (!validThemes.includes(profileData.theme)) {
+            console.warn('⚠️ Invalid theme detected:', profileData.theme, '- defaulting to standard');
+            profileData.theme = 'standard';
+          }
+          
+          console.log('🎨 Final theme applied to profile:', profileData.theme);
+          console.log('📊 Profile data with theme:', { 
+            fullName: profileData.fullName, 
+            theme: profileData.theme,
+            company: profileData.companyName 
+          });
           setProfile(profileData);
         } else {
           // Fallback: try getUser endpoint to get profileId
@@ -665,7 +1104,7 @@ const PublicProfile = ({ userId }) => {
   let theme = (profile?.theme || profile?.selectedTemplate || 'standard').toLowerCase().trim();
   
   // Normalize theme values: handle variations and typos
-  if (theme === 'epi') theme = 'epic';
+  if (theme === 'epic') theme = 'epic';
   
   // Validate theme - only allow: 'standard', 'modern', 'epic'
   const validThemes = ['standard', 'modern', 'epic'];
@@ -678,8 +1117,16 @@ const PublicProfile = ({ userId }) => {
   
   console.log('🎨 Rendering PublicProfile with theme:', normalizedTheme, {
     availableThemes: validThemes,
-    selectedTheme: normalizedTheme
+    selectedTheme: normalizedTheme,
+    profileTheme: profile?.theme,
+    profileSelectedTemplate: profile?.selectedTemplate,
+    profileId: profile?._id || profile?.id
   });
+  
+  // Log if theme is epic to confirm it's working
+  if (normalizedTheme === 'epic') {
+    console.log('🔥 EPIC THEME CONFIRMED - Rendering epic template');
+  }
 
   // Set background color based on theme
   const getBackgroundColor = (theme) => {

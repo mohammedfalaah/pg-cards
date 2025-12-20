@@ -23,52 +23,148 @@ const TEMPLATE_OPTIONS = [
   { id: 'epic', label: 'Epic', description: 'Dark theme with yellow accents' },
 ];
 
+// Country codes for phone numbers
+const COUNTRY_CODES = [
+  { code: '+971', country: 'UAE', flag: '🇦🇪' },
+  { code: '+1', country: 'USA/Canada', flag: '🇺🇸' },
+  { code: '+91', country: 'India', flag: '🇮🇳' },
+  { code: '+44', country: 'UK', flag: '🇬🇧' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: '+974', country: 'Qatar', flag: '🇶🇦' },
+  { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
+  { code: '+973', country: 'Bahrain', flag: '🇧🇭' },
+  { code: '+968', country: 'Oman', flag: '🇴🇲' },
+];
+
 // Profile Form Component
-const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
+const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initialData, onFormDataReady }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({
-    userId: getUserId() || '',
-    fullName: '',
-    companyDesignation: '',
-    companyName: '',
-    about: '',
-    phoneNumbers: [{ label: 'work', number: '' }],
-    emails: [{ emailAddress: '' }],
-    contactDetails: {
-      address: '',
-      state: '',
-      country: '',
-      googleMapLink: ''
-    },
-    socialMedia: []
-  });
+  
+  // Initialize form data with initialData if provided, or defaults
+  const initializeFormData = () => {
+    if (initialData) {
+      // Parse phone numbers to extract country code if needed
+      const phoneNumbers = initialData.phoneNumbers?.map(phone => {
+        if (phone.number && phone.number.startsWith('+') && !phone.countryCode) {
+          const parts = phone.number.split(' ');
+          if (parts.length > 1) {
+            return {
+              ...phone,
+              countryCode: parts[0],
+              number: parts.slice(1).join(' ')
+            };
+          }
+        }
+        return { ...phone, countryCode: phone.countryCode || '+971' };
+      }) || [{ label: 'work', countryCode: '+971', number: '' }];
+      
+      return {
+        ...initialData,
+        phoneNumbers
+      };
+    }
+    
+    return {
+      userId: getUserId() || '',
+      fullName: '',
+      companyDesignation: '',
+      companyName: '',
+      about: '',
+      phoneNumbers: [{ label: 'work', countryCode: '+971', number: '' }],
+      emails: [{ emailAddress: '' }],
+      contactDetails: {
+        address: '',
+        state: '',
+        country: '',
+        googleMapLink: ''
+      },
+      socialMedia: []
+    };
+  };
+  
+  const [formData, setFormData] = useState(initializeFormData());
   const [socialInput, setSocialInput] = useState({ platform: 'linkedin', url: '' });
+  
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      // Parse phone numbers to extract country code if needed
+      const phoneNumbers = initialData.phoneNumbers?.map(phone => {
+        if (phone.number && phone.number.startsWith('+') && !phone.countryCode) {
+          const parts = phone.number.split(' ');
+          if (parts.length > 1) {
+            return {
+              ...phone,
+              countryCode: parts[0],
+              number: parts.slice(1).join(' ')
+            };
+          }
+        }
+        return { ...phone, countryCode: phone.countryCode || '+971' };
+      }) || [{ label: 'work', countryCode: '+971', number: '' }];
+      
+      const updatedData = {
+        ...initialData,
+        phoneNumbers
+      };
+      setFormData(updatedData);
+      if (onFormDataChange) {
+        onFormDataChange(updatedData);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const updatedData = { ...formData, [name]: value };
+    setFormData(updatedData);
+    // Notify parent component of form data changes for live preview
+    if (onFormDataChange) {
+      onFormDataChange(updatedData);
+    }
+    // Also notify parent that form data is ready
+    if (onFormDataReady) {
+      onFormDataReady(updatedData);
+    }
   };
 
   const handleContactDetailsChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      contactDetails: { ...prev.contactDetails, [name]: value }
-    }));
+    const updatedData = {
+      ...formData,
+      contactDetails: { ...formData.contactDetails, [name]: value }
+    };
+    setFormData(updatedData);
+    // Notify parent component of form data changes for live preview
+    if (onFormDataChange) {
+      onFormDataChange(updatedData);
+    }
   };
 
   const handlePhoneChange = (index, field, value) => {
     const newPhones = [...formData.phoneNumbers];
     newPhones[index][field] = value;
-    setFormData(prev => ({ ...prev, phoneNumbers: newPhones }));
+    const updatedData = { ...formData, phoneNumbers: newPhones };
+    setFormData(updatedData);
+    // Notify parent component of form data changes for live preview
+    if (onFormDataChange) {
+      onFormDataChange(updatedData);
+    }
   };
 
   const addPhone = () => {
-    setFormData(prev => ({
-      ...prev,
-      phoneNumbers: [...prev.phoneNumbers, { label: 'work', number: '' }]
-    }));
+    const updatedData = {
+      ...formData,
+      phoneNumbers: [...formData.phoneNumbers, { label: 'work', countryCode: '+971', number: '' }]
+    };
+    setFormData(updatedData);
+    // Notify parent component of form data changes for live preview
+    if (onFormDataChange) {
+      onFormDataChange(updatedData);
+    }
   };
 
   const removePhone = (index) => {
@@ -83,7 +179,12 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
   const handleEmailChange = (index, value) => {
     const newEmails = [...formData.emails];
     newEmails[index].emailAddress = value;
-    setFormData(prev => ({ ...prev, emails: newEmails }));
+    const updatedData = { ...formData, emails: newEmails };
+    setFormData(updatedData);
+    // Notify parent component of form data changes for live preview
+    if (onFormDataChange) {
+      onFormDataChange(updatedData);
+    }
   };
 
   const addEmail = () => {
@@ -104,11 +205,16 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
 
   const addSocialMedia = () => {
     if (socialInput.url.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        socialMedia: [...prev.socialMedia, { ...socialInput }]
-      }));
+      const updatedData = {
+        ...formData,
+        socialMedia: [...formData.socialMedia, { ...socialInput }]
+      };
+      setFormData(updatedData);
       setSocialInput({ platform: 'linkedin', url: '' });
+      // Notify parent component of form data changes for live preview
+      if (onFormDataChange) {
+        onFormDataChange(updatedData);
+      }
     }
   };
 
@@ -158,54 +264,11 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
       return;
     }
     
-    setLoading(true);
-
-    try {
-      // Filter out empty phone numbers and emails
-      const cleanedData = {
-        ...formData,
-        phoneNumbers: formData.phoneNumbers.filter(p => p.number.trim()),
-        emails: formData.emails.filter(e => e.emailAddress.trim()),
-        // Include theme (backend expects 'theme' not 'selectedTemplate')
-        ...(selectedTemplate && { theme: selectedTemplate })
-      };
-
-      const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cleanedData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save profile');
-      }
-
-      const result = await response.json();
-      console.log('Profile saved:', result);
-
-      // Try to store the created profile ID so we can use it on the order success page
-      try {
-        const profileId = result?.data?._id || result?.data?.id;
-        if (profileId) {
-          localStorage.setItem('userProfileId', profileId);
-        }
-      } catch (e) {
-        console.warn('Unable to cache profile id', e);
-      }
-
-      toast.success('Profile saved successfully!');
-      if (onProfileSaved) {
-        onProfileSaved();
-      }
-
-    } catch (err) {
-      console.error('Error saving profile:', err);
-      setError(err.message || 'Failed to save profile');
-      toast.error('Failed to save profile');
-    } finally {
-      setLoading(false);
+    // Just validate and close - don't save yet
+    // Profile will be saved when user clicks "Proceed to Payment"
+    toast.success('Profile information validated! You can now choose your preview.');
+    if (onProfileSaved) {
+      onProfileSaved();
     }
   };
 
@@ -300,11 +363,23 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
                 <option value="home">Home</option>
               </select>
               
+              <select
+                value={phone.countryCode || '+971'}
+                onChange={(e) => handlePhoneChange(index, 'countryCode', e.target.value)}
+                style={styles.countryCodeSelect}
+              >
+                {COUNTRY_CODES.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.code}
+                  </option>
+                ))}
+              </select>
+              
               <input
                 type="tel"
                 value={phone.number}
                 onChange={(e) => handlePhoneChange(index, 'number', e.target.value)}
-                placeholder="+91 9876543210"
+                placeholder="50 000 0000"
                 style={styles.inputFlex}
                 required={index === 0}
               />
@@ -383,13 +458,13 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>State</label>
+            <label style={styles.label}>Emirates</label>
             <input
               type="text"
               name="state"
               value={formData.contactDetails.state}
               onChange={handleContactDetailsChange}
-              placeholder="Kerala"
+              placeholder="Dubai"
               style={styles.input}
             />
           </div>
@@ -401,7 +476,7 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate }) => {
               name="country"
               value={formData.contactDetails.country}
               onChange={handleContactDetailsChange}
-              placeholder="India"
+              placeholder="United Arab Emirates"
               style={styles.input}
             />
           </div>
@@ -752,7 +827,11 @@ const AddressForm = ({
     isDefault: false
   }
 }) => {
-  const [newAddress, setNewAddress] = useState(initialAddress);
+  const [newAddress, setNewAddress] = useState({
+    ...initialAddress,
+    country: initialAddress.country || 'United Arab Emirates',
+    state: initialAddress.state || 'Dubai'
+  });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -833,7 +912,7 @@ const AddressForm = ({
                 name="phone"
                 value={newAddress.phone}
                 onChange={handleChange}
-                placeholder="+91 9876543210"
+                placeholder="+971 50 000 0000"
                 style={styles.input}
                 required
               />
@@ -880,13 +959,13 @@ const AddressForm = ({
             </div>
             
             <div>
-              <label style={styles.label}>State *</label>
+              <label style={styles.label}>Emirates *</label>
               <input
                 type="text"
                 name="state"
                 value={newAddress.state}
                 onChange={handleChange}
-                placeholder="State"
+                placeholder="Dubai"
                 style={styles.input}
                 required
               />
@@ -938,13 +1017,34 @@ const AddressForm = ({
 // Template Preview Component
 const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSelect }) => {
   const renderTemplatePreview = (templateId) => {
-    const fullName = userProfile?.fullName || 'John Doe';
-    const designation = userProfile?.companyDesignation || 'Software Engineer';
-    const company = userProfile?.companyName || 'Tech Company Inc.';
-    const phone = userProfile?.phoneNumbers?.[0]?.number || '+1 (555) 123-4567';
-    const email = userProfile?.emails?.[0]?.emailAddress || 'john.doe@company.com';
-    const profilePic = userProfile?.profilePicture || '';
-    const socialMedia = userProfile?.socialMedia || [];
+    // Use live form data if available, otherwise use saved userProfile
+    const profileData = userProfile || {};
+    
+    // Get all phone numbers - handle both formats (with country code combined or separate)
+    const allPhones = (profileData?.phoneNumbers || []).map(phoneObj => {
+      if (phoneObj.number && phoneObj.number.startsWith('+') && !phoneObj.countryCode) {
+        return phoneObj.number;
+      }
+      return phoneObj.countryCode 
+        ? `${phoneObj.countryCode} ${phoneObj.number || ''}`.trim()
+        : phoneObj.number || '';
+    }).filter(p => p);
+    
+    const phone = allPhones[0] || '+971 50 000 0000'; // First phone for display
+    const allEmails = (profileData?.emails || []).map(e => e.emailAddress).filter(e => e);
+    const email = allEmails[0] || 'john.doe@company.com';
+    
+    const fullName = profileData?.fullName || 'John Doe';
+    const designation = profileData?.companyDesignation || 'Software Engineer';
+    const company = profileData?.companyName || 'Tech Company Inc.';
+    const about = profileData?.about || '';
+    const contactDetails = profileData?.contactDetails || {};
+    const address = contactDetails.address || '';
+    const emirates = contactDetails.state || '';
+    const country = contactDetails.country || '';
+    const googleMapLink = contactDetails.googleMapLink || '';
+    const profilePic = profileData?.profilePicture || '';
+    const socialMedia = profileData?.socialMedia || [];
 
     // Standard Template - Exact match to image: White card with light green-bordered header section
     if (templateId === 'standard') {
@@ -984,49 +1084,97 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             </p>
           </div>
 
+          {/* About Section */}
+          {about && (
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 8px 0', textAlign: 'left' }}>
+                About
+              </h4>
+              <p style={{ color: '#666', fontSize: 11, margin: 0, lineHeight: '1.4' }}>
+                {about}
+              </p>
+            </div>
+          )}
+
           {/* Contact Info Section */}
           <div style={{ marginBottom: '16px' }}>
             <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Contact Info
             </h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14 }}>📞</span>
-              <span style={{ color: '#000' }}>{phone}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14 }}>📧</span>
-              <span style={{ color: '#000' }}>{email}</span>
-            </div>
+            {allPhones.map((phoneNum, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontSize: 12 }}>
+                <span style={{ fontSize: 14 }}>📞</span>
+                <span style={{ color: '#000' }}>{phoneNum}</span>
+              </div>
+            ))}
+            {allEmails.map((emailAddr, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontSize: 12 }}>
+                <span style={{ fontSize: 14 }}>📧</span>
+                <span style={{ color: '#000' }}>{emailAddr}</span>
+              </div>
+            ))}
+            {address && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', fontSize: 12 }}>
+                <span style={{ fontSize: 14 }}>📍</span>
+                <span style={{ color: '#000' }}>
+                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
+                </span>
+              </div>
+            )}
+            {googleMapLink && (
+              <div style={{ marginTop: '8px' }}>
+                <a 
+                  href={googleMapLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: '#4CAF50', 
+                    fontSize: 11, 
+                    textDecoration: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  📍 View on Map
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Social Media Section */}
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Social Media
-            </h4>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {socialLabels.map((label, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    border: '1px solid #81C784',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: '#000',
-                    backgroundColor: '#fff',
-                  }}
-                >
-                  {label}
-                </div>
-              ))}
+          {socialMedia.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+                Social Media
+              </h4>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {socialMedia.slice(0, 3).map((social, idx) => (
+                  <a
+                    key={idx}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      border: '1px solid #81C784',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: '#000',
+                      backgroundColor: '#fff',
+                      textDecoration: 'none',
+                    }}
+                    title={social.platform}
+                  >
+                    {socialLabels[idx] || social.platform?.substring(0, 2) || 'Li'}
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Add to Contacts Button */}
           <div style={{ marginTop: 'auto' }}>
@@ -1052,7 +1200,9 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
 
     // Modern Template - Exact match: Purple-blue gradient (lighter to darker)
     if (templateId === 'modern') {
-      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
+      const socialLabels = socialMedia.length >= 3 
+        ? socialMedia.slice(0, 3).map(s => s.platform)
+        : ['Linkedin', 'Instagram', 'Twitter'];
       
       return (
         <div
@@ -1079,46 +1229,91 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             </p>
           </div>
 
+          {/* About Section */}
+          {about && (
+            <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+              <p style={{ color: '#fff', fontSize: 11, margin: 0, opacity: 0.9, lineHeight: '1.4' }}>
+                {about}
+              </p>
+            </div>
+          )}
+
           {/* Contact Information Section */}
           <div style={{ marginBottom: '20px' }}>
             <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Contact Information
             </h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
-              <span style={{ color: '#fff', flex: 1 }}>{phone}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
-              <span style={{ color: '#fff', flex: 1 }}>{email}</span>
-            </div>
+            {allPhones.map((phoneNum, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
+                <span style={{ color: '#fff', flex: 1 }}>{phoneNum}</span>
+              </div>
+            ))}
+            {allEmails.map((emailAddr, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
+                <span style={{ color: '#fff', flex: 1 }}>{emailAddr}</span>
+              </div>
+            ))}
+            {address && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>📍</span>
+                <span style={{ color: '#fff', flex: 1 }}>
+                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
+                </span>
+              </div>
+            )}
+            {googleMapLink && (
+              <div style={{ marginTop: '8px' }}>
+                <a 
+                  href={googleMapLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: '#fff', 
+                    fontSize: 11, 
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    opacity: 0.9
+                  }}
+                >
+                  📍 View on Map
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Social Media Section */}
-          <div style={{ marginTop: 'auto' }}>
-            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Social Media
-            </h4>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {socialLabels.map((label, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: '#0077b5',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {label}
-                </div>
-              ))}
+          {socialMedia.length > 0 && (
+            <div style={{ marginTop: 'auto' }}>
+              <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
+                Social Media
+              </h4>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {socialMedia.slice(0, 3).map((social, idx) => (
+                  <a
+                    key={idx}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: '#0077b5',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {social.platform || socialLabels[idx] || 'Link'}
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       );
     }
@@ -1269,7 +1464,9 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
 
     // Epic Template - Exact match: Black card with bright yellow border, yellow accents, horizontal separator
     if (templateId === 'epic') {
-      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
+      const socialLabels = socialMedia.length >= 3 
+        ? socialMedia.slice(0, 3).map(s => s.platform)
+        : ['Linkedin', 'Instagram', 'Twitter'];
       
       return (
         <div
@@ -1297,6 +1494,15 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             </p>
           </div>
 
+          {/* About Section */}
+          {about && (
+            <div style={{ marginBottom: '12px', textAlign: 'center' }}>
+              <p style={{ color: '#fff', fontSize: 10, margin: 0, opacity: 0.7, lineHeight: '1.3' }}>
+                {about}
+              </p>
+            </div>
+          )}
+
           {/* Yellow separator line */}
           <div
             style={{
@@ -1307,68 +1513,101 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             }}
           />
 
-          {/* Contact Info - Left and Right */}
+          {/* Contact Info - All phones and emails */}
           <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'flex-start',
             marginBottom: '20px', 
-            fontSize: 12,
-            gap: '12px',
-            flexWrap: 'wrap'
+            fontSize: 11,
           }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px',
-              flex: '1 1 auto',
-              minWidth: '120px'
-            }}>
-              <span style={{ fontSize: 14, opacity: 0.7, flexShrink: 0 }}>📞</span>
-              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phone}</span>
-            </div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px',
-              flex: '1 1 auto',
-              minWidth: '120px'
-            }}>
-              <span style={{ fontSize: 14, opacity: 0.7, flexShrink: 0 }}>📧</span>
-              <span style={{ color: '#fff', wordBreak: 'break-word' }}>{email}</span>
-            </div>
+            {allPhones.map((phoneNum, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                marginBottom: '8px'
+              }}>
+                <span style={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }}>📞</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phoneNum}</span>
+              </div>
+            ))}
+            {allEmails.map((emailAddr, idx) => (
+              <div key={idx} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                marginBottom: '8px'
+              }}>
+                <span style={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }}>📧</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{emailAddr}</span>
+              </div>
+            ))}
+            {address && (
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: '6px',
+                marginBottom: '8px'
+              }}>
+                <span style={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }}>📍</span>
+                <span style={{ color: '#fff', wordBreak: 'break-word', fontSize: 11 }}>
+                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
+                </span>
+              </div>
+            )}
+            {googleMapLink && (
+              <div style={{ marginTop: '8px' }}>
+                <a 
+                  href={googleMapLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: '#ffeb3b', 
+                    fontSize: 10, 
+                    textDecoration: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  📍 View on Map
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Social Media Buttons */}
-          <div style={{ 
-            marginTop: 'auto', 
-            display: 'flex', 
-            gap: '8px',
-            width: '100%'
-          }}>
-            {socialLabels.map((label, idx) => (
-              <div
-                key={idx}
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  border: '1px solid #ffeb3b',
-                  borderRadius: '8px',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
+          {socialMedia.length > 0 && (
+            <div style={{ 
+              marginTop: 'auto', 
+              display: 'flex', 
+              gap: '8px',
+              width: '100%'
+            }}>
+              {socialMedia.slice(0, 3).map((social, idx) => (
+                <a
+                  key={idx}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    backgroundColor: '#000',
+                    color: '#fff',
+                    border: '1px solid #ffeb3b',
+                    borderRadius: '8px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {social.platform || socialLabels[idx] || 'Link'}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
@@ -1428,6 +1667,7 @@ const CheckoutPage = () => {
   const [profileSaved, setProfileSaved] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [liveFormData, setLiveFormData] = useState(null); // For real-time preview updates
 
   useEffect(() => {
     fetchCartItems();
@@ -1450,7 +1690,25 @@ const CheckoutPage = () => {
       );
       const result = await response.json();
       if (response.ok && result?.data) {
-        setUserProfile(result.data);
+        // Parse phone numbers to extract country code if needed
+        const profileData = result.data;
+        if (profileData.phoneNumbers && profileData.phoneNumbers.length > 0) {
+          profileData.phoneNumbers = profileData.phoneNumbers.map(phone => {
+            // If phone number starts with +, try to extract country code
+            if (phone.number && phone.number.startsWith('+')) {
+              const parts = phone.number.split(' ');
+              if (parts.length > 1) {
+                return {
+                  ...phone,
+                  countryCode: parts[0],
+                  number: parts.slice(1).join(' ')
+                };
+              }
+            }
+            return { ...phone, countryCode: phone.countryCode || '+971' };
+          });
+        }
+        setUserProfile(profileData);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -1651,13 +1909,14 @@ const CheckoutPage = () => {
     return false;
   }
 
-  if (!selectedTemplate) {
-    toast.error('Please select a card preview template first');
+  if (!liveFormData && !userProfile) {
+    toast.error('Please complete your profile information first');
+    setShowProfileForm(true);
     return false;
   }
 
-  if (!profileSaved) {
-    setShowProfileForm(true);
+  if (!selectedTemplate) {
+    toast.error('Please select a card preview template first');
     return false;
   }
 
@@ -1742,15 +2001,95 @@ const CheckoutPage = () => {
   };
 
   const handleProceedToPayment = async () => {
+    // First save the profile with theme, then proceed to payment
+    if (!liveFormData && !userProfile) {
+      toast.error('Please complete your profile information first');
+      setShowProfileForm(true);
+      return;
+    }
+    
+    // Save profile with theme before proceeding to payment
+    await saveProfileWithTheme();
     await createPaymentIntent();
+  };
+  
+  const saveProfileWithTheme = async () => {
+    if (!liveFormData && !userProfile) {
+      return; // No data to save
+    }
+    
+    try {
+      // Use liveFormData if available, otherwise use userProfile
+      const profileData = liveFormData || userProfile;
+      
+      // Combine country code with phone number
+      const cleanedPhoneNumbers = profileData.phoneNumbers
+        ?.filter(p => p && p.number && p.number.trim())
+        .map(p => {
+          // If already combined (starts with +), use as is; otherwise combine
+          if (p.number && p.number.startsWith('+') && !p.countryCode) {
+            return { label: p.label || 'work', number: p.number };
+          }
+          return {
+            label: p.label || 'work',
+            number: p.countryCode ? `${p.countryCode} ${p.number.trim()}` : p.number.trim()
+          };
+        }) || [];
+      
+      const cleanedData = {
+        ...profileData,
+        phoneNumbers: cleanedPhoneNumbers,
+        emails: profileData.emails?.filter(e => e.emailAddress?.trim()) || [],
+        // Include theme (backend expects 'theme' not 'selectedTemplate')
+        ...(selectedTemplate && { theme: selectedTemplate })
+      };
+
+      console.log('Saving profile with theme before payment:', cleanedData);
+
+      const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cleanedData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to save profile');
+      }
+
+      const result = await response.json();
+      console.log('Profile saved before payment:', result);
+
+      // Store the profile ID
+      try {
+        const profileId = result?.data?._id || result?.data?.id;
+        if (profileId) {
+          localStorage.setItem('userProfileId', profileId);
+        }
+      } catch (e) {
+        console.warn('Unable to cache profile id', e);
+      }
+
+      // Update userProfile state
+      setUserProfile(cleanedData);
+      setProfileSaved(true);
+      
+      toast.success('Profile saved successfully!');
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      toast.error(err.message || 'Failed to save profile. Please try again.');
+      throw err; // Re-throw to prevent payment if profile save fails
+    }
   };
 
   const handleProfileSaved = async () => {
+    // Just mark profile as filled (not saved yet)
+    // Profile will be saved when user clicks "Proceed to Payment"
     setProfileSaved(true);
     setShowProfileForm(false);
-    // Fetch profile to update preview with actual data
-    await fetchUserProfile();
-    toast.success('Profile saved successfully! You can now proceed to payment.');
+    toast.success('Profile information completed! Now choose your preview and proceed to payment.');
   };
 
   const handleTemplateSelect = (templateId) => {
@@ -1773,43 +2112,54 @@ const CheckoutPage = () => {
       <div style={styles.container} className="checkout-container">
         <div style={styles.content} className="checkout-responsive-content">
           <div style={styles.leftSection}>
-            {/* Step 1: Choose Preview */}
+            {/* Step 1: Profile Information */}
             <div style={styles.section}>
-            <div style={styles.stepHeader} className="checkout-step-header">
-              <div style={styles.stepNumber} className="checkout-step-number">1</div>
-              <h2 style={styles.stepTitle} className="checkout-step-title">Choose Your Preview</h2>
-                {selectedTemplate && <span style={styles.checkmark}>✓</span>}
+              <div style={styles.stepHeader} className="checkout-step-header">
+                <div style={styles.stepNumber} className="checkout-step-number">1</div>
+                <h2 style={styles.stepTitle} className="checkout-step-title">Profile Information</h2>
+                {profileSaved && <span style={styles.checkmark}>✓</span>}
               </div>
-              <div style={styles.addressContent} className="checkout-address-content">
-                <TemplatePreviewSelector
-                  userProfile={userProfile}
-                  selectedTemplate={selectedTemplate}
-                  onTemplateSelect={handleTemplateSelect}
-                />
+              <div style={styles.addressContent}>
+                {!profileSaved ? (
+                  <button 
+                    style={styles.addAddressBtn} 
+                    onClick={() => setShowProfileForm(true)}
+                  >
+                    + Add Profile Information
+                  </button>
+                ) : (
+                  <div style={styles.profileSaved}>
+                    <span style={styles.checkmark}>✓</span>
+                    Profile information saved
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Step 2: Profile Information */}
-            {selectedTemplate && (
+            {/* Step 2: Choose Preview */}
+            {profileSaved && (
               <div style={styles.section}>
                 <div style={styles.stepHeader} className="checkout-step-header">
                   <div style={styles.stepNumber} className="checkout-step-number">2</div>
-                  <h2 style={styles.stepTitle} className="checkout-step-title">Profile Information</h2>
-                  {profileSaved && <span style={styles.checkmark}>✓</span>}
+                  <h2 style={styles.stepTitle} className="checkout-step-title">Choose Your Preview</h2>
+                  {selectedTemplate && <span style={styles.checkmark}>✓</span>}
                 </div>
-                <div style={styles.addressContent}>
-                  {!profileSaved ? (
-                    <button 
-                      style={styles.addAddressBtn} 
-                      onClick={() => setShowProfileForm(true)}
-                    >
-                      + Add Profile Information
-                    </button>
-                  ) : (
-                    <div style={styles.profileSaved}>
-                      <span style={styles.checkmark}>✓</span>
-                      Profile information saved
-                    </div>
+                <div style={styles.addressContent} className="checkout-address-content">
+                  <TemplatePreviewSelector
+                    userProfile={liveFormData || userProfile}
+                    selectedTemplate={selectedTemplate}
+                    onTemplateSelect={handleTemplateSelect}
+                  />
+                  {liveFormData && (
+                    <p style={{ 
+                      fontSize: '12px', 
+                      color: '#666', 
+                      marginTop: '12px', 
+                      fontStyle: 'italic',
+                      textAlign: 'center'
+                    }}>
+                      💡 Preview updates as you fill the profile form
+                    </p>
                   )}
                 </div>
               </div>
@@ -1881,11 +2231,11 @@ const CheckoutPage = () => {
                   ...styles.proceedBtn,
                   ...(processingPayment 
                     || !selectedTemplate
-                    || !profileSaved ? styles.proceedBtnDisabled : {})
+                    || (!liveFormData && !userProfile) ? styles.proceedBtnDisabled : {})
                 }} 
                 onClick={handleProceedToPayment}
                 disabled={processingPayment || cartItems.length === 0 || 
-                  !selectedTemplate || !profileSaved}
+                  (!liveFormData && !userProfile) || !selectedTemplate}
               >
                 {processingPayment ? (
                   <>
@@ -1893,8 +2243,8 @@ const CheckoutPage = () => {
                     Initializing Payment...
                   </>
                 ) :  
+                  (!liveFormData && !userProfile) ? 'Complete Profile Information' :
                   !selectedTemplate ? 'Choose Your Preview' :
-                  !profileSaved ? 'Complete Profile Information' :
                   'Proceed to Payment'}
               </button>
             ) : (
@@ -2039,7 +2389,10 @@ const CheckoutPage = () => {
               <h2 style={styles.modalTitle} className="checkout-modal-title">Complete Your Profile</h2>
                 <button 
                   style={styles.closeBtn}
-                  onClick={() => setShowProfileForm(false)}
+                  onClick={() => {
+                    setShowProfileForm(false);
+                    // Keep liveFormData for preview even when modal closes
+                  }}
                   type="button"
                 >
                   ×
@@ -2048,6 +2401,8 @@ const CheckoutPage = () => {
               <ProfileForm 
                 onProfileSaved={handleProfileSaved} 
                 selectedTemplate={selectedTemplate}
+                onFormDataChange={setLiveFormData}
+                initialData={userProfile || liveFormData}
               />
             </div>
           </div>
@@ -3132,9 +3487,10 @@ const styles = {
   },
   dynamicRow: {
     display: 'flex',
-    gap: '12px',
+    gap: '8px',
     marginBottom: '12px',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   selectSmall: {
     padding: '10px 12px',
@@ -3144,6 +3500,19 @@ const styles = {
     backgroundColor: '#fff',
     minWidth: '120px',
     outline: 'none',
+    '&:focus': {
+      borderColor: '#ff6b35',
+    }
+  },
+  countryCodeSelect: {
+    padding: '10px 12px',
+    fontSize: '14px',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    backgroundColor: '#fff',
+    minWidth: '140px',
+    outline: 'none',
+    cursor: 'pointer',
     '&:focus': {
       borderColor: '#ff6b35',
     }

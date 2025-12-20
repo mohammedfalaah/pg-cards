@@ -133,7 +133,7 @@ const CardCustomization = () => {
     { platform: 'Instagram', link: 'https://instagram.com/johndoe' },
     { platform: 'Twitter', link: 'https://twitter.com/johndoe' }
   ]);
-  const [phoneNumbers, setPhoneNumbers] = useState(['+1 (555) 123-4567']);
+  const [phoneNumbers, setPhoneNumbers] = useState(['+971 50 000 0000']);
   const [emails, setEmails] = useState(['john.doe@company.com']);
   const [logoSize, setLogoSize] = useState(100);
   const [images, setImages] = useState({
@@ -148,8 +148,8 @@ const CardCustomization = () => {
   });
   const [contactDetails, setContactDetails] = useState([
     { label: "Address", value: "123 Business Street" },
-    { label: "State", value: "California" },
-    { label: "Country", value: "United States" },
+    { label: "Emirates", value: "Dubai" },
+    { label: "Country", value: "United Arab Emirates" },
   ]);
   const [location, setLocation] = useState({
     address: '123 Business Street, City, Country',

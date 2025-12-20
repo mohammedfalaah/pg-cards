@@ -111,9 +111,9 @@ const OrderSuccessPage = () => {
     const fullName = profile?.fullName || 'John Doe';
     const designation = profile?.companyDesignation || 'Senior Software Developer';
     const company = profile?.companyName || 'TechCorp';
-    const phone = profile?.phoneNumbers?.[0]?.number || '+91 9876543210';
+    const phone = profile?.phoneNumbers?.[0]?.number || '+971 50 000 0000';
     const email = profile?.emails?.[0]?.emailAddress || 'john@company.com';
-    const address = profile?.contactDetails?.address || 'MG Road, Kerala, India';
+    const address = profile?.contactDetails?.address || 'Business Bay, Dubai, UAE';
     const mapLink = profile?.contactDetails?.googleMapLink;
     const profilePic = profile?.profilePicture || '';
     const cover = profile?.backgroundImage || '';
