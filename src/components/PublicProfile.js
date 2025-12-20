@@ -1081,7 +1081,7 @@ const PublicProfile = ({ userId }) => {
           
           // Normalize theme values: handle variations and typos
           let validatedTheme = normalizedTheme;
-          if (validatedTheme === 'epi') validatedTheme = 'epic';
+          if (validatedTheme === 'epic') validatedTheme = 'epic';
           
           // Validate theme - only allow: 'standard', 'modern', 'epic'
           const validThemes = ['standard', 'modern', 'epic'];
