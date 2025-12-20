@@ -6,6 +6,7 @@ import Login from './Login';
 
 const UserProfile = () => {
   const [userData, setUserData] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
@@ -13,26 +14,74 @@ const UserProfile = () => {
   const [qrLoading, setQrLoading] = useState(false);
   const [qrImage, setQrImage] = useState('');
   const [redirectUrl, setRedirectUrl] = useState('');
+  const [theme, setTheme] = useState('standard');
 
   // Get user ID from localStorage
   const userId = localStorage.getItem('userId');
 
-  // On mount, hydrate basic user data from localStorage and stop loading
+  // Fetch full profile data and theme
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUserData(JSON.parse(storedUser));
+    const fetchUserData = async () => {
+      if (!userId) {
+        setShowLogin(true);
+        setLoading(false);
+        return;
       }
-    } catch (e) {
-      console.error('Failed to parse user from storage', e);
-    }
 
-    if (!userId) {
-      setShowLogin(true);
-    }
+      try {
+        // Fetch user data from getUser API to get theme
+        try {
+          const userRes = await axios.post(
+            'https://pg-cards.vercel.app/userProfile/getUser',
+            { userId },
+            { headers: { 'Content-Type': 'application/json' } }
+          );
 
-    setLoading(false);
+          if (userRes.data?.code === 200 && userRes.data.data) {
+            const userTheme = userRes.data.data.theme || userRes.data.data.selectedTemplate || 'standard';
+            setTheme(userTheme.toLowerCase().trim());
+            
+            // Also get profileId if available
+            const profileId = userRes.data.data.profileId || userRes.data.data._id;
+            
+            // Fetch full profile data
+            if (profileId) {
+              try {
+                const profileRes = await axios.get(
+                  `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
+                );
+
+                if (profileRes.data?.status === true && profileRes.data?.data) {
+                  setProfileData(profileRes.data.data);
+                } else if (profileRes.data?.code === 200 && profileRes.data?.data) {
+                  setProfileData(profileRes.data.data);
+                }
+              } catch (profileErr) {
+                console.warn('Could not fetch profile data:', profileErr);
+              }
+            }
+          }
+        } catch (getUserErr) {
+          console.warn('Could not fetch user data:', getUserErr);
+        }
+
+        // Also try to get from localStorage
+        try {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUserData(JSON.parse(storedUser));
+          }
+        } catch (e) {
+          console.error('Failed to parse user from storage', e);
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
   }, [userId]);
 
   const handleLoginSuccess = ({ user, token }) => {
@@ -172,18 +221,61 @@ const UserProfile = () => {
           {activeTab === 'profile' && (
             <div className="profileDetails">
               <h2 className="sectionTitle">Profile Information</h2>
+              
+              {/* Theme Display */}
+              <div className="detailField" style={{ gridColumn: '1 / -1', marginBottom: '20px' }}>
+                <label className="fieldLabel">Selected Theme</label>
+                <div className="fieldValue" style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px',
+                  textTransform: 'capitalize',
+                  fontWeight: 700,
+                  color: theme === 'epic' ? '#ffeb3b' : theme === 'modern' ? '#9c88ff' : '#4CAF50'
+                }}>
+                  <span>{theme || 'standard'}</span>
+                  {theme === 'epic' && <span>🔥</span>}
+                  {theme === 'modern' && <span>✨</span>}
+                  {theme === 'standard' && <span>✓</span>}
+                </div>
+              </div>
+
               <div className="detailsGrid">
                 <div className="detailField">
                   <label className="fieldLabel">Full Name</label>
-                  <div className="fieldValue">{userData?.name || 'Not set'}</div>
+                  <div className="fieldValue">{profileData?.fullName || userData?.name || 'Not set'}</div>
+                </div>
+                <div className="detailField">
+                  <label className="fieldLabel">Designation</label>
+                  <div className="fieldValue">{profileData?.companyDesignation || 'Not set'}</div>
+                </div>
+                <div className="detailField">
+                  <label className="fieldLabel">Company Name</label>
+                  <div className="fieldValue">{profileData?.companyName || 'Not set'}</div>
                 </div>
                 <div className="detailField">
                   <label className="fieldLabel">Email Address</label>
-                  <div className="fieldValue">{userData?.email || 'Not set'}</div>
+                  <div className="fieldValue">
+                    {profileData?.emails?.[0]?.emailAddress || userData?.email || 'Not set'}
+                  </div>
                 </div>
                 <div className="detailField">
                   <label className="fieldLabel">Phone Number</label>
-                  <div className="fieldValue">{userData?.phone || 'Not set'}</div>
+                  <div className="fieldValue">
+                    {profileData?.phoneNumbers?.[0]?.number || userData?.phone || 'Not set'}
+                  </div>
+                </div>
+                <div className="detailField">
+                  <label className="fieldLabel">About</label>
+                  <div className="fieldValue">{profileData?.about || 'Not set'}</div>
+                </div>
+                <div className="detailField">
+                  <label className="fieldLabel">Address</label>
+                  <div className="fieldValue">
+                    {profileData?.contactDetails?.address 
+                      ? `${profileData.contactDetails.address}, ${profileData.contactDetails.state || ''}, ${profileData.contactDetails.country || ''}`
+                      : 'Not set'}
+                  </div>
                 </div>
                 <div className="detailField">
                   <label className="fieldLabel">Account Created</label>
@@ -192,6 +284,66 @@ const UserProfile = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Additional Phone Numbers */}
+              {profileData?.phoneNumbers && profileData.phoneNumbers.length > 1 && (
+                <div style={{ marginTop: '30px' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '15px', color: '#ffffff' }}>
+                    Additional Phone Numbers
+                  </h3>
+                  <div className="detailsGrid">
+                    {profileData.phoneNumbers.slice(1).map((phone, idx) => (
+                      <div key={idx} className="detailField">
+                        <label className="fieldLabel">{phone.label || 'Phone'} {idx + 2}</label>
+                        <div className="fieldValue">{phone.number || 'Not set'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Emails */}
+              {profileData?.emails && profileData.emails.length > 1 && (
+                <div style={{ marginTop: '30px' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '15px', color: '#ffffff' }}>
+                    Additional Email Addresses
+                  </h3>
+                  <div className="detailsGrid">
+                    {profileData.emails.slice(1).map((email, idx) => (
+                      <div key={idx} className="detailField">
+                        <label className="fieldLabel">Email {idx + 2}</label>
+                        <div className="fieldValue">{email.emailAddress || 'Not set'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Social Media */}
+              {profileData?.socialMedia && profileData.socialMedia.length > 0 && (
+                <div style={{ marginTop: '30px' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '15px', color: '#ffffff' }}>
+                    Social Media Links
+                  </h3>
+                  <div className="detailsGrid">
+                    {profileData.socialMedia.map((social, idx) => (
+                      <div key={idx} className="detailField">
+                        <label className="fieldLabel">{social.platform || 'Social Media'}</label>
+                        <div className="fieldValue">
+                          <a 
+                            href={social.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ color: '#d4af37', textDecoration: 'none' }}
+                          >
+                            {social.url || 'Not set'}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -306,6 +458,94 @@ const UserProfile = () => {
                         {redirectUrl}
                       </a>
                     </div>
+
+                    {/* Profile Preview with Theme */}
+                    {profileData && theme && (
+                      <div style={{ marginTop: '40px' }}>
+                        <h3 style={{ 
+                          fontSize: '24px', 
+                          fontWeight: 700, 
+                          marginBottom: '20px',
+                          color: '#ffffff',
+                          textAlign: 'center'
+                        }}>
+                          Your Profile Preview ({theme.toUpperCase()} Theme)
+                        </h3>
+                        <div style={{
+                          maxWidth: '400px',
+                          margin: '0 auto',
+                          padding: '20px',
+                          background: theme === 'epic' ? '#000' : theme === 'modern' 
+                            ? 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)' 
+                            : '#fff',
+                          borderRadius: '12px',
+                          border: theme === 'epic' ? '3px solid #ffeb3b' : theme === 'modern' ? 'none' : '2px solid #81C784',
+                          color: theme === 'standard' ? '#000' : '#fff',
+                        }}>
+                          {profileData.profilePicture && (
+                            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                              <img
+                                src={profileData.profilePicture}
+                                alt={profileData.fullName}
+                                style={{
+                                  width: '100px',
+                                  height: '100px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: theme === 'epic' ? '3px solid #ffeb3b' : theme === 'modern' ? '3px solid rgba(255,255,255,0.3)' : '3px solid #81C784',
+                                }}
+                              />
+                            </div>
+                          )}
+                          <h4 style={{ 
+                            fontSize: '20px', 
+                            fontWeight: 700, 
+                            marginBottom: '8px',
+                            textAlign: 'center',
+                            color: theme === 'standard' ? '#000' : '#fff'
+                          }}>
+                            {profileData.fullName || 'Your Name'}
+                          </h4>
+                          <p style={{ 
+                            fontSize: '14px', 
+                            marginBottom: '8px',
+                            textAlign: 'center',
+                            color: theme === 'standard' ? '#666' : theme === 'epic' ? '#ffeb3b' : '#fff',
+                            fontWeight: theme === 'epic' ? 700 : 400
+                          }}>
+                            {profileData.companyDesignation || 'Your Designation'}
+                          </p>
+                          <p style={{ 
+                            fontSize: '13px', 
+                            marginBottom: '16px',
+                            textAlign: 'center',
+                            color: theme === 'standard' ? '#000' : '#fff',
+                            opacity: theme === 'epic' ? 0.9 : 1
+                          }}>
+                            {profileData.companyName || 'Your Company'}
+                          </p>
+                          {profileData.phoneNumbers?.[0]?.number && (
+                            <p style={{ 
+                              fontSize: '12px', 
+                              marginBottom: '8px',
+                              textAlign: 'center',
+                              color: theme === 'standard' ? '#000' : '#fff'
+                            }}>
+                              📞 {profileData.phoneNumbers[0].number}
+                            </p>
+                          )}
+                          {profileData.emails?.[0]?.emailAddress && (
+                            <p style={{ 
+                              fontSize: '12px', 
+                              textAlign: 'center',
+                              color: theme === 'standard' ? '#000' : '#fff'
+                            }}>
+                              📧 {profileData.emails[0].emailAddress}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="qrPlaceholder">

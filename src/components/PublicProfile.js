@@ -1004,7 +1004,7 @@ const PublicProfile = ({ userId }) => {
           profileData.theme = finalTheme.toLowerCase().trim();
           
           // Normalize theme values: handle variations and typos
-          if (profileData.theme === 'epic') profileData.theme = 'epic';
+          if (profileData.theme === 'epi') profileData.theme = 'epic';
           
           // Validate theme - only allow: 'standard', 'modern', 'epic'
           const validThemes = ['standard', 'modern', 'epic'];
@@ -1104,7 +1104,7 @@ const PublicProfile = ({ userId }) => {
   let theme = (profile?.theme || profile?.selectedTemplate || 'standard').toLowerCase().trim();
   
   // Normalize theme values: handle variations and typos
-  if (theme === 'epic') theme = 'epic';
+  if (theme === 'epi') theme = 'epic';
   
   // Validate theme - only allow: 'standard', 'modern', 'epic'
   const validThemes = ['standard', 'modern', 'epic'];
