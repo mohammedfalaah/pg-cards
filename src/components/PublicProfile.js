@@ -989,8 +989,8 @@ const PublicProfile = ({ userId }) => {
         let profileData = null;
         let actualUserId = userId; // Track the actual userId for getUser API
 
-        // Step 1: FIRST, try to get theme from getUser API (PRIMARY SOURCE)
-        // The URL parameter might be a profileId, so we need to handle both cases
+        // Step 1: FIRST, get theme from getUser API (PRIMARY SOURCE)
+        // The URL parameter might be a profileId or userId, so we need to handle both cases
         try {
           const userRes = await axios.post(
             'https://pg-cards.vercel.app/userProfile/getUser',
@@ -998,19 +998,18 @@ const PublicProfile = ({ userId }) => {
             { headers: { 'Content-Type': 'application/json' } }
           );
           
-          console.log('📡 getUser API Response (Step 1):', userRes.data);
+          console.log('📡 getUser API Response:', userRes.data);
           
           if (userRes.data?.code === 200 && userRes.data.data) {
             // Get theme from getUser response - this is the PRIMARY source
             const userTheme = userRes.data.data.theme || userRes.data.data.selectedTemplate;
             if (userTheme) {
               theme = userTheme.toLowerCase().trim(); // Normalize theme value
-              console.log('✅ Theme from getUser API (PRIMARY):', theme);
+              console.log('✅ Theme from getUser API:', theme);
               console.log('📋 Full getUser data:', userRes.data.data);
               
-              // Also get the actual userId and profileId if available
-              actualUserId = userRes.data.data._id || userRes.data.data.id || userId;
-              const profileId = userRes.data.data.profileId || userId;
+              // Get profileId from getUser response to fetch profile data
+              const profileId = userRes.data.data.profileId || userRes.data.data._id || userId;
               
               // Step 2: Get profile data using profileId from getUser response
               try {
@@ -1018,11 +1017,15 @@ const PublicProfile = ({ userId }) => {
                   `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
                 );
 
+                console.log('📋 getUserProfile API Response:', profileRes.data);
+
                 if (profileRes.data?.status === true && profileRes.data?.data) {
                   profileData = profileRes.data.data;
                 } else if (profileRes.data?.code === 200 && profileRes.data?.data) {
                   profileData = profileRes.data.data;
                 }
+                
+                console.log('✅ Profile data fetched:', profileData ? 'Success' : 'Failed');
               } catch (profileErr) {
                 console.warn('Could not fetch from getUserProfile:', profileErr);
               }
@@ -1081,7 +1084,7 @@ const PublicProfile = ({ userId }) => {
           
           // Normalize theme values: handle variations and typos
           let validatedTheme = normalizedTheme;
-          if (validatedTheme === 'epic') validatedTheme = 'epic';
+          if (validatedTheme === 'epi') validatedTheme = 'epic';
           
           // Validate theme - only allow: 'standard', 'modern', 'epic'
           const validThemes = ['standard', 'modern', 'epic'];
@@ -1112,7 +1115,7 @@ const PublicProfile = ({ userId }) => {
             
             if (userRes.data?.code === 200 && userRes.data.data) {
               const userData = userRes.data.data;
-              const profileId = userData.profileId || userData._id;
+              // Get theme from getUser API response
               const userTheme = userData.theme || userData.selectedTemplate || 'standard';
               theme = userTheme.toLowerCase().trim();
               
@@ -1124,17 +1127,24 @@ const PublicProfile = ({ userId }) => {
                 theme = 'standard';
               }
               
+              // Get profileId from getUser response
+              const profileId = userData.profileId || userData._id || userId;
+              
               if (profileId) {
+                // Fetch profile data using profileId
                 const profileRes = await axios.get(
                   `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
                 );
+                
+                console.log('📋 getUserProfile API Response (fallback):', profileRes.data);
                 
                 if (profileRes.data?.data || profileRes.data?.status === true) {
                   profileData = profileRes.data.data || profileRes.data.data;
                   // CRITICAL: Use theme from getUser API (PRIMARY SOURCE)
                   profileData.theme = theme;
                   console.log('🎨 Final theme applied (fallback):', profileData.theme);
-                  console.log('📋 Theme source: getUser API fallback');
+                  console.log('📋 Theme source: getUser API (fallback)');
+                  console.log('📊 Profile data keys:', Object.keys(profileData));
                   setProfile(profileData);
                   return;
                 }
