@@ -25,6 +25,18 @@ import axios from 'axios';
 // Supports three themes: 'standard', 'modern', 'epic'
 // Theme is determined by getUser API response
 const renderProfileTemplate = (templateId, profile) => {
+  // CRITICAL: Normalize templateId to ensure case-insensitive matching
+  let normalizedTemplateId = String(templateId || 'standard').toLowerCase().trim();
+  if (normalizedTemplateId === 'epi') normalizedTemplateId = 'epic';
+  
+  // Debug: Log what template we're trying to render
+  console.log('🎨 renderProfileTemplate called with:', {
+    originalTemplateId: templateId,
+    normalizedTemplateId: normalizedTemplateId,
+    profileTheme: profile?.theme,
+    profileSelectedTemplate: profile?.selectedTemplate
+  });
+  
   const fullName = profile?.fullName || 'John Doe';
   const designation = profile?.companyDesignation || 'Software Engineer';
   const company = profile?.companyName || 'Tech Company Inc.';
@@ -57,7 +69,8 @@ const renderProfileTemplate = (templateId, profile) => {
   const socialMedia = profile?.socialMedia || [];
 
   // Standard Template - White background with green borders
-  if (templateId === 'standard') {
+  if (normalizedTemplateId === 'standard') {
+    console.log('✅ Rendering STANDARD template');
     const socialLabels = socialMedia.length >= 3 
       ? [socialMedia[0]?.platform?.substring(0, 2) || 'Li', socialMedia[1]?.platform?.substring(0, 2) || 'In', socialMedia[2]?.platform?.substring(0, 2) || 'Tw']
       : ['Li', 'In', 'Tw'];
@@ -426,7 +439,8 @@ const renderProfileTemplate = (templateId, profile) => {
   }
 
   // Modern Template - Purple gradient background
-  if (templateId === 'modern') {
+  if (normalizedTemplateId === 'modern') {
+    console.log('✨ Rendering MODERN template');
     const socialLabels = socialMedia.length >= 3 
       ? ['Linkedin', 'Instagram', 'Twitter']
       : socialMedia.slice(0, 3).map(s => s.platform);
@@ -676,7 +690,8 @@ const renderProfileTemplate = (templateId, profile) => {
   }
 
   // Epic Template - Exact match from CheckoutPage: Black card with bright yellow border, yellow accents, horizontal separator
-  if (templateId === 'epic') {
+  if (normalizedTemplateId === 'epic') {
+    console.log('🔥 Rendering EPIC template');
     const socialLabels = socialMedia.length >= 3 
       ? socialMedia.slice(0, 3).map(s => s.platform)
       : ['Linkedin', 'Instagram', 'Twitter'];
@@ -973,8 +988,16 @@ const renderProfileTemplate = (templateId, profile) => {
   }
 
   // Default fallback - if theme doesn't match any of the above, show standard
-  console.warn('Unknown theme:', templateId, '- falling back to standard');
-  return renderProfileTemplate('standard', profile);
+  console.error('❌ Unknown theme:', templateId, 'normalized:', normalizedTemplateId, '- falling back to standard');
+  console.error('❌ Available themes: standard, modern, epic');
+  console.error('❌ Profile data:', {
+    theme: profile?.theme,
+    selectedTemplate: profile?.selectedTemplate,
+    fullName: profile?.fullName
+  });
+  // Recursively call with 'standard' to avoid infinite loop
+  const fallbackProfile = { ...profile, theme: 'standard' };
+  return renderProfileTemplate('standard', fallbackProfile);
 };
 
 const PublicProfile = ({ userId }) => {
@@ -992,6 +1015,7 @@ const PublicProfile = ({ userId }) => {
         // Step 1: FIRST, get theme from getUser API (PRIMARY SOURCE)
         // The URL parameter might be a profileId or userId, so we need to handle both cases
         try {
+          console.log('🔍 Fetching theme from getUser API with userId:', userId);
           const userRes = await axios.post(
             'https://pg-cards.vercel.app/userProfile/getUser',
             { userId },
@@ -999,17 +1023,45 @@ const PublicProfile = ({ userId }) => {
           );
           
           console.log('📡 getUser API Response:', userRes.data);
+          console.log('📡 getUser API Response Code:', userRes.data?.code);
+          console.log('📡 getUser API Response Data:', userRes.data?.data);
           
           if (userRes.data?.code === 200 && userRes.data.data) {
             // Get theme from getUser response - this is the PRIMARY source
             const userTheme = userRes.data.data.theme || userRes.data.data.selectedTemplate;
+            console.log('🔍 Raw theme from getUser:', userTheme);
+            console.log('🔍 Theme type:', typeof userTheme);
+            
             if (userTheme) {
-              theme = userTheme.toLowerCase().trim(); // Normalize theme value
-              console.log('✅ Theme from getUser API:', theme);
+              theme = String(userTheme).toLowerCase().trim(); // Normalize theme value
+              console.log('✅ Theme from getUser API (normalized):', theme);
               console.log('📋 Full getUser data:', userRes.data.data);
+              console.log('📋 Theme value type:', typeof userTheme, 'Value:', userTheme);
+              console.log('📋 Normalized theme:', theme);
+              
+              // Validate theme immediately
+              if (theme === 'epi') {
+                theme = 'epic';
+                console.log('🔄 Fixed typo: epi -> epic');
+              }
+              const validThemes = ['standard', 'modern', 'epic'];
+              if (!validThemes.includes(theme)) {
+                console.warn('⚠️ Theme from getUser is invalid:', theme, '- will validate later');
+                console.warn('⚠️ Valid themes are:', validThemes);
+              } else {
+                console.log('✅ Theme from getUser is valid:', theme);
+                if (theme === 'epic') {
+                  console.log('🔥🔥🔥 EPIC THEME DETECTED FROM getUser API 🔥🔥🔥');
+                } else if (theme === 'modern') {
+                  console.log('✨✨✨ MODERN THEME DETECTED FROM getUser API ✨✨✨');
+                }
+              }
               
               // Get profileId from getUser response to fetch profile data
+              // Try profileId first, then _id, then userId as fallback
               const profileId = userRes.data.data.profileId || userRes.data.data._id || userId;
+              
+              console.log('🔍 Fetching profile data with profileId:', profileId);
               
               // Step 2: Get profile data using profileId from getUser response
               try {
@@ -1021,21 +1073,33 @@ const PublicProfile = ({ userId }) => {
 
                 if (profileRes.data?.status === true && profileRes.data?.data) {
                   profileData = profileRes.data.data;
+                  console.log('✅ Profile data fetched (status: true):', Object.keys(profileData));
                 } else if (profileRes.data?.code === 200 && profileRes.data?.data) {
                   profileData = profileRes.data.data;
+                  console.log('✅ Profile data fetched (code: 200):', Object.keys(profileData));
+                } else {
+                  console.warn('⚠️ Profile data format unexpected:', profileRes.data);
                 }
                 
-                console.log('✅ Profile data fetched:', profileData ? 'Success' : 'Failed');
+                if (profileData) {
+                  console.log('📊 Profile data keys:', Object.keys(profileData));
+                  console.log('📊 Profile fullName:', profileData.fullName);
+                  console.log('📊 Profile company:', profileData.companyName);
+                }
               } catch (profileErr) {
+                console.error('❌ Error fetching getUserProfile:', profileErr);
                 console.warn('Could not fetch from getUserProfile:', profileErr);
               }
             } else {
-              console.warn('⚠️ No theme found in getUser response:', userRes.data.data);
+              console.warn('⚠️ No theme found in getUser response');
+              console.warn('⚠️ getUser data.theme:', userRes.data.data.theme);
+              console.warn('⚠️ getUser data.selectedTemplate:', userRes.data.data.selectedTemplate);
             }
           } else {
             console.warn('⚠️ getUser API response format unexpected:', userRes.data);
           }
         } catch (getUserErr) {
+          console.error('❌ Error fetching getUser API:', getUserErr);
           console.warn('Could not fetch theme from getUser API with userId:', getUserErr);
           
           // Fallback: Try to get profile data first, then get userId from profile
@@ -1077,10 +1141,24 @@ const PublicProfile = ({ userId }) => {
 
         // Step 3: Use profile data if we have it, otherwise try fallback
         if (profileData) {
-          // Prioritize theme from getUser API, then profile theme, then selectedTemplate
-          // IMPORTANT: Theme from getUser API is the PRIMARY source
-          const finalTheme = theme || profileData.theme || profileData.selectedTemplate || 'standard';
-          const normalizedTheme = finalTheme.toLowerCase().trim();
+          // CRITICAL: Theme from getUser API is the PRIMARY source - ALWAYS use it if it exists
+          // Only fallback to profileData.theme if theme from getUser is truly not set (null, undefined, empty string)
+          let finalTheme = theme; // Theme from getUser API (PRIMARY)
+          
+          // Check if theme from getUser is actually set (not null, undefined, or empty string)
+          // IMPORTANT: Even if theme is 'standard', we should use it from getUser API
+          if (finalTheme && finalTheme !== '' && finalTheme !== 'null' && finalTheme !== 'undefined') {
+            // Theme from getUser exists - use it (even if it's 'standard', 'modern', or 'epic')
+            console.log('✅ Using theme from getUser API (PRIMARY):', finalTheme);
+            console.log('✅ This theme will override any theme in profileData');
+          } else {
+            // Theme from getUser is not set - fallback to profileData
+            finalTheme = profileData.theme || profileData.selectedTemplate || 'standard';
+            console.log('⚠️ Using theme from profileData (getUser theme not available):', finalTheme);
+            console.log('⚠️ Theme from getUser was:', theme);
+          }
+          
+          const normalizedTheme = String(finalTheme).toLowerCase().trim();
           
           // Normalize theme values: handle variations and typos
           let validatedTheme = normalizedTheme;
@@ -1093,16 +1171,41 @@ const PublicProfile = ({ userId }) => {
             validatedTheme = 'standard';
           }
           
-          // CRITICAL: Set the theme on profileData to ensure it's used for rendering
+          // CRITICAL: ALWAYS set the theme from getUser API on profileData (override any existing theme)
+          // This ensures the theme from getUser is used for rendering
+          // Store original theme values for debugging
+          const originalProfileTheme = profileData.theme;
+          const originalSelectedTemplate = profileData.selectedTemplate;
+          
           profileData.theme = validatedTheme;
+          
+          // Remove selectedTemplate to avoid confusion
+          delete profileData.selectedTemplate;
+          
+          console.log('🔄 Theme override:', {
+            before: { theme: originalProfileTheme, selectedTemplate: originalSelectedTemplate },
+            after: { theme: profileData.theme },
+            source: 'getUser API'
+          });
           
           console.log('🎨 Final theme applied to profile:', validatedTheme);
           console.log('📊 Profile data with theme:', { 
             fullName: profileData.fullName, 
             theme: profileData.theme,
             company: profileData.companyName,
-            themeSource: theme ? 'getUser API' : 'profile data'
+            themeSource: theme ? 'getUser API (PRIMARY)' : 'profile data (fallback)',
+            originalThemeFromGetUser: theme,
+            profileDataThemeBefore: profileData.theme,
+            profileDataSelectedTemplate: profileData.selectedTemplate
           });
+          
+          // If theme is epic or modern, log confirmation
+          if (validatedTheme === 'epic') {
+            console.log('🔥🔥🔥 EPIC THEME CONFIRMED - Will render epic template 🔥🔥🔥');
+          } else if (validatedTheme === 'modern') {
+            console.log('✨✨✨ MODERN THEME CONFIRMED - Will render modern template ✨✨✨');
+          }
+          
           setProfile(profileData);
         } else {
           // Fallback: try getUser endpoint to get profileId
@@ -1140,11 +1243,31 @@ const PublicProfile = ({ userId }) => {
                 
                 if (profileRes.data?.data || profileRes.data?.status === true) {
                   profileData = profileRes.data.data || profileRes.data.data;
+                  
                   // CRITICAL: Use theme from getUser API (PRIMARY SOURCE)
-                  profileData.theme = theme;
+                  // Normalize and validate theme
+                  let validatedTheme = theme;
+                  if (validatedTheme === 'epi') validatedTheme = 'epic';
+                  const validThemes = ['standard', 'modern', 'epic'];
+                  if (!validThemes.includes(validatedTheme)) {
+                    console.warn('⚠️ Invalid theme in fallback:', validatedTheme, '- defaulting to standard');
+                    validatedTheme = 'standard';
+                  }
+                  
+                  // ALWAYS set theme from getUser API, override any existing theme
+                  profileData.theme = validatedTheme;
+                  delete profileData.selectedTemplate; // Remove to avoid confusion
+                  
                   console.log('🎨 Final theme applied (fallback):', profileData.theme);
                   console.log('📋 Theme source: getUser API (fallback)');
                   console.log('📊 Profile data keys:', Object.keys(profileData));
+                  
+                  if (validatedTheme === 'epic') {
+                    console.log('🔥🔥🔥 EPIC THEME CONFIRMED (fallback) 🔥🔥🔥');
+                  } else if (validatedTheme === 'modern') {
+                    console.log('✨✨✨ MODERN THEME CONFIRMED (fallback) ✨✨✨');
+                  }
+                  
                   setProfile(profileData);
                   return;
                 }
@@ -1202,8 +1325,12 @@ const PublicProfile = ({ userId }) => {
   }
 
   // Get theme from profile (from getUser API), default to 'standard'
-  // Support both 'theme' and 'selectedTemplate' for backward compatibility
-  let theme = (profile?.theme || profile?.selectedTemplate || 'standard').toLowerCase().trim();
+  // CRITICAL: profile.theme should already be set from getUser API in useEffect
+  // Use profile.theme as PRIMARY source (it was set from getUser API)
+  let theme = profile?.theme || profile?.selectedTemplate || 'standard';
+  
+  // Convert to string and normalize
+  theme = String(theme).toLowerCase().trim();
   
   // Normalize theme values: handle variations and typos
   if (theme === 'epi') theme = 'epic';
@@ -1212,10 +1339,19 @@ const PublicProfile = ({ userId }) => {
   const validThemes = ['standard', 'modern', 'epic'];
   if (!validThemes.includes(theme)) {
     console.warn('⚠️ Invalid theme detected:', theme, '- defaulting to standard');
+    console.warn('⚠️ Profile theme value:', profile?.theme);
+    console.warn('⚠️ Profile selectedTemplate:', profile?.selectedTemplate);
     theme = 'standard';
   }
   
   const normalizedTheme = theme;
+  
+  // Debug: Log what theme we're about to render
+  console.log('🎨 About to render with theme:', normalizedTheme, {
+    profileTheme: profile?.theme,
+    profileSelectedTemplate: profile?.selectedTemplate,
+    normalizedTheme: normalizedTheme
+  });
   
   console.log('🎨 Rendering PublicProfile with theme:', normalizedTheme, {
     availableThemes: validThemes,
@@ -1227,7 +1363,24 @@ const PublicProfile = ({ userId }) => {
   
   // Log if theme is epic to confirm it's working
   if (normalizedTheme === 'epic') {
-    console.log('🔥 EPIC THEME CONFIRMED - Rendering epic template');
+    console.log('🔥🔥🔥 EPIC THEME CONFIRMED - Rendering epic template 🔥🔥🔥');
+    console.log('🔥 Profile data for epic theme:', {
+      fullName: profile?.fullName,
+      designation: profile?.companyDesignation,
+      company: profile?.companyName,
+      about: profile?.about,
+      phoneNumbers: profile?.phoneNumbers?.length || 0,
+      emails: profile?.emails?.length || 0,
+      address: profile?.contactDetails?.address,
+      socialMedia: profile?.socialMedia?.length || 0,
+      profilePicture: !!profile?.profilePicture,
+      companyLogo: !!profile?.companyLogo,
+      coverImage: !!profile?.coverImage
+    });
+  } else {
+    console.warn('⚠️ Theme is NOT epic, it is:', normalizedTheme);
+    console.warn('⚠️ Profile theme value:', profile?.theme);
+    console.warn('⚠️ Expected: epic, Got:', normalizedTheme);
   }
 
   // Set background color based on theme
@@ -1248,6 +1401,14 @@ const PublicProfile = ({ userId }) => {
     profileTheme: profile?.theme,
     profileSelectedTemplate: profile?.selectedTemplate,
     profileId: profile?._id || profile?.id
+  });
+
+  // Final check before rendering
+  console.log('🎯 FINAL RENDER CHECK:', {
+    normalizedTheme: normalizedTheme,
+    profileTheme: profile?.theme,
+    profileSelectedTemplate: profile?.selectedTemplate,
+    aboutToCallRenderProfileTemplate: true
   });
 
   return (
