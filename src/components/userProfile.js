@@ -113,9 +113,9 @@ const UserProfile = () => {
         setQrImage(response.data.data.qr || '');
 
         // Force neutral redirect to go through ThemeRouter so backend theme (epic/modern) is respected
-        const forcedRedirect =
-          `${window.location.origin}/user_profile/${userId}`;
-        setRedirectUrl(response.data.data.redirectUrl || forcedRedirect);
+        // Always override backend redirect to avoid ?theme=standard/modern leaking into URL
+        const forcedRedirect = `${window.location.origin}/user_profile/${userId}`;
+        setRedirectUrl(forcedRedirect);
       } else {
         toast.error(response.data?.msg || 'Failed to generate QR');
       }

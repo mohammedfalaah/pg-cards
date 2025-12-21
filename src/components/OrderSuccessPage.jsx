@@ -83,10 +83,9 @@ const OrderSuccessPage = () => {
           setQrImage(result.data.qr || '');
 
           // Force a neutral redirect that goes through ThemeRouter so epic/modern won't be lost
-          // Use user_profile/:userId which ThemeRouter handles and redirects to the correct theme
-          const forcedRedirect =
-            `${window.location.origin}/user_profile/${userId}`;
-          setRedirectUrl(result.data.redirectUrl || forcedRedirect);
+          // Always override backend redirect to avoid ?theme=standard/modern leaking into URL
+          const forcedRedirect = `${window.location.origin}/user_profile/${userId}`;
+          setRedirectUrl(forcedRedirect);
         }
       } catch (e) {
         console.error('Error loading QR for success page:', e);
