@@ -71,7 +71,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         ...initialData,
       phoneNumbers,
       profilePicture: initialData.profilePicture || initialData.profileImage || '',
-      coverImage: initialData.coverImage || ''
+      coverImage: initialData.coverImage || '',
+      logo: initialData.logo || initialData.companyLogo || ''
       };
     }
     
@@ -91,7 +92,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
       },
       socialMedia: [],
       profilePicture: '',
-      coverImage: ''
+      coverImage: '',
+      logo: ''
     };
   };
   
@@ -157,7 +159,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         ...initialData,
         phoneNumbers,
         profilePicture: initialData.profilePicture || initialData.profileImage || '',
-        coverImage: initialData.coverImage || ''
+        coverImage: initialData.coverImage || '',
+        logo: initialData.logo || initialData.companyLogo || ''
       };
       setFormData(updatedData);
       if (onFormDataChange) {
@@ -201,10 +204,12 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
     // Immediate preview with local data URL
     const reader = new FileReader();
     reader.onloadend = () => {
-      const previewData = { ...formData, [field]: reader.result };
-      setFormData(previewData);
-      if (onFormDataChange) onFormDataChange(previewData);
-      if (onFormDataReady) onFormDataReady(previewData);
+      setFormData((prev) => {
+        const updated = { ...prev, [field]: reader.result };
+        if (onFormDataChange) onFormDataChange(updated);
+        if (onFormDataReady) onFormDataReady(updated);
+        return updated;
+      });
     };
     reader.readAsDataURL(file);
 
@@ -215,10 +220,12 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         field === 'coverImage' ? 'cover image' : 'profile image'
       );
       if (hostedUrl) {
-        const updatedData = { ...formData, [field]: hostedUrl };
-        setFormData(updatedData);
-        if (onFormDataChange) onFormDataChange(updatedData);
-        if (onFormDataReady) onFormDataReady(updatedData);
+        setFormData((prev) => {
+          const updated = { ...prev, [field]: hostedUrl };
+          if (onFormDataChange) onFormDataChange(updated);
+          if (onFormDataReady) onFormDataReady(updated);
+          return updated;
+        });
       }
     } catch (err) {
       // Error already toasted in helper; keep local preview
@@ -444,6 +451,24 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
                 src={formData.profilePicture}
                 alt="Profile preview"
                 style={{ marginTop: 8, width: 120, height: 120, objectFit: 'cover', borderRadius: '12px' }}
+                onError={(e) => (e.target.style.display = 'none')}
+              />
+            )}
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Company Logo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload('logo', e)}
+              style={styles.input}
+            />
+            {formData.logo && (
+              <img
+                src={formData.logo}
+                alt="Logo preview"
+                style={{ marginTop: 8, width: 140, height: 80, objectFit: 'contain', borderRadius: '8px', background: '#fff' }}
                 onError={(e) => (e.target.style.display = 'none')}
               />
             )}
@@ -1190,6 +1215,7 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     const googleMapLink = contactDetails.googleMapLink || '';
     const profilePic = profileData?.profilePicture || profileData?.profileImage || '';
     const coverImage = profileData?.coverImage || '';
+    const companyLogo = profileData?.logo || profileData?.companyLogo || '';
     const socialMedia = profileData?.socialMedia || [];
 
     // Standard Template - Exact match to image: White card with light green-bordered header section
@@ -1227,6 +1253,17 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
               marginBottom: '16px',
             }}
           >
+          {companyLogo && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <img
+                src={companyLogo}
+                alt="Company Logo"
+                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain' }}
+                onError={(e) => (e.target.style.display = 'none')}
+              />
+            </div>
+          )}
+
             {profilePic && (
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
                 <img
@@ -1367,6 +1404,17 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             flexDirection: 'column',
           }}
         >
+          {companyLogo && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <img
+                src={companyLogo}
+                alt="Company Logo"
+                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain', filter: 'brightness(1.1)' }}
+                onError={(e) => (e.target.style.display = 'none')}
+              />
+            </div>
+          )}
+
           {/* Personal Information - Centered */}
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             {profilePic && (
@@ -1621,6 +1669,17 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             flexDirection: 'column',
           }}
         >
+          {companyLogo && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <img
+                src={companyLogo}
+                alt="Company Logo"
+                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain', filter: 'brightness(1.05)' }}
+                onError={(e) => (e.target.style.display = 'none')}
+              />
+            </div>
+          )}
+
           {(coverImage || profilePic) && (
             <div style={{ position: 'relative', marginBottom: 16 }}>
               <div
@@ -1746,6 +1805,17 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             flexDirection: 'column',
           }}
         >
+          {companyLogo && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <img
+                src={companyLogo}
+                alt="Company Logo"
+                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain', filter: 'brightness(1.1)' }}
+                onError={(e) => (e.target.style.display = 'none')}
+              />
+            </div>
+          )}
+
           {/* Personal Information - Centered */}
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             {profilePic && (
