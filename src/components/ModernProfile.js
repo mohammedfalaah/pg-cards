@@ -10,6 +10,36 @@ const ModernProfile = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Safety net: if backend theme is not modern, redirect to the correct theme route
+  useEffect(() => {
+    const ensureTheme = async () => {
+      if (!userId) return;
+      try {
+        const res = await axios.post(
+          'https://pg-cards.vercel.app/userProfile/getUser',
+          { userId },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+        if (res.data?.code === 200 && res.data.data) {
+          let theme = res.data.data.theme || res.data.data.selectedTemplate || 'standard';
+          theme = String(theme).toLowerCase().trim();
+          if (theme === 'epi') theme = 'epic';
+          const validThemes = ['standard', 'modern', 'epic'];
+          if (!validThemes.includes(theme)) theme = 'standard';
+          if (theme !== 'modern') {
+            const target = `/${theme}/${userId}`;
+            console.log('⚠️ ModernProfile: theme mismatch, redirecting to', target);
+            window.history.replaceState({}, '', target);
+            window.dispatchEvent(new Event('popstate'));
+          }
+        }
+      } catch (e) {
+        console.warn('ModernProfile: could not verify theme, staying on modern.', e);
+      }
+    };
+    ensureTheme();
+  }, [userId]);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {

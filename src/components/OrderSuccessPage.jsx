@@ -81,7 +81,12 @@ const OrderSuccessPage = () => {
         const result = await res.json();
         if (result?.code === 200 && result.data) {
           setQrImage(result.data.qr || '');
-          setRedirectUrl(result.data.redirectUrl || '');
+
+          // Force a neutral redirect that goes through ThemeRouter so epic/modern won't be lost
+          // Use user_profile/:userId which ThemeRouter handles and redirects to the correct theme
+          const forcedRedirect =
+            `${window.location.origin}/user_profile/${userId}`;
+          setRedirectUrl(result.data.redirectUrl || forcedRedirect);
         }
       } catch (e) {
         console.error('Error loading QR for success page:', e);

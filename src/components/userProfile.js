@@ -111,7 +111,11 @@ const UserProfile = () => {
 
       if (response.data?.code === 200 && response.data.data) {
         setQrImage(response.data.data.qr || '');
-        setRedirectUrl(response.data.data.redirectUrl || '');
+
+        // Force neutral redirect to go through ThemeRouter so backend theme (epic/modern) is respected
+        const forcedRedirect =
+          `${window.location.origin}/user_profile/${userId}`;
+        setRedirectUrl(response.data.data.redirectUrl || forcedRedirect);
       } else {
         toast.error(response.data?.msg || 'Failed to generate QR');
       }
