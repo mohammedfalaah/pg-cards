@@ -113,7 +113,8 @@ const UserProfile = () => {
         setQrImage(response.data.data.qr || '');
 
         // Honor theme when building redirect so scan lands on correct themed page
-        const profileId = response.data.data.profileId || response.data.data._id || userId;
+        const storedProfileId = localStorage.getItem('userProfileId');
+        const profileId = response.data.data.profileId || storedProfileId || response.data.data._id || userId;
         const localTheme = localStorage.getItem('selectedCardTemplate');
         let theme =
           (response.data.data.theme || localTheme || '').toString().toLowerCase().trim();

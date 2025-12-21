@@ -83,7 +83,8 @@ const OrderSuccessPage = () => {
           setQrImage(result.data.qr || '');
 
           // Build redirect honoring theme (epic/modern/standard)
-          const profileId = result.data.profileId || result.data._id || userId;
+          const storedProfileId = localStorage.getItem('userProfileId');
+          const profileId = result.data.profileId || storedProfileId || result.data._id || userId;
           const localTheme = localStorage.getItem('selectedCardTemplate');
           let theme =
             (result.data.theme || localTheme || '').toString().toLowerCase().trim();
