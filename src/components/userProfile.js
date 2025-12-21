@@ -112,10 +112,16 @@ const UserProfile = () => {
       if (response.data?.code === 200 && response.data.data) {
         setQrImage(response.data.data.qr || '');
 
-        // Force neutral redirect to go through ThemeRouter so backend theme (epic/modern) is respected
-        // Always override backend redirect to avoid ?theme=standard/modern leaking into URL
+        // Honor theme when building redirect so scan lands on correct themed page
         const profileId = response.data.data.profileId || response.data.data._id || userId;
-        const forcedRedirect = `${window.location.origin}/user_profile/${profileId}`;
+        const localTheme = localStorage.getItem('selectedCardTemplate');
+        let theme =
+          (response.data.data.theme || localTheme || '').toString().toLowerCase().trim();
+        if (theme === 'epi') theme = 'epic';
+        const validThemes = ['standard', 'modern', 'epic'];
+        if (!validThemes.includes(theme)) theme = 'standard';
+
+        const forcedRedirect = `${window.location.origin}/${theme}/${profileId}`;
         setRedirectUrl(forcedRedirect);
       } else {
         toast.error(response.data?.msg || 'Failed to generate QR');

@@ -82,10 +82,17 @@ const OrderSuccessPage = () => {
         if (result?.code === 200 && result.data) {
           setQrImage(result.data.qr || '');
 
-          // Force a neutral redirect that goes through ThemeRouter so epic/modern won't be lost
-          // Always override backend redirect to avoid ?theme=standard/modern leaking into URL
+          // Build redirect honoring theme (epic/modern/standard)
           const profileId = result.data.profileId || result.data._id || userId;
-          const forcedRedirect = `${window.location.origin}/user_profile/${profileId}`;
+          const localTheme = localStorage.getItem('selectedCardTemplate');
+          let theme =
+            (result.data.theme || localTheme || '').toString().toLowerCase().trim();
+          if (theme === 'epi') theme = 'epic';
+          const validThemes = ['standard', 'modern', 'epic'];
+          if (!validThemes.includes(theme)) theme = 'standard';
+
+          // Route directly to themed profile to avoid ThemeRouter fallback issues
+          const forcedRedirect = `${window.location.origin}/${theme}/${profileId}`;
           setRedirectUrl(forcedRedirect);
         }
       } catch (e) {
