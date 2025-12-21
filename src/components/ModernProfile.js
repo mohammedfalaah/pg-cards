@@ -42,18 +42,57 @@ const ModernProfile = ({ userId }) => {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!userId) {
+        setError('Profile not found');
+        setLoading(false);
+        return;
+      }
       try {
-        const profileRes = await axios.get(
+        let profileRes = await axios.get(
           `https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`
         );
 
         if (profileRes.data?.status === true && profileRes.data?.data) {
           setProfile(profileRes.data.data);
-        } else if (profileRes.data?.code === 200 && profileRes.data?.data) {
-          setProfile(profileRes.data.data);
-        } else {
-          setError('Profile not found');
+          setLoading(false);
+          return;
         }
+        if (profileRes.data?.code === 200 && profileRes.data?.data) {
+          setProfile(profileRes.data.data);
+          setLoading(false);
+          return;
+        }
+
+        // Fallback: resolve profileId via getUser
+        try {
+          const userRes = await axios.post(
+            'https://pg-cards.vercel.app/userProfile/getUser',
+            { userId },
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+          if (userRes.data?.code === 200 && userRes.data?.data) {
+            const profileId = userRes.data.data.profileId || userRes.data.data._id;
+            if (profileId) {
+              profileRes = await axios.get(
+                `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
+              );
+              if (profileRes.data?.status === true && profileRes.data?.data) {
+                setProfile(profileRes.data.data);
+                setLoading(false);
+                return;
+              }
+              if (profileRes.data?.code === 200 && profileRes.data?.data) {
+                setProfile(profileRes.data.data);
+                setLoading(false);
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('ModernProfile: fallback getUser -> profileId failed', e);
+        }
+
+        setError('Profile not found');
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Unable to load profile');
@@ -62,9 +101,7 @@ const ModernProfile = ({ userId }) => {
       }
     };
 
-    if (userId) {
-      fetchProfile();
-    }
+    fetchProfile();
   }, [userId]);
 
   if (loading) {
