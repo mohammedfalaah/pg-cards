@@ -21,12 +21,18 @@ import CheckoutPage from './CheckoutPage';
 import UserProfile from './components/userProfile';
 import OrderSuccessPage from './components/OrderSuccessPage';
 import PublicProfile from './components/PublicProfile';
+import ThemeRouter from './components/ThemeRouter';
+import EpicProfile from './components/EpicProfile';
+import ModernProfile from './components/ModernProfile';
+import StandardProfile from './components/StandardProfile';
 import './App.css';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
   const [productId, setProductId] = useState(null);
   const [publicProfileUserId, setPublicProfileUserId] = useState(null);
+  const [themeProfileUserId, setThemeProfileUserId] = useState(null);
+  const [themeType, setThemeType] = useState(null);
 
   const [auth, setAuth] = useState(() => {
     if (typeof window === 'undefined') {
@@ -77,12 +83,22 @@ function App() {
       else if (path.startsWith('/order-success')) {
         setActiveView('order-success');
       }
+      // Theme-based profile routes: /epic/:userId, /modern/:userId, /standard/:userId
+      else if (path.match(/^\/(epic|modern|standard)\/([^/]+)$/)) {
+        const match = path.match(/^\/(epic|modern|standard)\/([^/]+)$/);
+        if (match && match[1] && match[2]) {
+          setThemeType(match[1]);
+          setThemeProfileUserId(match[2]);
+          setActiveView('theme-profile');
+        }
+      }
       // Public profile view via QR code: /public-profile/:userId or /user_profile/:userId
+      // This will use ThemeRouter to check backend theme and redirect
       else if (path.match(/^\/public-profile\/([^/]+)$/) || path.match(/^\/user_profile\/([^/]+)$/)) {
         const match = path.match(/^\/(?:public-profile|user_profile)\/([^/]+)$/);
         if (match && match[1]) {
           setPublicProfileUserId(match[1]);
-          setActiveView('public-profile');
+          setActiveView('theme-router');
         }
       }
       // Check for product detail route
@@ -148,12 +164,14 @@ function App() {
 
   return (
     <div className="App">
-      {/* HEADER (hide on dashboard, admin panel, user profile, order success, and public profile) */}
+      {/* HEADER (hide on dashboard, admin panel, user profile, order success, public profile, theme router, and theme profiles) */}
       {activeView !== 'dashboard' && 
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-       activeView !== 'public-profile' && (
+       activeView !== 'public-profile' &&
+       activeView !== 'theme-router' &&
+       activeView !== 'theme-profile' && (
         <Header
           user={auth.user}
           onLoginSuccess={handleLoginSuccess}
@@ -187,7 +205,21 @@ function App() {
       {/* ✅ NEW: Order Success route */}
       {activeView === 'order-success' && <OrderSuccessPage />}
 
-      {/* Public profile view for QR scans */}
+      {/* Theme Router - checks backend theme and redirects */}
+      {activeView === 'theme-router' && publicProfileUserId && (
+        <ThemeRouter userId={publicProfileUserId} />
+      )}
+
+      {/* Theme-based profile pages */}
+      {activeView === 'theme-profile' && themeProfileUserId && themeType && (
+        <>
+          {themeType === 'epic' && <EpicProfile userId={themeProfileUserId} />}
+          {themeType === 'modern' && <ModernProfile userId={themeProfileUserId} />}
+          {themeType === 'standard' && <StandardProfile userId={themeProfileUserId} />}
+        </>
+      )}
+
+      {/* Public profile view for QR scans (fallback) */}
       {activeView === 'public-profile' && publicProfileUserId && (
         <PublicProfile userId={publicProfileUserId} />
       )}
@@ -208,20 +240,24 @@ function App() {
         />
       )}
 
-      {/* WHATSAPP → SHOW ON ALL PAGES except admin, user profile, order success, and public profile */}
+      {/* WHATSAPP → SHOW ON ALL PAGES except admin, user profile, order success, public profile, theme router, and theme profiles */}
       {activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-       activeView !== 'public-profile' && 
+       activeView !== 'public-profile' &&
+       activeView !== 'theme-router' &&
+       activeView !== 'theme-profile' && 
        <WhatsappChat />}
 
-      {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, order success, and public profile */}
+      {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, order success, public profile, theme router, and theme profiles */}
       {activeView !== 'dashboard' && 
        activeView !== 'reset-password' && 
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-       activeView !== 'public-profile' && 
+       activeView !== 'public-profile' &&
+       activeView !== 'theme-router' &&
+       activeView !== 'theme-profile' && 
        <Footer />}
     </div>
   );

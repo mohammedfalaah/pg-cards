@@ -1008,7 +1008,8 @@ const PublicProfile = ({ userId }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        let theme = 'standard'; // default theme
+        let theme = null; // Start with null - only set if we get it from getUser API
+        let themeFromGetUser = false; // Track if theme came from getUser API
         let profileData = null;
         let actualUserId = userId; // Track the actual userId for getUser API
 
@@ -1034,10 +1035,12 @@ const PublicProfile = ({ userId }) => {
             
             if (userTheme) {
               theme = String(userTheme).toLowerCase().trim(); // Normalize theme value
+              themeFromGetUser = true; // Mark that theme came from getUser API
               console.log('✅ Theme from getUser API (normalized):', theme);
               console.log('📋 Full getUser data:', userRes.data.data);
               console.log('📋 Theme value type:', typeof userTheme, 'Value:', userTheme);
               console.log('📋 Normalized theme:', theme);
+              console.log('✅ themeFromGetUser flag set to:', themeFromGetUser);
               
               // Validate theme immediately
               if (theme === 'epi') {
@@ -1127,7 +1130,9 @@ const PublicProfile = ({ userId }) => {
                   const userTheme = userRes2.data.data.theme || userRes2.data.data.selectedTemplate;
                   if (userTheme) {
                     theme = userTheme.toLowerCase().trim(); // Normalize theme value
+                    themeFromGetUser = true; // Mark that theme came from getUser API
                     console.log('✅ Theme from getUser API (using profile.userId):', theme);
+                    console.log('✅ themeFromGetUser flag set to:', themeFromGetUser);
                   }
                 }
               } catch (getUserErr2) {
@@ -1141,21 +1146,23 @@ const PublicProfile = ({ userId }) => {
 
         // Step 3: Use profile data if we have it, otherwise try fallback
         if (profileData) {
-          // CRITICAL: Theme from getUser API is the PRIMARY source - ALWAYS use it if it exists
-          // Only fallback to profileData.theme if theme from getUser is truly not set (null, undefined, empty string)
-          let finalTheme = theme; // Theme from getUser API (PRIMARY)
+          // CRITICAL: Theme from getUser API is the PRIMARY source - ALWAYS use it if we got it from getUser
+          // Only fallback to profileData.theme if theme from getUser is truly not set
+          let finalTheme;
           
-          // Check if theme from getUser is actually set (not null, undefined, or empty string)
-          // IMPORTANT: Even if theme is 'standard', we should use it from getUser API
-          if (finalTheme && finalTheme !== '' && finalTheme !== 'null' && finalTheme !== 'undefined') {
+          // Check if theme came from getUser API (not just if it has a value)
+          if (themeFromGetUser && theme && theme !== '' && theme !== 'null' && theme !== 'undefined') {
             // Theme from getUser exists - use it (even if it's 'standard', 'modern', or 'epic')
+            finalTheme = theme;
             console.log('✅ Using theme from getUser API (PRIMARY):', finalTheme);
+            console.log('✅ themeFromGetUser flag:', themeFromGetUser);
             console.log('✅ This theme will override any theme in profileData');
           } else {
             // Theme from getUser is not set - fallback to profileData
             finalTheme = profileData.theme || profileData.selectedTemplate || 'standard';
             console.log('⚠️ Using theme from profileData (getUser theme not available):', finalTheme);
             console.log('⚠️ Theme from getUser was:', theme);
+            console.log('⚠️ themeFromGetUser flag:', themeFromGetUser);
           }
           
           const normalizedTheme = String(finalTheme).toLowerCase().trim();
@@ -1219,15 +1226,20 @@ const PublicProfile = ({ userId }) => {
             if (userRes.data?.code === 200 && userRes.data.data) {
               const userData = userRes.data.data;
               // Get theme from getUser API response
-              const userTheme = userData.theme || userData.selectedTemplate || 'standard';
-              theme = userTheme.toLowerCase().trim();
-              
-              // Normalize and validate theme
-              if (theme === 'epi') theme = 'epic';
-              const validThemes = ['standard', 'modern', 'epic'];
-              if (!validThemes.includes(theme)) {
-                console.warn('⚠️ Invalid theme in fallback:', theme, '- defaulting to standard');
-                theme = 'standard';
+              const userTheme = userData.theme || userData.selectedTemplate;
+              if (userTheme) {
+                theme = userTheme.toLowerCase().trim();
+                themeFromGetUser = true; // Mark that theme came from getUser API
+                
+                // Normalize and validate theme
+                if (theme === 'epi') theme = 'epic';
+                const validThemes = ['standard', 'modern', 'epic'];
+                if (!validThemes.includes(theme)) {
+                  console.warn('⚠️ Invalid theme in fallback:', theme, '- defaulting to standard');
+                  theme = 'standard';
+                }
+                console.log('✅ Theme from getUser API (fallback):', theme);
+                console.log('✅ themeFromGetUser flag set to:', themeFromGetUser);
               }
               
               // Get profileId from getUser response
@@ -1244,22 +1256,30 @@ const PublicProfile = ({ userId }) => {
                 if (profileRes.data?.data || profileRes.data?.status === true) {
                   profileData = profileRes.data.data || profileRes.data.data;
                   
-                  // CRITICAL: Use theme from getUser API (PRIMARY SOURCE)
-                  // Normalize and validate theme
-                  let validatedTheme = theme;
-                  if (validatedTheme === 'epi') validatedTheme = 'epic';
-                  const validThemes = ['standard', 'modern', 'epic'];
-                  if (!validThemes.includes(validatedTheme)) {
-                    console.warn('⚠️ Invalid theme in fallback:', validatedTheme, '- defaulting to standard');
-                    validatedTheme = 'standard';
+                  // CRITICAL: Use theme from getUser API (PRIMARY SOURCE) if we have it
+                  let validatedTheme;
+                  if (themeFromGetUser && theme) {
+                    // Theme came from getUser API - use it
+                    validatedTheme = theme;
+                    if (validatedTheme === 'epi') validatedTheme = 'epic';
+                    const validThemes = ['standard', 'modern', 'epic'];
+                    if (!validThemes.includes(validatedTheme)) {
+                      console.warn('⚠️ Invalid theme in fallback:', validatedTheme, '- defaulting to standard');
+                      validatedTheme = 'standard';
+                    }
+                    console.log('✅ Using theme from getUser API (fallback):', validatedTheme);
+                  } else {
+                    // No theme from getUser - use profileData theme
+                    validatedTheme = profileData.theme || profileData.selectedTemplate || 'standard';
+                    console.log('⚠️ Using theme from profileData (fallback):', validatedTheme);
                   }
                   
-                  // ALWAYS set theme from getUser API, override any existing theme
+                  // ALWAYS set theme on profileData
                   profileData.theme = validatedTheme;
                   delete profileData.selectedTemplate; // Remove to avoid confusion
                   
                   console.log('🎨 Final theme applied (fallback):', profileData.theme);
-                  console.log('📋 Theme source: getUser API (fallback)');
+                  console.log('📋 Theme source:', themeFromGetUser ? 'getUser API (fallback)' : 'profileData');
                   console.log('📊 Profile data keys:', Object.keys(profileData));
                   
                   if (validatedTheme === 'epic') {

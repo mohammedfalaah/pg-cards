@@ -46,34 +46,8 @@ const premiumThemes = [
     profilePosition: 'top-center',
     type: 'social'
   },
-  {
-    id: 'linkedin',
-    name: 'Classic',
-    description: 'Professional LinkedIn-inspired layout',
-    background: 'linear-gradient(135deg, #0077b5 0%, #00a0dc 100%)',
-    accent: '#0077b5',
-    textColor: '#ffffff',
-    secondaryColor: '#00a0dc',
-    cardBg: 'rgba(255,255,255,0.9)',
-    layout: 'linkedin-profile',
-    hasProfessionalLayout: true,
-    profilePosition: 'top-left',
-    type: 'professional'
-  },
-  {
-    id: 'map',
-    name: 'Location Map',
-    description: 'Google Maps integration with location focus',
-    background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
-    accent: '#4285F4',
-    textColor: '#ffffff',
-    secondaryColor: '#34A853',
-    cardBg: 'rgba(255,255,255,0.95)',
-    layout: 'map-location',
-    hasMapIntegration: true,
-    profilePosition: 'center-top',
-    type: 'location'
-  },
+  
+  
   {
     id: 'epic',
     name: 'Epic',
@@ -1156,48 +1130,7 @@ const CardCustomization = () => {
                 </div>
               </div>
 
-              <div style={styles.imageUploadSection}>
-                <div style={styles.imageLabelRow}>
-                  <label style={styles.imageLabel}>Company Logo</label>
-                  <label style={styles.toggleSwitch}>
-                    <input
-                      type="checkbox"
-                      checked={imageToggles.companyLogo}
-                      onChange={() => handleImageToggle('companyLogo')}
-                      style={{ display: 'none' }}
-                    />
-                    <span style={{
-                      ...styles.toggleSlider,
-                      background: imageToggles.companyLogo ? '#0066ff' : '#666'
-                    }}>
-                      <span style={{
-                        ...styles.toggleDot,
-                        transform: imageToggles.companyLogo ? 'translateX(20px)' : 'translateX(0)'
-                      }} />
-                    </span>
-                  </label>
-                </div>
-                <div style={styles.imageUploadBox}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload('companyLogo', e)}
-                    style={styles.fileInput}
-                    id="companyLogo"
-                  />
-                  <label htmlFor="companyLogo" style={styles.uploadLabel}>
-                    {images.companyLogo ? (
-                      <img src={images.companyLogo} alt="Company Logo" style={styles.uploadedImage} />
-                    ) : (
-                      <div style={styles.uploadPlaceholder}>
-                        <span style={{ fontSize: 32 }}>+</span>
-                        <span>Upload</span>
-                        <span style={{ fontSize: 12, opacity: 0.7 }}>No file uploaded</span>
-                      </div>
-                    )}
-                  </label>
-                </div>
-              </div>
+              
             </div>
           </div>
         )}
