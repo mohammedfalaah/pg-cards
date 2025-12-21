@@ -92,6 +92,23 @@ const ModernProfile = ({ userId }) => {
           console.warn('ModernProfile: fallback getUser -> profileId failed', e);
         }
 
+        // Extra fallback: use cached profileId from localStorage
+        try {
+          const cachedId = localStorage.getItem('userProfileId');
+          if (cachedId && cachedId !== userId) {
+            profileRes = await axios.get(
+              `https://pg-cards.vercel.app/userProfile/getUserProfile/${cachedId}`
+            );
+            if ((profileRes.data?.status === true || profileRes.data?.code === 200) && profileRes.data?.data) {
+              setProfile(profileRes.data.data);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('ModernProfile: cached profileId fetch failed', e);
+        }
+
         setError('Profile not found');
       } catch (err) {
         console.error('Error fetching profile:', err);
