@@ -2462,7 +2462,7 @@ const CheckoutPage = () => {
       // Upload images first (profile, cover, optional logo)
       const rawProfileImage = profileData.profilePicture || profileData.profileImage || '';
       const rawCoverImage = profileData.coverImage || '';
-      const rawLogoImage = profileData.logo || '';
+      const rawLogoImage = profileData.logo || profileData.companyLogo || '';
 
       const [profilePictureUrl, coverImageUrl, logoUrl] = await Promise.all([
         uploadImageIfNeeded(rawProfileImage, 'profile image'),
@@ -2476,7 +2476,7 @@ const CheckoutPage = () => {
         profilePicture: profilePictureUrl || rawProfileImage,
         profileImage: profilePictureUrl || rawProfileImage,
         coverImage: coverImageUrl || rawCoverImage,
-        ...(logoUrl ? { logo: logoUrl } : rawLogoImage ? { logo: rawLogoImage } : {}),
+        ...(logoUrl ? { logo: logoUrl, companyLogo: logoUrl } : rawLogoImage ? { logo: rawLogoImage, companyLogo: rawLogoImage } : {}),
         phoneNumbers: cleanedPhoneNumbers,
         emails: profileData.emails?.filter(e => e.emailAddress?.trim()) || [],
         // Include theme (backend expects 'theme' not 'selectedTemplate')
