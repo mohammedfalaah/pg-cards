@@ -84,7 +84,8 @@ const OrderSuccessPage = () => {
 
           // Force a neutral redirect that goes through ThemeRouter so epic/modern won't be lost
           // Always override backend redirect to avoid ?theme=standard/modern leaking into URL
-          const forcedRedirect = `${window.location.origin}/user_profile/${userId}`;
+          const profileId = result.data.profileId || result.data._id || userId;
+          const forcedRedirect = `${window.location.origin}/user_profile/${profileId}`;
           setRedirectUrl(forcedRedirect);
         }
       } catch (e) {

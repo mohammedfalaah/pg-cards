@@ -13,6 +13,13 @@ import {
 } from '@stripe/react-stripe-js';
 import { getUserId } from './components/Utils';
 
+// Cloudinary config (unsigned upload). Keep secrets out of frontend.
+const CLOUDINARY_CLOUD_NAME = 'dhcwgdobf';
+// Fallback to known unsigned preset so uploads work without env vars
+const CLOUDINARY_UPLOAD_PRESET =
+  process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'pgcards_unsigned';
+const CLOUDINARY_FOLDER = process.env.REACT_APP_CLOUDINARY_FOLDER || 'pgcards';
+
 // Initialize Stripe
 const stripePromise = loadStripe('pk_test_51SYlQeCt0GZs5TLdv40gy5CFNFZQwjJBKKafhRcRkAteocPEM5UVtYrXtiOMGeuFrci9HUgwn8rPIua4wuqysHsw00cCrrypSt');
 
@@ -62,7 +69,9 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
       
       return {
         ...initialData,
-        phoneNumbers
+      phoneNumbers,
+      profilePicture: initialData.profilePicture || initialData.profileImage || '',
+      coverImage: initialData.coverImage || ''
       };
     }
     
@@ -80,13 +89,52 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         country: '',
         googleMapLink: ''
       },
-      socialMedia: []
+      socialMedia: [],
+      profilePicture: '',
+      coverImage: ''
     };
   };
   
   const [formData, setFormData] = useState(initializeFormData());
   const [socialInput, setSocialInput] = useState({ platform: 'linkedin', url: '' });
   
+  // Upload helper for profile/cover to Cloudinary (returns hosted URL)
+  const uploadImageToServer = async (file, label = 'image') => {
+    if (!CLOUDINARY_UPLOAD_PRESET) {
+      toast.error('Upload preset missing. Set REACT_APP_CLOUDINARY_UPLOAD_PRESET.');
+      return null;
+    }
+
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    formDataUpload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    if (CLOUDINARY_FOLDER) formDataUpload.append('folder', CLOUDINARY_FOLDER);
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formDataUpload,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+
+      const data = response.data || {};
+      const uploadedUrl = data.secure_url || data.url;
+      if (uploadedUrl) return uploadedUrl;
+      throw new Error('No URL returned');
+    } catch (err) {
+      console.error(`Upload failed for ${label}:`, err?.response?.data || err);
+      const message =
+        err?.response?.data?.error?.message ||
+        err?.message ||
+        'Failed to upload';
+      toast.error(`${message}. Using local preview only.`);
+      // Fallback: keep local preview (data URL) so UI does not break
+      return null;
+    }
+  };
+
   // Update form data when initialData changes
   useEffect(() => {
     if (initialData) {
@@ -107,7 +155,9 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
       
       const updatedData = {
         ...initialData,
-        phoneNumbers
+        phoneNumbers,
+        profilePicture: initialData.profilePicture || initialData.profileImage || '',
+        coverImage: initialData.coverImage || ''
       };
       setFormData(updatedData);
       if (onFormDataChange) {
@@ -141,6 +191,37 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
     // Notify parent component of form data changes for live preview
     if (onFormDataChange) {
       onFormDataChange(updatedData);
+    }
+  };
+
+  const handleImageUpload = async (field, fileEvent) => {
+    const file = fileEvent.target.files?.[0];
+    if (!file) return;
+
+    // Immediate preview with local data URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const previewData = { ...formData, [field]: reader.result };
+      setFormData(previewData);
+      if (onFormDataChange) onFormDataChange(previewData);
+      if (onFormDataReady) onFormDataReady(previewData);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to server, then replace with hosted URL for API + preview
+    try {
+      const hostedUrl = await uploadImageToServer(
+        file,
+        field === 'coverImage' ? 'cover image' : 'profile image'
+      );
+      if (hostedUrl) {
+        const updatedData = { ...formData, [field]: hostedUrl };
+        setFormData(updatedData);
+        if (onFormDataChange) onFormDataChange(updatedData);
+        if (onFormDataReady) onFormDataReady(updatedData);
+      }
+    } catch (err) {
+      // Error already toasted in helper; keep local preview
     }
   };
 
@@ -344,6 +425,48 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
               rows="3"
             />
           </div>
+        </div>
+
+        {/* Photos */}
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>📷 Photos</h3>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Profile Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload('profilePicture', e)}
+              style={styles.input}
+            />
+            {formData.profilePicture && (
+              <img
+                src={formData.profilePicture}
+                alt="Profile preview"
+                style={{ marginTop: 8, width: 120, height: 120, objectFit: 'cover', borderRadius: '12px' }}
+                onError={(e) => (e.target.style.display = 'none')}
+              />
+            )}
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Cover Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload('coverImage', e)}
+              style={styles.input}
+            />
+            {formData.coverImage && (
+              <img
+                src={formData.coverImage}
+                alt="Cover preview"
+                style={{ marginTop: 8, width: '100%', maxWidth: 280, height: 120, objectFit: 'cover', borderRadius: '12px' }}
+                onError={(e) => (e.target.style.display = 'none')}
+              />
+            )}
+          </div>
+
         </div>
 
         {/* Phone Numbers */}
@@ -1016,8 +1139,30 @@ const AddressForm = ({
 
 // Template Preview Component
 const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSelect }) => {
+  const renderAddToContactsButton = (styleOverrides = {}) => (
+    <div style={{ marginTop: 'auto' }}>
+      <button
+        type="button"
+        style={{
+          width: '100%',
+          padding: '12px',
+          background: '#4CAF50',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+          ...styleOverrides,
+        }}
+      >
+        Add to Contacts
+      </button>
+    </div>
+  );
+
   const renderTemplatePreview = (templateId) => {
-    // Use live form data if available, otherwise use saved userProfile
+    // Use provided profile data (parent already passes live form data or saved profile)
     const profileData = userProfile || {};
     
     // Get all phone numbers - handle both formats (with country code combined or separate)
@@ -1043,7 +1188,8 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     const emirates = contactDetails.state || '';
     const country = contactDetails.country || '';
     const googleMapLink = contactDetails.googleMapLink || '';
-    const profilePic = profileData?.profilePicture || '';
+    const profilePic = profileData?.profilePicture || profileData?.profileImage || '';
+    const coverImage = profileData?.coverImage || '';
     const socialMedia = profileData?.socialMedia || [];
 
     // Standard Template - Exact match to image: White card with light green-bordered header section
@@ -1057,12 +1203,20 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
           style={{
             borderRadius: 12,
             padding: '16px',
-            background: '#ffffff',
+            background: coverImage ? `url(${coverImage}) center/cover no-repeat` : '#ffffff',
             minHeight: '280px',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
+          {coverImage && (
+            <div style={{ position: 'relative', marginBottom: 12 }}>
+              <div style={{ borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: 120, backgroundImage: `url(${coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              </div>
+            </div>
+          )}
+
           {/* Light green-bordered header section with rounded corners */}
           <div
             style={{
@@ -1073,6 +1227,17 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
               marginBottom: '16px',
             }}
           >
+            {profilePic && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #81C784' }}
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+              </div>
+            )}
+
             <h3 style={{ color: '#000', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0', textAlign: 'center' }}>
               {fullName}
             </h3>
@@ -1177,23 +1342,7 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
           )}
 
           {/* Add to Contacts Button */}
-          <div style={{ marginTop: 'auto' }}>
-            <button
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: '#4CAF50',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Add to Contacts
-            </button>
-          </div>
+          {renderAddToContactsButton()}
         </div>
       );
     }
@@ -1209,7 +1358,9 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
           style={{
             borderRadius: 16,
             padding: '20px',
-            background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
+            background: coverImage
+              ? `linear-gradient(180deg, rgba(156,136,255,0.9) 0%, rgba(118,75,162,0.9) 100%), url(${coverImage}) center/cover no-repeat`
+              : 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
             color: '#ffffff',
             minHeight: '280px',
             display: 'flex',
@@ -1218,6 +1369,16 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
         >
           {/* Personal Information - Centered */}
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            {profilePic && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+              </div>
+            )}
             <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
               {fullName}
             </h3>
@@ -1314,6 +1475,12 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
               </div>
             </div>
           )}
+
+          {renderAddToContactsButton({
+            background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
+            color: '#fff',
+            marginTop: socialMedia.length > 0 ? 16 : 'auto',
+          })}
         </div>
       );
     }
@@ -1334,8 +1501,41 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             flexDirection: 'column',
           }}
         >
+          {(coverImage || profilePic) && (
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <div
+                style={{
+                  height: 110,
+                  borderRadius: 12,
+                  background: coverImage
+                    ? `url(${coverImage}) center/cover no-repeat`
+                    : 'rgba(255,255,255,0.15)',
+                }}
+              />
+              {profilePic && (
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '3px solid #fff',
+                    position: 'absolute',
+                    left: '50%',
+                    bottom: -36,
+                    transform: 'translateX(-50%)',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+                  }}
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+              )}
+            </div>
+          )}
+
           {/* Personal Information - Centered */}
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: profilePic ? 36 : 0 }}>
             <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
               {fullName}
             </h3>
@@ -1352,14 +1552,18 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Contact Information
             </h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
-              <span style={{ color: '#fff' }}>{phone}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
-              <span style={{ color: '#fff' }}>{email}</span>
-            </div>
+            {allPhones.map((phoneNum, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
+                <span style={{ color: '#fff' }}>{phoneNum}</span>
+              </div>
+            ))}
+            {allEmails.map((emailAddr, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
+                <span style={{ color: '#fff' }}>{emailAddr}</span>
+              </div>
+            ))}
           </div>
 
           {/* Social Media Section */}
@@ -1367,10 +1571,12 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Social Media
             </h4>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {socialLabels.map((label, idx) => (
-                <div
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {(socialMedia.length ? socialMedia : socialLabels.map((label) => ({ platform: label }))).slice(0, 3).map((social, idx) => (
+                <a
                   key={idx}
+                  href={social.url || '#'}
+                  onClick={(e) => !social.url && e.preventDefault()}
                   style={{
                     padding: '8px 12px',
                     backgroundColor: '#005885',
@@ -1379,13 +1585,22 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
                     borderRadius: '8px',
                     fontSize: 11,
                     fontWeight: 600,
+                    textDecoration: 'none',
                   }}
+                  target={social.url ? '_blank' : undefined}
+                  rel={social.url ? 'noopener noreferrer' : undefined}
                 >
-                  {label}
-                </div>
+                  {social.platform || socialLabels[idx] || 'Link'}
+                </a>
               ))}
             </div>
           </div>
+
+          {renderAddToContactsButton({
+            background: '#005885',
+            color: '#fff',
+            marginTop: 16,
+          })}
         </div>
       );
     }
@@ -1406,8 +1621,41 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             flexDirection: 'column',
           }}
         >
+          {(coverImage || profilePic) && (
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <div
+                style={{
+                  height: 110,
+                  borderRadius: 12,
+                  background: coverImage
+                    ? `url(${coverImage}) center/cover no-repeat`
+                    : 'rgba(255,255,255,0.12)',
+                }}
+              />
+              {profilePic && (
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '3px solid #fff',
+                    position: 'absolute',
+                    left: '50%',
+                    bottom: -36,
+                    transform: 'translateX(-50%)',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+                  }}
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+              )}
+            </div>
+          )}
+
           {/* Personal Information - Centered */}
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: profilePic ? 36 : 0 }}>
             <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
               {fullName}
             </h3>
@@ -1424,14 +1672,18 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Contact Information
             </h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
-              <span style={{ color: '#fff' }}>{phone}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
-              <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
-              <span style={{ color: '#fff' }}>{email}</span>
-            </div>
+            {allPhones.map((phoneNum, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
+                <span style={{ color: '#fff' }}>{phoneNum}</span>
+              </div>
+            ))}
+            {allEmails.map((emailAddr, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
+                <span style={{ color: '#fff' }}>{emailAddr}</span>
+              </div>
+            ))}
           </div>
 
           {/* Social Media Section */}
@@ -1439,10 +1691,12 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
               Social Media
             </h4>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {socialLabels.map((label, idx) => (
-                <div
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {(socialMedia.length ? socialMedia : socialLabels.map((label) => ({ platform: label }))).slice(0, 3).map((social, idx) => (
+                <a
                   key={idx}
+                  href={social.url || '#'}
+                  onClick={(e) => !social.url && e.preventDefault()}
                   style={{
                     padding: '8px 12px',
                     backgroundColor: '#2E7D32',
@@ -1451,13 +1705,22 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
                     borderRadius: '8px',
                     fontSize: 11,
                     fontWeight: 600,
+                    textDecoration: 'none',
                   }}
+                  target={social.url ? '_blank' : undefined}
+                  rel={social.url ? 'noopener noreferrer' : undefined}
                 >
-                  {label}
-                </div>
+                  {social.platform || socialLabels[idx] || 'Link'}
+                </a>
               ))}
             </div>
           </div>
+
+          {renderAddToContactsButton({
+            background: 'linear-gradient(135deg, #34A853 0%, #0b8043 100%)',
+            color: '#fff',
+            marginTop: 16,
+          })}
         </div>
       );
     }
@@ -1473,7 +1736,9 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
           style={{
             borderRadius: 12,
             padding: '20px',
-            background: '#000000',
+            background: coverImage
+              ? `linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url(${coverImage}) center/cover no-repeat`
+              : '#000000',
             border: '2px solid #ffeb3b',
             color: '#fff',
             minHeight: '280px',
@@ -1483,6 +1748,16 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
         >
           {/* Personal Information - Centered */}
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            {profilePic && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '4px solid #ffeb3b', boxShadow: '0 4px 12px rgba(255,235,59,0.3)' }}
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+              </div>
+            )}
             <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: '0 0 6px 0' }}>
               {fullName}
             </h3>
@@ -1608,6 +1883,12 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
               ))}
             </div>
           )}
+
+          {renderAddToContactsButton({
+            background: '#ffeb3b',
+            color: '#000',
+            marginTop: socialMedia.length > 0 ? 16 : 'auto',
+          })}
         </div>
       );
     }
@@ -1645,6 +1926,20 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
           </div>
         ))}
       </div>
+
+      {selectedTemplate && (
+        <div style={styles.selectedTemplatePreviewCard} className="checkout-selected-template-preview">
+          <div style={styles.selectedTemplatePreviewHeader}>
+            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111' }}>Selected Theme Preview</h4>
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#555' }}>
+              Your profile image, cover photo, and contact details appear here.
+            </p>
+          </div>
+          <div style={styles.selectedTemplatePreviewWrapper}>
+            {renderTemplatePreview(selectedTemplate)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1892,6 +2187,64 @@ const CheckoutPage = () => {
     return appliedCoupon.value;
   };
 
+  /**
+   * Upload a dataURL/base64 image to backend and return a hosted URL.
+   * If the incoming value is already a URL, return it unchanged.
+   */
+  const uploadImageIfNeeded = async (imageValue, label = 'image') => {
+    if (!imageValue) return '';
+
+    // Already a hosted URL
+    if (typeof imageValue === 'string' && /^https?:\/\//i.test(imageValue)) {
+      return imageValue;
+    }
+
+    if (!CLOUDINARY_UPLOAD_PRESET) {
+      toast.error('Missing Cloudinary preset. Set REACT_APP_CLOUDINARY_UPLOAD_PRESET.');
+      return imageValue; // fallback to existing value to avoid blocking
+    }
+
+    // If it's not a data URL, pass through
+    if (typeof imageValue !== 'string' || !imageValue.startsWith('data:')) {
+      return imageValue;
+    }
+
+    try {
+      const blob = await (await fetch(imageValue)).blob();
+      const formData = new FormData();
+      const extension = blob.type?.split('/')?.[1] || 'png';
+      formData.append('file', blob, `upload-${Date.now()}.${extension}`);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      if (CLOUDINARY_FOLDER) formData.append('folder', CLOUDINARY_FOLDER);
+
+      const uploadResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      const uploadJson = await uploadResponse.json().catch(() => ({}));
+      const uploadedUrl = uploadJson?.secure_url || uploadJson?.url;
+
+      if (uploadResponse.ok && uploadedUrl) {
+        return uploadedUrl;
+      }
+
+      const message =
+        uploadJson?.error?.message ||
+        uploadJson?.message ||
+        'Upload failed';
+      toast.error(`${message}. Using local image instead.`);
+      return imageValue; // fallback to base64/data URL so save can proceed
+    } catch (err) {
+      console.error(`Failed to upload ${label}:`, err);
+      toast.error(`Failed to upload ${label}. Using local image instead.`);
+      return imageValue; // fallback to avoid blocking
+    }
+  };
+
   const calculateGST = () => {
     // Not used anymore - kept for compatibility
     return 0;
@@ -2036,8 +2389,24 @@ const CheckoutPage = () => {
           };
         }) || [];
       
+      // Upload images first (profile, cover, optional logo)
+      const rawProfileImage = profileData.profilePicture || profileData.profileImage || '';
+      const rawCoverImage = profileData.coverImage || '';
+      const rawLogoImage = profileData.logo || '';
+
+      const [profilePictureUrl, coverImageUrl, logoUrl] = await Promise.all([
+        uploadImageIfNeeded(rawProfileImage, 'profile image'),
+        uploadImageIfNeeded(rawCoverImage, 'cover image'),
+        uploadImageIfNeeded(rawLogoImage, 'logo image'),
+      ]);
+
       const cleanedData = {
         ...profileData,
+        // ensure images are uploaded then passed to API
+        profilePicture: profilePictureUrl || rawProfileImage,
+        profileImage: profilePictureUrl || rawProfileImage,
+        coverImage: coverImageUrl || rawCoverImage,
+        ...(logoUrl ? { logo: logoUrl } : rawLogoImage ? { logo: rawLogoImage } : {}),
         phoneNumbers: cleanedPhoneNumbers,
         emails: profileData.emails?.filter(e => e.emailAddress?.trim()) || [],
         // Include theme (backend expects 'theme' not 'selectedTemplate')
@@ -3679,6 +4048,21 @@ const styles = {
     fontSize: '12px',
     fontWeight: '600',
     boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
+  },
+  selectedTemplatePreviewCard: {
+    marginTop: '24px',
+    border: '1px solid #e0e0e0',
+    borderRadius: '12px',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+  },
+  selectedTemplatePreviewHeader: {
+    padding: '16px 16px 0',
+  },
+  selectedTemplatePreviewWrapper: {
+    padding: '16px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '12px',
   },
   loadingTemplate: {
     display: 'flex',
