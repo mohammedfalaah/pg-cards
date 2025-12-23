@@ -92,8 +92,9 @@ const OrderSuccessPage = () => {
           const validThemes = ['standard', 'modern', 'epic'];
           if (!validThemes.includes(theme)) theme = 'standard';
 
-          // Route directly to themed profile to avoid ThemeRouter fallback issues
-          const forcedRedirect = `${window.location.origin}/${theme}/${profileId}`;
+          // Prefer profileId for profile fetch; fall back to userId
+          const targetId = profileId || userId;
+          const forcedRedirect = `${window.location.origin}/${theme}/${targetId}`;
           setRedirectUrl(forcedRedirect);
         }
       } catch (e) {
