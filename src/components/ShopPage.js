@@ -273,8 +273,8 @@ const handleProductClick = (product) => {
               </div>
               
               <div style={styles.priceLabels}>
-                <span style={styles.priceLabel}>INR {priceRange[0].toLocaleString()}</span>
-                <span style={styles.priceLabel}>INR {priceRange[1].toLocaleString()}</span>
+                <span style={styles.priceLabel}>AED {priceRange[0].toLocaleString()}</span>
+                <span style={styles.priceLabel}>AED {priceRange[1].toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -340,17 +340,17 @@ const handleProductClick = (product) => {
                         <>
                           <div style={styles.priceRow}>
                             <span style={styles.originalPrice}>
-                              {product.currency === 'INR' ? '₹' : '$'}{originalPrice}
+                              {product.currency === 'AED' ? 'AED ' : 'AED '}{originalPrice}
                             </span>
                             <span style={styles.discountBadge}>({discount}% off)</span>
                           </div>
                           <span style={styles.currentPrice}>
-                            {product.currency === 'INR' ? '₹' : '$'}{currentPrice}
+                            {product.currency === 'AED' ? 'AED ' : 'AED '}{currentPrice}
                           </span>
                         </>
                       ) : (
                         <span style={styles.currentPrice}>
-                          {product.currency === 'INR' ? '₹' : '$'}{currentPrice}
+                          {product.currency === 'AED' ? 'AED ' : 'AED '}{currentPrice}
                         </span>
                       )}
                     </div>

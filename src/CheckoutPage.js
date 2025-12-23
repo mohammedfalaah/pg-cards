@@ -71,8 +71,7 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         ...initialData,
       phoneNumbers,
       profilePicture: initialData.profilePicture || initialData.profileImage || '',
-      coverImage: initialData.coverImage || '',
-      logo: initialData.logo || initialData.companyLogo || ''
+      coverImage: initialData.coverImage || ''
       };
     }
     
@@ -92,8 +91,7 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
       },
       socialMedia: [],
       profilePicture: '',
-      coverImage: '',
-      logo: ''
+      coverImage: ''
     };
   };
   
@@ -159,8 +157,7 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         ...initialData,
         phoneNumbers,
         profilePicture: initialData.profilePicture || initialData.profileImage || '',
-        coverImage: initialData.coverImage || '',
-        logo: initialData.logo || initialData.companyLogo || ''
+        coverImage: initialData.coverImage || ''
       };
       setFormData(updatedData);
       if (onFormDataChange) {
@@ -200,35 +197,47 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
   const handleImageUpload = async (field, fileEvent) => {
     const file = fileEvent.target.files?.[0];
     if (!file) return;
-
-    // Immediate preview with local data URL
+  
+    // Create a URL for immediate preview
+    const objectUrl = URL.createObjectURL(file);
+    
+    // Set immediate preview with object URL
+    const updated = { ...formData, [field]: objectUrl };
+    setFormData(updated);
+    
+    // Notify parent immediately
+    if (onFormDataChange) onFormDataChange(updated);
+    if (onFormDataReady) onFormDataReady(updated);
+  
+    // Also read as data URL for backup
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFormData((prev) => {
-        const updated = { ...prev, [field]: reader.result };
-        if (onFormDataChange) onFormDataChange(updated);
-        if (onFormDataReady) onFormDataReady(updated);
-        return updated;
-      });
+      // Update with data URL if object URL fails
+      const updatedWithDataUrl = { ...formData, [field]: reader.result };
+      setFormData(updatedWithDataUrl);
+      if (onFormDataChange) onFormDataChange(updatedWithDataUrl);
+      if (onFormDataReady) onFormDataReady(updatedWithDataUrl);
     };
     reader.readAsDataURL(file);
-
-    // Upload to server, then replace with hosted URL for API + preview
+  
+    // Upload to server
     try {
       const hostedUrl = await uploadImageToServer(
         file,
         field === 'coverImage' ? 'cover image' : 'profile image'
       );
       if (hostedUrl) {
-        setFormData((prev) => {
-          const updated = { ...prev, [field]: hostedUrl };
-          if (onFormDataChange) onFormDataChange(updated);
-          if (onFormDataReady) onFormDataReady(updated);
-          return updated;
-        });
+        // Clean up object URL
+        URL.revokeObjectURL(objectUrl);
+        
+        const finalUpdated = { ...formData, [field]: hostedUrl };
+        setFormData(finalUpdated);
+        if (onFormDataChange) onFormDataChange(finalUpdated);
+        if (onFormDataReady) onFormDataReady(finalUpdated);
       }
     } catch (err) {
-      // Error already toasted in helper; keep local preview
+      // Keep the object URL or data URL if upload fails
+      console.error('Upload failed:', err);
     }
   };
 
@@ -257,10 +266,14 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
 
   const removePhone = (index) => {
     if (formData.phoneNumbers.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        phoneNumbers: prev.phoneNumbers.filter((_, i) => i !== index)
-      }));
+      const updatedData = {
+        ...formData,
+        phoneNumbers: formData.phoneNumbers.filter((_, i) => i !== index)
+      };
+      setFormData(updatedData);
+      if (onFormDataChange) {
+        onFormDataChange(updatedData);
+      }
     }
   };
 
@@ -276,18 +289,26 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
   };
 
   const addEmail = () => {
-    setFormData(prev => ({
-      ...prev,
-      emails: [...prev.emails, { emailAddress: '' }]
-    }));
+    const updatedData = {
+      ...formData,
+      emails: [...formData.emails, { emailAddress: '' }]
+    };
+    setFormData(updatedData);
+    if (onFormDataChange) {
+      onFormDataChange(updatedData);
+    }
   };
 
   const removeEmail = (index) => {
     if (formData.emails.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        emails: prev.emails.filter((_, i) => i !== index)
-      }));
+      const updatedData = {
+        ...formData,
+        emails: formData.emails.filter((_, i) => i !== index)
+      };
+      setFormData(updatedData);
+      if (onFormDataChange) {
+        onFormDataChange(updatedData);
+      }
     }
   };
 
@@ -307,10 +328,14 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
   };
 
   const removeSocialMedia = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      socialMedia: prev.socialMedia.filter((_, i) => i !== index)
-    }));
+    const updatedData = {
+      ...formData,
+      socialMedia: formData.socialMedia.filter((_, i) => i !== index)
+    };
+    setFormData(updatedData);
+    if (onFormDataChange) {
+      onFormDataChange(updatedData);
+    }
   };
 
   const validateForm = () => {
@@ -451,24 +476,6 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
                 src={formData.profilePicture}
                 alt="Profile preview"
                 style={{ marginTop: 8, width: 120, height: 120, objectFit: 'cover', borderRadius: '12px' }}
-                onError={(e) => (e.target.style.display = 'none')}
-              />
-            )}
-          </div>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Company Logo</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleImageUpload('logo', e)}
-              style={styles.input}
-            />
-            {formData.logo && (
-              <img
-                src={formData.logo}
-                alt="Logo preview"
-                style={{ marginTop: 8, width: 140, height: 80, objectFit: 'contain', borderRadius: '8px', background: '#fff' }}
                 onError={(e) => (e.target.style.display = 'none')}
               />
             )}
@@ -876,7 +883,7 @@ const StripeCardForm = ({
         <h3 style={styles.paymentTitle}>Secure Payment</h3>
         <div style={styles.paymentAmount}>
           <span>Amount to Pay:</span>
-          <span style={styles.amountValue}>₹ {totalAmount.toFixed(2)}</span>
+          <span style={styles.amountValue}>AED {totalAmount.toFixed(2)}</span>
         </div>
       </div>
       
@@ -943,7 +950,7 @@ const StripeCardForm = ({
               <div style={styles.spinner}></div>
               Processing Payment...
             </>
-          ) : `Pay ₹ ${totalAmount.toFixed(2)}`}
+          ) : `Pay AED ${totalAmount.toFixed(2)}`}
         </button>
         
         <div style={styles.cardLogos}>
@@ -1185,12 +1192,8 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
       </button>
     </div>
   );
-
   const renderTemplatePreview = (templateId) => {
-    // Use provided profile data (parent already passes live form data or saved profile)
     const profileData = userProfile || {};
-    
-    // Get all phone numbers - handle both formats (with country code combined or separate)
     const allPhones = (profileData?.phoneNumbers || []).map(phoneObj => {
       if (phoneObj.number && phoneObj.number.startsWith('+') && !phoneObj.countryCode) {
         return phoneObj.number;
@@ -1199,11 +1202,9 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
         ? `${phoneObj.countryCode} ${phoneObj.number || ''}`.trim()
         : phoneObj.number || '';
     }).filter(p => p);
-    
-    const phone = allPhones[0] || '+971 50 000 0000'; // First phone for display
+    const phone = allPhones[0] || '+971 50 000 0000';
     const allEmails = (profileData?.emails || []).map(e => e.emailAddress).filter(e => e);
     const email = allEmails[0] || 'john.doe@company.com';
-    
     const fullName = profileData?.fullName || 'John Doe';
     const designation = profileData?.companyDesignation || 'Software Engineer';
     const company = profileData?.companyName || 'Tech Company Inc.';
@@ -1212,759 +1213,152 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     const address = contactDetails.address || '';
     const emirates = contactDetails.state || '';
     const country = contactDetails.country || '';
-    const googleMapLink = contactDetails.googleMapLink || '';
     const profilePic = profileData?.profilePicture || profileData?.profileImage || '';
     const coverImage = profileData?.coverImage || '';
-    const companyLogo = profileData?.logo || profileData?.companyLogo || '';
     const socialMedia = profileData?.socialMedia || [];
 
-    // Standard Template - Exact match to image: White card with light green-bordered header section
+    const baseCard = {
+      borderRadius: 16,
+      padding: '16px',
+      minHeight: '280px',
+      display: 'flex',
+      flexDirection: 'column',
+      boxSizing: 'border-box'
+    };
+
     if (templateId === 'standard') {
-      const socialLabels = socialMedia.length >= 3 
-        ? [socialMedia[0]?.platform?.substring(0, 2) || 'Li', socialMedia[1]?.platform?.substring(0, 2) || 'In', socialMedia[2]?.platform?.substring(0, 2) || 'Tw']
-        : ['Li', 'In', 'Tw'];
-      
       return (
-        <div
-          style={{
-            borderRadius: 12,
-            padding: '16px',
-            background: coverImage ? `url(${coverImage}) center/cover no-repeat` : '#ffffff',
-            minHeight: '280px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
+        <div style={{ ...baseCard, background: '#fff', border: '1px solid #e0e0e0' }}>
           {coverImage && (
-            <div style={{ position: 'relative', marginBottom: 12 }}>
-              <div style={{ borderRadius: 8, overflow: 'hidden' }}>
-                <div style={{ width: '100%', height: 120, backgroundImage: `url(${coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-              </div>
+            <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ width: '100%', height: 120, background: `url(${coverImage}) center/cover no-repeat` }} />
             </div>
           )}
-
-          {/* Light green-bordered header section with rounded corners */}
-          <div
-            style={{
-              border: '2px solid #81C784',
-              borderRadius: '8px',
-              padding: '16px',
-              backgroundColor: '#ffffff',
-              marginBottom: '16px',
-            }}
-          >
-          {companyLogo && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <img
-                src={companyLogo}
-                alt="Company Logo"
-                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain' }}
-                onError={(e) => (e.target.style.display = 'none')}
-              />
+          {profilePic && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+              <img src={profilePic} alt="Profile" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #81C784' }} />
             </div>
           )}
-
-            {profilePic && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                <img
-                  src={profilePic}
-                  alt="Profile"
-                  style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #81C784' }}
-                  onError={(e) => (e.target.style.display = 'none')}
-                />
-              </div>
-            )}
-
-            <h3 style={{ color: '#000', fontSize: 16, fontWeight: 700, margin: '0 0 6px 0', textAlign: 'center' }}>
-              {fullName}
-            </h3>
-            <p style={{ color: '#666', fontSize: 12, margin: '0 0 6px 0', textAlign: 'center' }}>
-              {designation}
-            </p>
-            <p style={{ color: '#000', fontSize: 12, margin: 0, textAlign: 'center' }}>
-              {company}
-            </p>
+          <h3 style={{ textAlign: 'center', margin: '4px 0', color: '#000' }}>{fullName}</h3>
+          <p style={{ textAlign: 'center', margin: '2px 0', color: '#666' }}>{designation}</p>
+          <p style={{ textAlign: 'center', margin: '2px 0', color: '#000' }}>{company}</p>
+          {about && <p style={{ marginTop: 12, color: '#555', fontSize: 12 }}>{about}</p>}
+          <div style={{ marginTop: 12, fontSize: 12, color: '#000' }}>
+            {phone && <div>📞 {phone}</div>}
+            {email && <div>📧 {email}</div>}
+            {address && <div>📍 {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}</div>}
           </div>
-
-          {/* About Section */}
-          {about && (
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 8px 0', textAlign: 'left' }}>
-                About
-              </h4>
-              <p style={{ color: '#666', fontSize: 11, margin: 0, lineHeight: '1.4' }}>
-                {about}
-              </p>
-            </div>
-          )}
-
-          {/* Contact Info Section */}
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Contact Info
-            </h4>
-            {allPhones.map((phoneNum, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontSize: 12 }}>
-                <span style={{ fontSize: 14 }}>📞</span>
-                <span style={{ color: '#000' }}>{phoneNum}</span>
-              </div>
-            ))}
-            {allEmails.map((emailAddr, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontSize: 12 }}>
-                <span style={{ fontSize: 14 }}>📧</span>
-                <span style={{ color: '#000' }}>{emailAddr}</span>
-              </div>
-            ))}
-            {address && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', fontSize: 12 }}>
-                <span style={{ fontSize: 14 }}>📍</span>
-                <span style={{ color: '#000' }}>
-                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
-                </span>
-              </div>
-            )}
-            {googleMapLink && (
-              <div style={{ marginTop: '8px' }}>
-                <a 
-                  href={googleMapLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ 
-                    color: '#4CAF50', 
-                    fontSize: 11, 
-                    textDecoration: 'none',
-                    fontWeight: 600
-                  }}
-                >
-                  📍 View on Map
-                </a>
-              </div>
-            )}
-          </div>
-
-          {/* Social Media Section */}
           {socialMedia.length > 0 && (
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ color: '#000', fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-                Social Media
-              </h4>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {socialMedia.slice(0, 3).map((social, idx) => (
-                  <a
-                    key={idx}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      border: '1px solid #81C784',
-                      borderRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: '#000',
-                      backgroundColor: '#fff',
-                      textDecoration: 'none',
-                    }}
-                    title={social.platform}
-                  >
-                    {socialLabels[idx] || social.platform?.substring(0, 2) || 'Li'}
-                  </a>
-                ))}
-              </div>
+            <div style={{ marginTop: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {socialMedia.slice(0, 3).map((s, i) => (
+                <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ padding: '6px 10px', border: '1px solid #81C784', borderRadius: 6, fontSize: 11, color: '#000', textDecoration: 'none' }}>
+                  {s.platform || 'Link'}
+                </a>
+              ))}
             </div>
           )}
-
-          {/* Add to Contacts Button */}
-          {renderAddToContactsButton()}
+          {renderAddToContactsButton({ marginTop: 12 })}
         </div>
       );
     }
 
-    // Modern Template - Exact match: Purple-blue gradient (lighter to darker)
     if (templateId === 'modern') {
-      const socialLabels = socialMedia.length >= 3 
-        ? socialMedia.slice(0, 3).map(s => s.platform)
-        : ['Linkedin', 'Instagram', 'Twitter'];
-      
       return (
-        <div
-          style={{
-            borderRadius: 16,
-            padding: '20px',
-            background: coverImage
-              ? `linear-gradient(180deg, rgba(156,136,255,0.9) 0%, rgba(118,75,162,0.9) 100%), url(${coverImage}) center/cover no-repeat`
-              : 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
-            color: '#ffffff',
-            minHeight: '280px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {companyLogo && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <img
-                src={companyLogo}
-                alt="Company Logo"
-                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain', filter: 'brightness(1.1)' }}
-                onError={(e) => (e.target.style.display = 'none')}
-              />
+        <div style={{ ...baseCard, background: coverImage ? `linear-gradient(180deg, rgba(156,136,255,0.9) 0%, rgba(118,75,162,0.9) 100%), url(${coverImage}) center/cover no-repeat` : 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)', color: '#fff' }}>
+          {profilePic && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+              <img src={profilePic} alt="Profile" style={{ width: 78, height: 78, borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.3)' }} />
             </div>
           )}
-
-          {/* Personal Information - Centered */}
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            {profilePic && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                <img
-                  src={profilePic}
-                  alt="Profile"
-                  style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}
-                  onError={(e) => (e.target.style.display = 'none')}
-                />
-              </div>
-            )}
-            <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
-              {fullName}
-            </h3>
-            <p style={{ color: '#fff', fontSize: 13, margin: '0 0 6px 0' }}>
-              {designation}
-            </p>
-            <p style={{ color: '#fff', fontSize: 12, margin: 0 }}>
-              {company}
-            </p>
+          <h3 style={{ textAlign: 'center', margin: '4px 0' }}>{fullName}</h3>
+          <p style={{ textAlign: 'center', margin: '2px 0' }}>{designation}</p>
+          <p style={{ textAlign: 'center', margin: '2px 0' }}>{company}</p>
+          {about && <p style={{ marginTop: 12, color: '#fff', opacity: 0.9, fontSize: 12 }}>{about}</p>}
+          <div style={{ marginTop: 12, fontSize: 12 }}>
+            {phone && <div>📞 {phone}</div>}
+            {email && <div>📧 {email}</div>}
+            {address && <div>📍 {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}</div>}
           </div>
-
-          {/* About Section */}
-          {about && (
-            <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-              <p style={{ color: '#fff', fontSize: 11, margin: 0, opacity: 0.9, lineHeight: '1.4' }}>
-                {about}
-              </p>
-            </div>
-          )}
-
-          {/* Contact Information Section */}
-          <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Contact Information
-            </h4>
-            {allPhones.map((phoneNum, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-                <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
-                <span style={{ color: '#fff', flex: 1 }}>{phoneNum}</span>
-              </div>
-            ))}
-            {allEmails.map((emailAddr, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-                <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
-                <span style={{ color: '#fff', flex: 1 }}>{emailAddr}</span>
-              </div>
-            ))}
-            {address && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-                <span style={{ fontSize: 14, opacity: 0.8 }}>📍</span>
-                <span style={{ color: '#fff', flex: 1 }}>
-                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
-                </span>
-              </div>
-            )}
-            {googleMapLink && (
-              <div style={{ marginTop: '8px' }}>
-                <a 
-                  href={googleMapLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ 
-                    color: '#fff', 
-                    fontSize: 11, 
-                    textDecoration: 'none',
-                    fontWeight: 600,
-                    opacity: 0.9
-                  }}
-                >
-                  📍 View on Map
-                </a>
-              </div>
-            )}
-          </div>
-
-          {/* Social Media Section */}
           {socialMedia.length > 0 && (
-            <div style={{ marginTop: 'auto' }}>
-              <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-                Social Media
-              </h4>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {socialMedia.slice(0, 3).map((social, idx) => (
-                  <a
-                    key={idx}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      padding: '8px 12px',
-                      backgroundColor: '#0077b5',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      whiteSpace: 'nowrap',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    {social.platform || socialLabels[idx] || 'Link'}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {renderAddToContactsButton({
-            background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
-            color: '#fff',
-            marginTop: socialMedia.length > 0 ? 16 : 'auto',
-          })}
-        </div>
-      );
-    }
-
-    // Classic/LinkedIn Template - Blue gradient with professional layout
-    if (templateId === 'linkedin') {
-      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
-      
-      return (
-        <div
-          style={{
-            borderRadius: 16,
-            padding: '20px',
-            background: 'linear-gradient(135deg, #0077b5 0%, #00a0dc 100%)',
-            color: '#ffffff',
-            minHeight: '280px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {(coverImage || profilePic) && (
-            <div style={{ position: 'relative', marginBottom: 16 }}>
-              <div
-                style={{
-                  height: 110,
-                  borderRadius: 12,
-                  background: coverImage
-                    ? `url(${coverImage}) center/cover no-repeat`
-                    : 'rgba(255,255,255,0.15)',
-                }}
-              />
-              {profilePic && (
-                <img
-                  src={profilePic}
-                  alt="Profile"
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '3px solid #fff',
-                    position: 'absolute',
-                    left: '50%',
-                    bottom: -36,
-                    transform: 'translateX(-50%)',
-                    boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                  }}
-                  onError={(e) => (e.target.style.display = 'none')}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Personal Information - Centered */}
-          <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: profilePic ? 36 : 0 }}>
-            <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
-              {fullName}
-            </h3>
-            <p style={{ color: '#fff', fontSize: 13, margin: '0 0 6px 0' }}>
-              {designation}
-            </p>
-            <p style={{ color: '#fff', fontSize: 12, margin: 0 }}>
-              {company}
-            </p>
-          </div>
-
-          {/* Contact Information Section */}
-          <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Contact Information
-            </h4>
-            {allPhones.map((phoneNum, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-                <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
-                <span style={{ color: '#fff' }}>{phoneNum}</span>
-              </div>
-            ))}
-            {allEmails.map((emailAddr, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
-                <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
-                <span style={{ color: '#fff' }}>{emailAddr}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Social Media Section */}
-          <div style={{ marginTop: 'auto' }}>
-            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Social Media
-            </h4>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {(socialMedia.length ? socialMedia : socialLabels.map((label) => ({ platform: label }))).slice(0, 3).map((social, idx) => (
-                <a
-                  key={idx}
-                  href={social.url || '#'}
-                  onClick={(e) => !social.url && e.preventDefault()}
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: '#005885',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                  }}
-                  target={social.url ? '_blank' : undefined}
-                  rel={social.url ? 'noopener noreferrer' : undefined}
-                >
-                  {social.platform || socialLabels[idx] || 'Link'}
+            <div style={{ marginTop: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {socialMedia.slice(0, 3).map((s, i) => (
+                <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ padding: '8px 12px', background: '#005885', color: '#fff', borderRadius: 8, fontSize: 11, textDecoration: 'none' }}>
+                  {s.platform || 'Link'}
                 </a>
               ))}
             </div>
-          </div>
-
-          {renderAddToContactsButton({
-            background: '#005885',
-            color: '#fff',
-            marginTop: 16,
-          })}
+          )}
+          {renderAddToContactsButton({ background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)', color: '#fff', marginTop: 12 })}
         </div>
       );
     }
 
-    // Location Map Template - Green/Blue gradient
     if (templateId === 'map') {
-      const socialLabels = ['Linkedin', 'Instagram', 'Twitter'];
-      
       return (
-        <div
-          style={{
-            borderRadius: 16,
-            padding: '20px',
-            background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
-            color: '#ffffff',
-            minHeight: '280px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {companyLogo && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <img
-                src={companyLogo}
-                alt="Company Logo"
-                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain', filter: 'brightness(1.05)' }}
-                onError={(e) => (e.target.style.display = 'none')}
-              />
-            </div>
-          )}
-
+        <div style={{ ...baseCard, background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)', color: '#fff' }}>
           {(coverImage || profilePic) && (
-            <div style={{ position: 'relative', marginBottom: 16 }}>
-              <div
-                style={{
-                  height: 110,
-                  borderRadius: 12,
-                  background: coverImage
-                    ? `url(${coverImage}) center/cover no-repeat`
-                    : 'rgba(255,255,255,0.12)',
-                }}
-              />
+            <div style={{ position: 'relative', marginBottom: 12 }}>
+              <div style={{ height: 110, borderRadius: 12, background: coverImage ? `url(${coverImage}) center/cover no-repeat` : 'rgba(255,255,255,0.12)' }} />
               {profilePic && (
-                <img
-                  src={profilePic}
-                  alt="Profile"
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '3px solid #fff',
-                    position: 'absolute',
-                    left: '50%',
-                    bottom: -36,
-                    transform: 'translateX(-50%)',
-                    boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                  }}
-                  onError={(e) => (e.target.style.display = 'none')}
-                />
+                <img src={profilePic} alt="Profile" style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '3px solid #fff', position: 'absolute', left: '50%', bottom: -35, transform: 'translateX(-50%)' }} />
               )}
             </div>
           )}
-
-          {/* Personal Information - Centered */}
-          <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: profilePic ? 36 : 0 }}>
-            <h3 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 6px 0' }}>
-              {fullName}
-            </h3>
-            <p style={{ color: '#fff', fontSize: 13, margin: '0 0 6px 0' }}>
-              {designation}
-            </p>
-            <p style={{ color: '#fff', fontSize: 12, margin: 0 }}>
-              {company}
-            </p>
+          <div style={{ textAlign: 'center', marginTop: profilePic ? 40 : 0, marginBottom: 12 }}>
+            <h3 style={{ margin: '4px 0' }}>{fullName}</h3>
+            <p style={{ margin: '2px 0' }}>{designation}</p>
+            <p style={{ margin: '2px 0' }}>{company}</p>
           </div>
-
-          {/* Contact Information Section */}
-          <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Contact Information
-            </h4>
-            {allPhones.map((phoneNum, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: 12 }}>
-                <span style={{ fontSize: 14, opacity: 0.8 }}>📞</span>
-                <span style={{ color: '#fff' }}>{phoneNum}</span>
-              </div>
-            ))}
-            {allEmails.map((emailAddr, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 12 }}>
-                <span style={{ fontSize: 14, opacity: 0.8 }}>📧</span>
-                <span style={{ color: '#fff' }}>{emailAddr}</span>
-              </div>
-            ))}
+          <div style={{ fontSize: 12, marginBottom: 12 }}>
+            {phone && <div>📞 {phone}</div>}
+            {email && <div>📧 {email}</div>}
           </div>
-
-          {/* Social Media Section */}
-          <div style={{ marginTop: 'auto' }}>
-            <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px 0', textAlign: 'left' }}>
-              Social Media
-            </h4>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {(socialMedia.length ? socialMedia : socialLabels.map((label) => ({ platform: label }))).slice(0, 3).map((social, idx) => (
-                <a
-                  key={idx}
-                  href={social.url || '#'}
-                  onClick={(e) => !social.url && e.preventDefault()}
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: '#2E7D32',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textDecoration: 'none',
-                  }}
-                  target={social.url ? '_blank' : undefined}
-                  rel={social.url ? 'noopener noreferrer' : undefined}
-                >
-                  {social.platform || socialLabels[idx] || 'Link'}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {renderAddToContactsButton({
-            background: 'linear-gradient(135deg, #34A853 0%, #0b8043 100%)',
-            color: '#fff',
-            marginTop: 16,
-          })}
-        </div>
-      );
-    }
-
-    // Epic Template - Exact match: Black card with bright yellow border, yellow accents, horizontal separator
-    if (templateId === 'epic') {
-      const socialLabels = socialMedia.length >= 3 
-        ? socialMedia.slice(0, 3).map(s => s.platform)
-        : ['Linkedin', 'Instagram', 'Twitter'];
-      
-      return (
-        <div
-          style={{
-            borderRadius: 12,
-            padding: '20px',
-            background: coverImage
-              ? `linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url(${coverImage}) center/cover no-repeat`
-              : '#000000',
-            border: '2px solid #ffeb3b',
-            color: '#fff',
-            minHeight: '280px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {companyLogo && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <img
-                src={companyLogo}
-                alt="Company Logo"
-                style={{ maxWidth: 120, maxHeight: 60, objectFit: 'contain', filter: 'brightness(1.1)' }}
-                onError={(e) => (e.target.style.display = 'none')}
-              />
-            </div>
-          )}
-
-          {/* Personal Information - Centered */}
-          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-            {profilePic && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                <img
-                  src={profilePic}
-                  alt="Profile"
-                  style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '4px solid #ffeb3b', boxShadow: '0 4px 12px rgba(255,235,59,0.3)' }}
-                  onError={(e) => (e.target.style.display = 'none')}
-                />
-              </div>
-            )}
-            <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: '0 0 6px 0' }}>
-              {fullName}
-            </h3>
-            <p style={{ color: '#ffeb3b', fontSize: 14, fontWeight: 700, margin: '0 0 6px 0' }}>
-              {designation}
-            </p>
-            <p style={{ color: '#fff', fontSize: 12, opacity: 0.8, margin: 0, fontStyle: 'italic' }}>
-              {company}
-            </p>
-          </div>
-
-          {/* About Section */}
-          {about && (
-            <div style={{ marginBottom: '12px', textAlign: 'center' }}>
-              <p style={{ color: '#fff', fontSize: 10, margin: 0, opacity: 0.7, lineHeight: '1.3' }}>
-                {about}
-              </p>
-            </div>
-          )}
-
-          {/* Yellow separator line */}
-          <div
-            style={{
-              width: '100%',
-              height: '1px',
-              backgroundColor: '#ffeb3b',
-              margin: '0 auto 16px',
-            }}
-          />
-
-          {/* Contact Info - All phones and emails */}
-          <div style={{ 
-            marginBottom: '20px', 
-            fontSize: 11,
-          }}>
-            {allPhones.map((phoneNum, idx) => (
-              <div key={idx} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '6px',
-                marginBottom: '8px'
-              }}>
-                <span style={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }}>📞</span>
-                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{phoneNum}</span>
-              </div>
-            ))}
-            {allEmails.map((emailAddr, idx) => (
-              <div key={idx} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '6px',
-                marginBottom: '8px'
-              }}>
-                <span style={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }}>📧</span>
-                <span style={{ color: '#fff', wordBreak: 'break-word' }}>{emailAddr}</span>
-              </div>
-            ))}
-            {address && (
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start', 
-                gap: '6px',
-                marginBottom: '8px'
-              }}>
-                <span style={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }}>📍</span>
-                <span style={{ color: '#fff', wordBreak: 'break-word', fontSize: 11 }}>
-                  {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}
-                </span>
-              </div>
-            )}
-            {googleMapLink && (
-              <div style={{ marginTop: '8px' }}>
-                <a 
-                  href={googleMapLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ 
-                    color: '#ffeb3b', 
-                    fontSize: 10, 
-                    textDecoration: 'none',
-                    fontWeight: 600
-                  }}
-                >
-                  📍 View on Map
-                </a>
-              </div>
-            )}
-          </div>
-
-          {/* Social Media Buttons */}
           {socialMedia.length > 0 && (
-            <div style={{ 
-              marginTop: 'auto', 
-              display: 'flex', 
-              gap: '8px',
-              width: '100%'
-            }}>
-              {socialMedia.slice(0, 3).map((social, idx) => (
-                <a
-                  key={idx}
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    backgroundColor: '#000',
-                    color: '#fff',
-                    border: '1px solid #ffeb3b',
-                    borderRadius: '8px',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textAlign: 'center',
-                    minWidth: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    textDecoration: 'none',
-                  }}
-                >
-                  {social.platform || socialLabels[idx] || 'Link'}
+            <div style={{ marginTop: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {socialMedia.slice(0, 3).map((s, i) => (
+                <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ padding: '8px 12px', background: '#2E7D32', color: '#fff', borderRadius: 8, fontSize: 11, textDecoration: 'none' }}>
+                  {s.platform || 'Link'}
                 </a>
               ))}
             </div>
           )}
-
-          {renderAddToContactsButton({
-            background: '#ffeb3b',
-            color: '#000',
-            marginTop: socialMedia.length > 0 ? 16 : 'auto',
-          })}
+          {renderAddToContactsButton({ background: 'linear-gradient(135deg, #34A853 0%, #0b8043 100%)', color: '#fff', marginTop: 12 })}
         </div>
       );
     }
 
-    // Default fallback
-    return null;
+    // Epic
+    return (
+      <div style={{ ...baseCard, background: coverImage ? `linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url(${coverImage}) center/cover no-repeat` : '#000', color: '#fff', border: '2px solid #ffeb3b' }}>
+        <div style={{ textAlign: 'center', marginBottom: 12 }}>
+          {profilePic && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+              <img src={profilePic} alt="Profile" style={{ width: 78, height: 78, borderRadius: '50%', objectFit: 'cover', border: '4px solid #ffeb3b' }} />
+            </div>
+          )}
+          <h3 style={{ margin: '4px 0' }}>{fullName}</h3>
+          <p style={{ margin: '2px 0', color: '#ffeb3b' }}>{designation}</p>
+          <p style={{ margin: '2px 0', opacity: 0.8 }}>{company}</p>
+        </div>
+        {about && <p style={{ textAlign: 'center', color: '#fff', opacity: 0.7, fontSize: 11 }}>{about}</p>}
+        <div style={{ height: 1, background: '#ffeb3b', margin: '10px 0' }} />
+        <div style={{ fontSize: 11, marginBottom: 12 }}>
+          {allPhones.map((p, i) => <div key={i}>📞 {p}</div>)}
+          {allEmails.map((e, i) => <div key={i}>📧 {e}</div>)}
+          {address && <div>📍 {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}</div>}
+        </div>
+        {socialMedia.length > 0 && (
+          <div style={{ marginTop: 'auto', display: 'flex', gap: 8 }}>
+            {socialMedia.slice(0, 3).map((s, i) => (
+              <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ flex: 1, padding: '8px 10px', border: '1px solid #ffeb3b', color: '#fff', textAlign: 'center', borderRadius: 8, fontSize: 11, textDecoration: 'none' }}>
+                {s.platform || 'Link'}
+              </a>
+            ))}
+          </div>
+        )}
+        {renderAddToContactsButton({ background: '#ffeb3b', color: '#000', marginTop: 12 })}
+      </div>
+    );
   };
 
   return (
@@ -2045,6 +1439,13 @@ const CheckoutPage = () => {
     }
   }, []);
 
+  // Initialize liveFormData with userProfile when it loads
+  useEffect(() => {
+    if (userProfile && !liveFormData) {
+      setLiveFormData(userProfile);
+    }
+  }, [userProfile]);
+
   const fetchUserProfile = async () => {
     const profileId = localStorage.getItem('userProfileId');
     if (!profileId) return;
@@ -2074,6 +1475,7 @@ const CheckoutPage = () => {
           });
         }
         setUserProfile(profileData);
+        setLiveFormData(profileData); // keep previews in sync with loaded profile
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -2462,12 +1864,10 @@ const CheckoutPage = () => {
       // Upload images first (profile, cover, optional logo)
       const rawProfileImage = profileData.profilePicture || profileData.profileImage || '';
       const rawCoverImage = profileData.coverImage || '';
-      const rawLogoImage = profileData.logo || profileData.companyLogo || '';
 
-      const [profilePictureUrl, coverImageUrl, logoUrl] = await Promise.all([
+      const [profilePictureUrl, coverImageUrl] = await Promise.all([
         uploadImageIfNeeded(rawProfileImage, 'profile image'),
         uploadImageIfNeeded(rawCoverImage, 'cover image'),
-        uploadImageIfNeeded(rawLogoImage, 'logo image'),
       ]);
 
       const cleanedData = {
@@ -2476,7 +1876,6 @@ const CheckoutPage = () => {
         profilePicture: profilePictureUrl || rawProfileImage,
         profileImage: profilePictureUrl || rawProfileImage,
         coverImage: coverImageUrl || rawCoverImage,
-        ...(logoUrl ? { logo: logoUrl, companyLogo: logoUrl } : rawLogoImage ? { logo: rawLogoImage, companyLogo: rawLogoImage } : {}),
         phoneNumbers: cleanedPhoneNumbers,
         emails: profileData.emails?.filter(e => e.emailAddress?.trim()) || [],
         // Include theme (backend expects 'theme' not 'selectedTemplate')
@@ -2513,6 +1912,7 @@ const CheckoutPage = () => {
 
       // Update userProfile state
       setUserProfile(cleanedData);
+      setLiveFormData(cleanedData); // ensure previews keep the saved images/values
       setProfileSaved(true);
       
       toast.success('Profile saved successfully!');
@@ -2576,12 +1976,12 @@ const CheckoutPage = () => {
             </div>
 
             {/* Step 2: Choose Preview */}
-            {profileSaved && (
+            {(profileSaved || liveFormData) && (
               <div style={styles.section}>
                 <div style={styles.stepHeader} className="checkout-step-header">
                   <div style={styles.stepNumber} className="checkout-step-number">2</div>
                   <h2 style={styles.stepTitle} className="checkout-step-title">Choose Your Preview</h2>
-                  {selectedTemplate && <span style={styles.checkmark}>✓</span>}
+                  {profileSaved && selectedTemplate && <span style={styles.checkmark}>✓</span>}
                 </div>
                 <div style={styles.addressContent} className="checkout-address-content">
                   <TemplatePreviewSelector
@@ -2770,10 +2170,10 @@ const CheckoutPage = () => {
                           {color} with {finish}
                         </p>
                         <div style={styles.priceRow}>
-                          <span style={styles.productPrice}>₹ {numericPrice}</span>
+                          <span style={styles.productPrice}>AED {numericPrice}</span>
                           {originalPrice && originalPrice > numericPrice && (
                             <>
-                              <span style={styles.originalPrice}>₹ {originalPrice}</span>
+                              <span style={styles.originalPrice}>AED {originalPrice}</span>
                               <span style={styles.discountBadge}>{discount}% off</span>
                             </>
                           )}
@@ -2805,7 +2205,7 @@ const CheckoutPage = () => {
                   
                   <div style={{...styles.priceRow, ...styles.totalRow}}>
                     <span style={styles.totalLabel}>Total Payable</span>
-                    <span style={styles.totalAmount}>₹ {calculateTotal().toFixed(2)}</span>
+                    <span style={styles.totalAmount}>AED {calculateTotal().toFixed(2)}</span>
                   </div>
                 </div>
               </>
@@ -2841,6 +2241,7 @@ const CheckoutPage = () => {
                 onProfileSaved={handleProfileSaved} 
                 selectedTemplate={selectedTemplate}
                 onFormDataChange={setLiveFormData}
+                onFormDataReady={setLiveFormData}
                 initialData={userProfile || liveFormData}
               />
             </div>

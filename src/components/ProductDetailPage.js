@@ -205,16 +205,16 @@ const handleAddToCart = async () => {
             {originalPrice && discount ? (
               <>
                 <span className="currentPrice">
-                  {product.currency === 'INR' ? '₹' : '$'}{currentPrice.toLocaleString()}
+                  AED {currentPrice.toLocaleString()}
                 </span>
                 <span className="originalPrice">
-                  {product.currency === 'INR' ? '₹' : '$'}{originalPrice.toLocaleString()}
+                  AED {originalPrice.toLocaleString()}
                 </span>
                 <span className="discountBadge">{discount}% OFF</span>
               </>
             ) : (
               <span className="currentPrice">
-                {product.currency === 'INR' ? '₹' : '$'}{currentPrice.toLocaleString()}
+                AED {currentPrice.toLocaleString()}
               </span>
             )}
           </div>
@@ -255,7 +255,7 @@ const handleAddToCart = async () => {
                     </div>
                   </div>
                   <div className="variantPrice">
-                    {product.currency === 'INR' ? '₹' : '$'}{variant.price}
+                    AED {variant.price}
                   </div>
                 </div>
               ))}
@@ -315,7 +315,7 @@ const handleAddToCart = async () => {
               <div className="infoBoxIcon">🚚</div>
               <div>
                 <div className="infoBoxTitle">Free Delivery</div>
-                <div className="infoBoxText">On orders above ₹500</div>
+                <div className="infoBoxText">On orders above AED 500</div>
               </div>
             </div>
             <div className="infoBox">

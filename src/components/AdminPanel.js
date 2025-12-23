@@ -218,7 +218,7 @@ const AdminPanel = ({ user, token, onLogout }) => {
               <div className="statCard">
                 <div className="statIcon">💰</div>
                 <div className="statInfo">
-                  <h3 className="statValue">₹{stats.totalRevenue.toLocaleString()}</h3>
+                  <h3 className="statValue">AED {stats.totalRevenue.toLocaleString()}</h3>
                   <p className="statLabel">Total Revenue</p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ const AdminPanel = ({ user, token, onLogout }) => {
                         {new Date(order.createdAt).toLocaleString()}
                       </p>
                     </div>
-                    <span className="activityAmount">₹{order.totalAmount || 0}</span>
+                    <span className="activityAmount">AED {order.totalAmount || 0}</span>
                   </div>
                 ))}
               </div>
@@ -460,10 +460,10 @@ const AdminPanel = ({ user, token, onLogout }) => {
                     <h3 className="productTitle">{product.title}</h3>
                     <p className="productCategory">{product.category}</p>
                     <div className="productPrice">
-                      ₹{product.price}
+                      AED {product.price}
                       {product.originalPrice && (
                         <span className="originalPrice">
-                          ₹{product.originalPrice}
+                          AED {product.originalPrice}
                         </span>
                       )}
                     </div>
@@ -508,7 +508,7 @@ const AdminPanel = ({ user, token, onLogout }) => {
                         </div>
                       </td>
                       <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                      <td className="orderAmount">₹{order.totalAmount || 0}</td>
+                      <td className="orderAmount">AED {order.totalAmount || 0}</td>
                       <td>
                         <select
                           value={order.status || 'pending'}

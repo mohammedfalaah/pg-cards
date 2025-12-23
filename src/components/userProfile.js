@@ -393,7 +393,7 @@ const UserProfile = () => {
                         {order.items?.slice(0, 2).map((item, i) => (
                           <div key={i} className="orderItem">
                             <span>{item.name || 'Product'} × {item.quantity || 1}</span>
-                            <span>₹{item.price || 0}</span>
+                            <span>AED {item.price || 0}</span>
                           </div>
                         ))}
                         {order.items?.length > 2 && (
@@ -403,7 +403,7 @@ const UserProfile = () => {
                       <div className="orderFooter">
                         <div className="orderTotal">
                           <span>Total:</span>
-                          <span className="totalAmount">₹{order.totalAmount || 0}</span>
+                          <span className="totalAmount">AED {order.totalAmount || 0}</span>
                         </div>
                         <button 
                           className="viewOrderButton"
