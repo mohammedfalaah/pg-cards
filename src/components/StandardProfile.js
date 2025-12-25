@@ -148,7 +148,7 @@ const StandardProfile = ({ userId }) => {
         backgroundColor: '#f5f5f5',
         padding: '20px'
       }}>
-        <h2 style={{ color: '#000', marginBottom: '10px' }}>Profile not available</h2>
+        <h2 style={{ color: '#000', marginBottom: '10px' }}>Profile not jnj.knavailable</h2>
         <p style={{ color: '#666' }}>{error || 'This profile could not be found.'}</p>
       </div>
     );
