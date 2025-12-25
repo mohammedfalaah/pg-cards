@@ -123,7 +123,9 @@ const UserProfile = () => {
         if (!validThemes.includes(theme)) theme = 'standard';
 
         const targetId = profileId || userId;
-        const forcedRedirect = `${window.location.origin}/${theme}/${targetId}`;
+        const forcedRedirect = profileId
+          ? `${window.location.origin}/${theme}/${profileId}`
+          : `${window.location.origin}/user_profile/${targetId}`;
         setRedirectUrl(forcedRedirect);
       } else {
         toast.error(response.data?.msg || 'Failed to generate QR');

@@ -1423,6 +1423,7 @@ const CheckoutPage = () => {
   const [clientSecret, setClientSecret] = useState(null);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [trialSelected, setTrialSelected] = useState(false); // 3-day trial opt-in
   const [profileSaved, setProfileSaved] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -1755,14 +1756,14 @@ const CheckoutPage = () => {
     // Or you need to adjust the API to accept cart items array
     const firstCartItem = cartItems[0];
     
-    // Based on Postman screenshot, the API expects specific fields
-    const paymentResponse = await axios.post('https://pg-cards.vercel.app/payment/createPayment', {
-      amount: amount,
-      userId: userId,
-      productId: firstCartItem.product?._id,
-      variantId: firstCartItem.product?.variants?.[0]?._id
-      // Remove cartItems array as it's not in the Postman example
-    });
+          // Based on Postman screenshot, the API expects specific fields
+          const paymentResponse = await axios.post('https://pg-cards.vercel.app/payment/createPayment', {
+            amount: amount,
+            userId: userId,
+            productId: firstCartItem.product?._id,
+            variantId: firstCartItem.product?.variants?.[0]?._id,
+            isTrial: trialSelected ? true : false, // flag to inform backend about 3-day trial
+          });
 
     console.log('Payment intent response:', paymentResponse.data);
 
@@ -2101,6 +2102,20 @@ const CheckoutPage = () => {
                       </span>
                     </div>
                   )}
+
+                  <div style={styles.trialBox}>
+                    <input
+                      type="checkbox"
+                      id="trial-checkbox"
+                      checked={trialSelected}
+                      onChange={(e) => setTrialSelected(e.target.checked)}
+                      style={{ marginTop: 3 }}
+                    />
+                    <label htmlFor="trial-checkbox" style={{ flex: 1, cursor: 'pointer' }}>
+                      Start 3-day free trial. We’ll store your card now and begin charging automatically after 3 days unless you cancel.
+                    </label>
+                  </div>
+
                   <div style={styles.paymentContent}>
                     {clientSecret && (
                       <StripeCardForm
@@ -2110,6 +2125,7 @@ const CheckoutPage = () => {
                         totalAmount={calculateTotal()}
                         onSuccess={handlePaymentSuccess}
                         onError={handlePaymentError}
+                        disabled={!trialSelected}
                       />
                     )}
                     <button 
@@ -3549,6 +3565,19 @@ const styles = {
     borderLeft: '4px solid #ff6b35',
     marginBottom: '16px',
     fontSize: '14px',
+  },
+  trialBox: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'flex-start',
+    background: '#fff7e6',
+    border: '1px solid #ffd591',
+    borderRadius: '8px',
+    padding: '12px 14px',
+    marginBottom: '12px',
+    color: '#8c6b2f',
+    fontSize: '14px',
+    lineHeight: 1.4,
   },
   selectedTemplateLabel: {
     fontWeight: '600',

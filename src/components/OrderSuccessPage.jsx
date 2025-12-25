@@ -92,9 +92,12 @@ const OrderSuccessPage = () => {
           const validThemes = ['standard', 'modern', 'epic'];
           if (!validThemes.includes(theme)) theme = 'standard';
 
-          // Prefer profileId for profile fetch; fall back to userId
+          // Always build a themed route when we have a profileId; otherwise use ThemeRouter path
           const targetId = profileId || userId;
-          const forcedRedirect = `${window.location.origin}/${theme}/${targetId}`;
+          const forcedRedirect = profileId
+            ? `${window.location.origin}/${theme}/${profileId}`
+            : `${window.location.origin}/user_profile/${targetId}`;
+
           setRedirectUrl(forcedRedirect);
         }
       } catch (e) {
