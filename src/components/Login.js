@@ -90,11 +90,11 @@ const Login = ({ onClose, onLogin }) => {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+  
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 5) {
+      newErrors.password = 'Password must be at least 5 characters';
     }
 
     if (mode === 'register') {

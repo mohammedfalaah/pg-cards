@@ -18,6 +18,7 @@ const OrderSuccessPage = () => {
   const [qrImage, setQrImage] = useState('');
   const [redirectUrl, setRedirectUrl] = useState('');
   const [qrLoading, setQrLoading] = useState(true);
+  const [isTrial, setIsTrial] = useState(false);
 
   useEffect(() => {
     // Animation delay
@@ -32,6 +33,14 @@ const OrderSuccessPage = () => {
       estimatedDelivery: '5-7 Working Days',
       email: 'customer@example.com',
     });
+
+    // detect trial from query param
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('trial') === 'true') {
+        setIsTrial(true);
+      }
+    } catch (_) {}
   }, []);
 
   // Load user profile for preview using profileId stored during checkout
@@ -307,6 +316,12 @@ const OrderSuccessPage = () => {
   return (
     <div style={styles.container} className="order-success-container">
       <div style={styles.content} className="order-success-content">
+        {isTrial && (
+          <div style={styles.trialBanner}>
+            🎉 3-Day Free Trial Activated! Your card will be charged after the trial ends unless you cancel.
+          </div>
+        )}
+
         {/* Success Animation */}
         <div style={{
           ...styles.checkmarkCircle,
@@ -490,6 +505,16 @@ const styles = {
     border: '1px solid #e0e0e0',
     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
     textAlign: 'left',
+  },
+  trialBanner: {
+    background: '#fff7e6',
+    border: '1px solid #ffd591',
+    color: '#8c6b2f',
+    borderRadius: '12px',
+    padding: '12px 14px',
+    marginBottom: '16px',
+    fontWeight: 600,
+    textAlign: 'center',
   },
   nextStepsTitle: {
     fontSize: '20px',

@@ -1838,6 +1838,31 @@ const CheckoutPage = () => {
     await saveProfileWithTheme();
     await createPaymentIntent();
   };
+
+  const handleStartTrial = async () => {
+    if (processingPayment) return;
+    if (!liveFormData && !userProfile) {
+      toast.error('Please complete your profile information first');
+      setShowProfileForm(true);
+      return;
+    }
+    if (!selectedTemplate) {
+      toast.error('Please select a preview template first');
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+      setTrialSelected(true);
+      await saveProfileWithTheme();
+      navigateTo('/order-success?trial=true');
+    } catch (err) {
+      console.error('Error starting trial:', err);
+      toast.error(err?.message || 'Unable to start trial. Please try again.');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
   
   const saveProfileWithTheme = async () => {
     if (!liveFormData && !userProfile) {
@@ -2065,28 +2090,44 @@ const CheckoutPage = () => {
 
             {/* Step 3: Payment */}
             {!showPaymentForm ? (
-              <button 
-                className="checkout-proceed-btn"
-                style={{
-                  ...styles.proceedBtn,
-                  ...(processingPayment 
-                    || !selectedTemplate
-                    || (!liveFormData && !userProfile) ? styles.proceedBtnDisabled : {})
-                }} 
-                onClick={handleProceedToPayment}
-                disabled={processingPayment || cartItems.length === 0 || 
-                  (!liveFormData && !userProfile) || !selectedTemplate}
-              >
-                {processingPayment ? (
-                  <>
-                    <div style={styles.buttonSpinner}></div>
-                    Initializing Payment...
-                  </>
-                ) :  
-                  (!liveFormData && !userProfile) ? 'Complete Profile Information' :
-                  !selectedTemplate ? 'Choose Your Preview' :
-                  'Proceed to Payment'}
-              </button>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button 
+                  className="checkout-proceed-btn"
+                  style={{
+                    ...styles.proceedBtn,
+                    ...(processingPayment 
+                      || !selectedTemplate
+                      || (!liveFormData && !userProfile) ? styles.proceedBtnDisabled : {})
+                  }} 
+                  onClick={handleProceedToPayment}
+                  disabled={processingPayment || cartItems.length === 0 || 
+                    (!liveFormData && !userProfile) || !selectedTemplate}
+                >
+                  {processingPayment ? (
+                    <>
+                      <div style={styles.buttonSpinner}></div>
+                      Initializing Payment...
+                    </>
+                  ) :  
+                    (!liveFormData && !userProfile) ? 'Complete Profile Information' :
+                    !selectedTemplate ? 'Choose Your Preview' :
+                    'Proceed to Payment'}
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    ...styles.proceedBtn,
+                    backgroundColor: '#fff7e6',
+                    color: '#8c6b2f',
+                    border: '1px solid #ffd591'
+                  }}
+                  disabled={processingPayment || cartItems.length === 0 || (!liveFormData && !userProfile)}
+                  onClick={handleStartTrial}
+                >
+                  Start 3-Day Free Trial
+                </button>
+              </div>
             ) : (
               <div style={styles.paymentContainerWrapper}>
                 <div style={styles.section}>
