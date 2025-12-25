@@ -2144,18 +2144,7 @@ const CheckoutPage = () => {
                     </div>
                   )}
 
-                  <div style={styles.trialBox}>
-                    <input
-                      type="checkbox"
-                      id="trial-checkbox"
-                      checked={trialSelected}
-                      onChange={(e) => setTrialSelected(e.target.checked)}
-                      style={{ marginTop: 3 }}
-                    />
-                    <label htmlFor="trial-checkbox" style={{ flex: 1, cursor: 'pointer' }}>
-                      Start 3-day free trial. We’ll store your card now and begin charging automatically after 3 days unless you cancel.
-                    </label>
-                  </div>
+
 
                   <div style={styles.paymentContent}>
                     {clientSecret && (
