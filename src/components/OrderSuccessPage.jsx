@@ -54,7 +54,7 @@ const OrderSuccessPage = () => {
     const fetchProfile = async () => {
       try {
         const res = await fetch(
-          `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
+          `http://localhost:3000/userProfile/getUserProfile/${profileId}`
         );
         const result = await res.json();
         if (!res.ok || !result?.data) {

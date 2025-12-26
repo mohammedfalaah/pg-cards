@@ -20,7 +20,6 @@ import ProductDetailPage from './components/ProductDetailPage';
 import CheckoutPage from './CheckoutPage';
 import UserProfile from './components/userProfile';
 import OrderSuccessPage from './components/OrderSuccessPage';
-import PublicProfile from './components/PublicProfile';
 import './App.css';
 
 function App() {
@@ -190,9 +189,7 @@ function App() {
 
       {/* Theme Router - checks backend theme and redirects */}
       {/* Public profile view for QR scans */}
-      {activeView === 'public-profile' && publicProfileUserId && (
-        <PublicProfile userId={publicProfileUserId} />
-      )}
+     
 
       {activeView === 'dashboard' && (
         <Dashboard
