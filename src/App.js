@@ -25,7 +25,6 @@ import './App.css';
 function App() {
   const [activeView, setActiveView] = useState('landing');
   const [productId, setProductId] = useState(null);
-  const [publicProfileUserId, setPublicProfileUserId] = useState(null);
 
   const [auth, setAuth] = useState(() => {
     if (typeof window === 'undefined') {
@@ -76,14 +75,7 @@ function App() {
       else if (path.startsWith('/order-success')) {
         setActiveView('order-success');
       }
-      // Public profile view via QR code: /public-profile/:userId or /user_profile/:userId
-      else if (path.match(/^\/public-profile\/([^/]+)$/) || path.match(/^\/user_profile\/([^/]+)$/)) {
-        const match = path.match(/^\/(?:public-profile|user_profile)\/([^/]+)$/);
-        if (match && match[1]) {
-          setPublicProfileUserId(match[1]);
-          setActiveView('public-profile');
-        }
-      }
+     
       // Check for product detail route
       else if (path.match(/^\/product\/[^/]+\/([^/]+)$/)) {
         const productMatch = path.match(/^\/product\/[^/]+\/([^/]+)$/);
@@ -152,8 +144,7 @@ function App() {
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-       activeView !== 'public-profile' &&
-       activeView !== 'theme-router' && (
+      (
         <Header
           user={auth.user}
           onLoginSuccess={handleLoginSuccess}
@@ -211,8 +202,8 @@ function App() {
       {activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-       activeView !== 'public-profile' &&
-       activeView !== 'theme-router' && 
+  
+     
        <WhatsappChat />}
 
       {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, order success, public profile, theme router, and theme profiles */}
@@ -221,8 +212,8 @@ function App() {
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-       activeView !== 'public-profile' &&
-       activeView !== 'theme-router' && 
+    
+     
        <Footer />}
     </div>
   );
