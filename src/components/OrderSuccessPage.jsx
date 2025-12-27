@@ -19,6 +19,7 @@ const OrderSuccessPage = () => {
   const [redirectUrl, setRedirectUrl] = useState('');
   const [qrLoading, setQrLoading] = useState(true);
   const [isTrial, setIsTrial] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState('standard');
 
   useEffect(() => {
     // Animation delay
@@ -54,13 +55,19 @@ const OrderSuccessPage = () => {
     const fetchProfile = async () => {
       try {
         const res = await fetch(
-          `http://localhost:3000/userProfile/getUserProfile/${profileId}`
+          `https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`
         );
         const result = await res.json();
         if (!res.ok || !result?.data) {
           throw new Error(result?.message || 'Unable to load profile details');
         }
         setProfile(result.data);
+        const derivedTheme = (result.data.theme || result.data.selectedTemplate || localStorage.getItem('selectedCardTemplate') || 'standard')
+          .toString()
+          .toLowerCase()
+          .trim()
+          .replace(/^epi$/, 'epic');
+        setSelectedTheme(['standard', 'modern', 'epic'].includes(derivedTheme) ? derivedTheme : 'standard');
       } catch (e) {
         console.error('Error loading profile for success page:', e);
         setProfileError(e.message || 'Unable to load profile details.');
@@ -100,6 +107,7 @@ const OrderSuccessPage = () => {
           if (theme === 'epi') theme = 'epic';
           const validThemes = ['standard', 'modern', 'epic'];
           if (!validThemes.includes(theme)) theme = 'standard';
+          setSelectedTheme(theme);
 
           // Always build a themed route when we have a profileId; otherwise use ThemeRouter path
           const targetId = profileId || userId;
@@ -382,6 +390,14 @@ const OrderSuccessPage = () => {
               <p style={{ fontSize: 14, wordBreak: 'break-all' }}>
                 <strong>Profile URL:</strong> {redirectUrl}
               </p>
+            )}
+
+            {/* Profile preview with selected theme */}
+            {profile && (
+              <div style={{ marginTop: 24 }}>
+                <h4 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>Preview ({selectedTheme})</h4>
+                {renderProfilePreview(selectedTheme)}
+              </div>
             )}
           </div>
         )}
