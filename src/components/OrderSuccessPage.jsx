@@ -379,11 +379,13 @@ const OrderSuccessPage = () => {
             </p>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               {qrImage ? (
-                <img
-                  src={qrImage}
-                  alt="Profile QR"
-                  style={{ width: 180, height: 180, borderRadius: 12, background: '#fff' }}
-                />
+                <a href={redirectUrl || '#'} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={qrImage}
+                    alt="Profile QR"
+                    style={{ width: 180, height: 180, borderRadius: 12, background: '#fff' }}
+                  />
+                </a>
               ) : null}
             </div>
             {redirectUrl && (

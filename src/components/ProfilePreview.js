@@ -15,6 +15,7 @@ const ProfilePreview = ({ userId }) => {
       }
       try {
         const res = await axios.get(`https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`);
+        console.log(res.data);
         if ((res.data?.status === true || res.data?.code === 200) && res.data?.data) {
           setProfile(res.data.data);
         } else {
