@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const ProfilePreview = ({ userId }) => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
+  const [profile, setProfile] = useState(profileProp || null);
+  const [loading, setLoading] = useState(!profileProp);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // If profile prop is provided, skip fetch
+    if (profileProp) {
+      setProfile(profileProp);
+      setLoading(false);
+      return;
+    }
     const fetchProfile = async () => {
       if (!userId) {
         setError('Profile not available');
@@ -15,7 +21,6 @@ const ProfilePreview = ({ userId }) => {
       }
       try {
         const res = await axios.get(`https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`);
-        console.log(res.data);
         if ((res.data?.status === true || res.data?.code === 200) && res.data?.data) {
           setProfile(res.data.data);
         } else {
@@ -29,7 +34,7 @@ const ProfilePreview = ({ userId }) => {
       }
     };
     fetchProfile();
-  }, [userId]);
+  }, [userId, profileProp]);
 
   const renderCard = (theme) => {
     const fullName = profile?.fullName || 'John Doe';
@@ -147,7 +152,11 @@ const ProfilePreview = ({ userId }) => {
     );
   }
 
-  const theme = (profile.theme || profile.selectedTemplate || 'standard').toString().toLowerCase().trim().replace(/^epi$/, 'epic');
+  const theme = (themeOverride || profile.theme || profile.selectedTemplate || 'standard')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/^epi$/, 'epic');
   const finalTheme = ['standard', 'modern', 'epic'].includes(theme) ? theme : 'standard';
 
   return (

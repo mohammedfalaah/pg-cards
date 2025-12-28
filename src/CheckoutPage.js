@@ -12,6 +12,7 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 import { getUserId } from './components/Utils';
+import ProfilePreview from './components/ProfilePreview';
 
 // Cloudinary config (unsigned upload). Keep secrets out of frontend.
 const CLOUDINARY_CLOUD_NAME = 'dhcwgdobf';
@@ -1400,7 +1401,11 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             </p>
           </div>
           <div style={styles.selectedTemplatePreviewWrapper}>
-            {renderTemplatePreview(selectedTemplate)}
+            {/* Use ProfilePreview to mirror QR scan view */}
+            <ProfilePreview
+              profile={liveFormData || userProfile}
+              themeOverride={selectedTemplate}
+            />
           </div>
         </div>
       )}
