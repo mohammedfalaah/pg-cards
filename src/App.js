@@ -20,11 +20,13 @@ import ProductDetailPage from './components/ProductDetailPage';
 import CheckoutPage from './CheckoutPage';
 import UserProfile from './components/userProfile';
 import OrderSuccessPage from './components/OrderSuccessPage';
+import ProfilePreview from './components/ProfilePreview';
 import './App.css';
 
 function App() {
   const [activeView, setActiveView] = useState('landing');
   const [productId, setProductId] = useState(null);
+  const [previewProfileId, setPreviewProfileId] = useState(null);
 
   const [auth, setAuth] = useState(() => {
     if (typeof window === 'undefined') {
@@ -74,6 +76,14 @@ function App() {
       // ✅ NEW: Check for order success route
       else if (path.startsWith('/order-success')) {
         setActiveView('order-success');
+      }
+      // Profile preview route (QR or direct)
+      else if (path.match(/^\/user_profile\/([^/]+)$/)) {
+        const match = path.match(/^\/user_profile\/([^/]+)$/);
+        if (match && match[1]) {
+          setPreviewProfileId(match[1]);
+          setActiveView('profile-preview');
+        }
       }
      
       // Check for product detail route
@@ -177,6 +187,11 @@ function App() {
 
       {/* ✅ NEW: Order Success route */}
       {activeView === 'order-success' && <OrderSuccessPage />}
+
+      {/* Profile preview for QR / user_profile/:id */}
+      {activeView === 'profile-preview' && previewProfileId && (
+        <ProfilePreview userId={previewProfileId} />
+      )}
 
       {/* Theme Router - checks backend theme and redirects */}
       {/* Public profile view for QR scans */}
