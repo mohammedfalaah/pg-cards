@@ -5,6 +5,7 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
   const [profile, setProfile] = useState(profileProp || null);
   const [loading, setLoading] = useState(!profileProp);
   const [error, setError] = useState('');
+  const [downloadingVCard, setDownloadingVCard] = useState(false);
 
   useEffect(() => {
     // If profile prop is provided, skip fetch
@@ -36,16 +37,124 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
     fetchProfile();
   }, [userId, profileProp]);
 
+  const generateVCard = () => {
+    if (!profile) return '';
+    
+    // Parse phone numbers - handle both formats
+    const allPhones = (profile.phoneNumbers || []).map(phoneObj => {
+      if (phoneObj.number && phoneObj.number.startsWith('+') && !phoneObj.countryCode) {
+        return phoneObj.number;
+      }
+      return phoneObj.countryCode 
+        ? `${phoneObj.countryCode} ${phoneObj.number || ''}`.trim()
+        : phoneObj.number || '';
+    }).filter(p => p);
+    
+    const allEmails = (profile.emails || []).map(e => e.emailAddress).filter(e => e);
+    
+    const contactDetails = profile.contactDetails || {};
+    const fullAddress = [
+      contactDetails.address,
+      contactDetails.state,
+      contactDetails.country
+    ].filter(Boolean).join(', ');
+    
+    // Build vCard 3.0 format
+    let vcard = 'BEGIN:VCARD\n';
+    vcard += 'VERSION:3.0\n';
+    vcard += `FN:${profile.fullName || 'Unknown'}\n`;
+    vcard += `ORG:${profile.companyName || ''}\n`;
+    vcard += `TITLE:${profile.companyDesignation || ''}\n`;
+    
+    // Add phone numbers
+    allPhones.forEach((phone, index) => {
+      const label = profile.phoneNumbers[index]?.label || 'WORK';
+      vcard += `TEL;TYPE=${label.toUpperCase()}:${phone}\n`;
+    });
+    
+    // Add emails
+    allEmails.forEach(email => {
+      vcard += `EMAIL:${email}\n`;
+    });
+    
+    // Add address
+    if (fullAddress) {
+      vcard += `ADR:;;${fullAddress}\n`;
+    }
+    
+    // Add URL if available
+    if (contactDetails.googleMapLink) {
+      vcard += `URL:${contactDetails.googleMapLink}\n`;
+    }
+    
+    // Add social media as URLs
+    (profile.socialMedia || []).forEach(social => {
+      if (social.url) {
+        vcard += `URL:${social.url}\n`;
+      }
+    });
+    
+    // Add note/about
+    if (profile.about) {
+      vcard += `NOTE:${profile.about}\n`;
+    }
+    
+    vcard += 'END:VCARD';
+    
+    return vcard;
+  };
+
+  const downloadVCard = () => {
+    setDownloadingVCard(true);
+    try {
+      const vcard = generateVCard();
+      const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${profile.fullName || 'contact'}.vcf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading vCard:', error);
+      alert('Failed to download contact. Please try again.');
+    } finally {
+      setDownloadingVCard(false);
+    }
+  };
+
   const renderCard = (theme) => {
     const fullName = profile?.fullName || 'John Doe';
     const designation = profile?.companyDesignation || 'Software Engineer';
     const company = profile?.companyName || 'Tech Company';
     const about = profile?.about || '';
-    const phone = profile?.phoneNumbers?.[0]?.number || '+971 50 000 0000';
-    const email = profile?.emails?.[0]?.emailAddress || 'john@company.com';
-    const address = profile?.contactDetails?.address || '';
+    
+    // Parse phone numbers - handle both formats
+    const allPhones = (profile?.phoneNumbers || []).map(phoneObj => {
+      if (phoneObj.number && phoneObj.number.startsWith('+') && !phoneObj.countryCode) {
+        return phoneObj.number;
+      }
+      return phoneObj.countryCode 
+        ? `${phoneObj.countryCode} ${phoneObj.number || ''}`.trim()
+        : phoneObj.number || '';
+    }).filter(p => p);
+    const phone = allPhones[0] || '+971 50 000 0000';
+    
+    const allEmails = (profile?.emails || []).map(e => e.emailAddress).filter(e => e);
+    const email = allEmails[0] || 'john@company.com';
+    
+    const contactDetails = profile?.contactDetails || {};
+    const address = contactDetails.address || '';
+    const state = contactDetails.state || '';
+    const country = contactDetails.country || '';
+    
+    // Handle both profilePicture and profileImage fields
     const profilePic = profile?.profilePicture || profile?.profileImage || '';
     const cover = profile?.coverImage || '';
+    
+    const socialMedia = profile?.socialMedia || [];
 
     if (theme === 'modern') {
       return (
@@ -65,12 +174,21 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
           <h3 style={{ textAlign: 'center', margin: '6px 0' }}>{fullName}</h3>
           <p style={{ textAlign: 'center', margin: '2px 0' }}>{designation}</p>
           <p style={{ textAlign: 'center', margin: '2px 0' }}>{company}</p>
-          {about && <p style={{ marginTop: 12, opacity: 0.9 }}>{about}</p>}
+          {about && <p style={{ marginTop: 12, opacity: 0.9, fontSize: 13 }}>{about}</p>}
           <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.5 }}>
-            <div>📞 {phone}</div>
-            <div>📧 {email}</div>
-            {address && <div>📍 {address}</div>}
+            {allPhones.map((p, i) => <div key={i}>📞 {p}</div>)}
+            {allEmails.map((e, i) => <div key={i}>📧 {e}</div>)}
+            {address && <div>📍 {address}{state ? `, ${state}` : ''}{country ? `, ${country}` : ''}</div>}
           </div>
+          {socialMedia.length > 0 && (
+            <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {socialMedia.map((s, i) => (
+                <a key={i} href={s.url || '#'} target="_blank" rel="noopener noreferrer" onClick={e => !s.url && e.preventDefault()} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: 8, fontSize: 11, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.3)' }}>
+                  {s.platform || 'Link'}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
@@ -97,10 +215,19 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
           {about && <p style={{ marginTop: 10, opacity: 0.7, fontSize: 12, textAlign: 'center' }}>{about}</p>}
           <div style={{ height: 1, background: '#ffeb3b', margin: '10px 0' }} />
           <div style={{ fontSize: 12, lineHeight: 1.6 }}>
-            <div>📞 {phone}</div>
-            <div>📧 {email}</div>
-            {address && <div>📍 {address}</div>}
+            {allPhones.map((p, i) => <div key={i}>📞 {p}</div>)}
+            {allEmails.map((e, i) => <div key={i}>📧 {e}</div>)}
+            {address && <div>📍 {address}{state ? `, ${state}` : ''}{country ? `, ${country}` : ''}</div>}
           </div>
+          {socialMedia.length > 0 && (
+            <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {socialMedia.map((s, i) => (
+                <a key={i} href={s.url || '#'} target="_blank" rel="noopener noreferrer" onClick={e => !s.url && e.preventDefault()} style={{ flex: 1, padding: '8px 10px', border: '1px solid #ffeb3b', color: '#fff', textAlign: 'center', borderRadius: 8, fontSize: 11, textDecoration: 'none' }}>
+                  {s.platform || 'Link'}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
@@ -128,10 +255,19 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
         <p style={{ textAlign: 'center', margin: '2px 0', color: '#000' }}>{company}</p>
         {about && <p style={{ marginTop: 10, color: '#555', fontSize: 12 }}>{about}</p>}
         <div style={{ marginTop: 10, fontSize: 12, color: '#000', lineHeight: 1.5 }}>
-          <div>📞 {phone}</div>
-          <div>📧 {email}</div>
-          {address && <div>📍 {address}</div>}
+          {allPhones.map((p, i) => <div key={i}>📞 {p}</div>)}
+          {allEmails.map((e, i) => <div key={i}>📧 {e}</div>)}
+          {address && <div>📍 {address}{state ? `, ${state}` : ''}{country ? `, ${country}` : ''}</div>}
         </div>
+        {socialMedia.length > 0 && (
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {socialMedia.map((s, i) => (
+              <a key={i} href={s.url || '#'} target="_blank" rel="noopener noreferrer" onClick={e => !s.url && e.preventDefault()} style={{ padding: '6px 10px', border: '1px solid #81C784', borderRadius: 6, fontSize: 11, color: '#000', textDecoration: 'none' }}>
+                {s.platform || 'Link'}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -164,7 +300,58 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
       <div style={styles.card}>
         <h2 style={{ margin: '0 0 12px', fontSize: 18, textAlign: 'center' }}>Profile Preview ({finalTheme})</h2>
         {renderCard(finalTheme)}
+        
+        {/* Add to Contacts Button */}
+        <button 
+          onClick={downloadVCard}
+          disabled={downloadingVCard}
+          style={{
+            width: '100%',
+            marginTop: 16,
+            padding: '14px',
+            background: downloadingVCard ? '#ccc' : '#4CAF50',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: 15,
+            fontWeight: 600,
+            cursor: downloadingVCard ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+          onMouseOver={(e) => !downloadingVCard && (e.target.style.background = '#45a049')}
+          onMouseOut={(e) => !downloadingVCard && (e.target.style.background = '#4CAF50')}
+        >
+          {downloadingVCard ? (
+            <>
+              <span style={{
+                width: 16,
+                height: 16,
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderTop: '2px solid #fff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></span>
+              Downloading...
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: 18 }}>📇</span>
+              Add to Contacts
+            </>
+          )}
+        </button>
       </div>
+      
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
