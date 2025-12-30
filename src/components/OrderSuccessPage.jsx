@@ -87,11 +87,11 @@ const OrderSuccessPage = () => {
         });
         const result = await res.json();
         if (result?.code === 200 && result.data) {
-          setQrImage(result.data.qr || '');
-
-          // Build redirect honoring theme (epic/modern/standard)
+          // Get profile ID
           const storedProfileId = localStorage.getItem('userProfileId');
           const profileId = result.data.profileId || storedProfileId || result.data._id || userId;
+          
+          // Get theme
           const localTheme = localStorage.getItem('selectedCardTemplate');
           let theme =
             (result.data.theme || localTheme || '').toString().toLowerCase().trim();
@@ -100,13 +100,21 @@ const OrderSuccessPage = () => {
           if (!validThemes.includes(theme)) theme = 'standard';
           setSelectedTheme(theme);
 
-          // Always build a themed route when we have a profileId; otherwise use ThemeRouter path
+          // ALWAYS use production URL - pg-cards-seven.vercel.app
+          const productionOrigin = 'https://pgcards.com';
+
+          // Always build a themed route with profileId
           const targetId = profileId || userId;
-          const forcedRedirect = profileId
-            ? `${window.location.origin}/${theme}/${profileId}`
-            : `${window.location.origin}/user_profile/${targetId}`;
+          const forcedRedirect = `${productionOrigin}/${theme}/${targetId}`;
 
           setRedirectUrl(forcedRedirect);
+          
+          // ALWAYS generate QR code client-side with correct themed URL
+          // Don't use backend QR as it may have old/wrong URL format
+          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(forcedRedirect)}`;
+          setQrImage(qrApiUrl);
+          
+          console.log('OrderSuccessPage: QR URL set to:', forcedRedirect);
         }
       } catch (e) {
         console.error('Error loading QR:', e);
