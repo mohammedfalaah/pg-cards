@@ -1393,22 +1393,22 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
       </div>
 
       {selectedTemplate && (
-        <div style={styles.selectedTemplatePreviewCard} className="checkout-selected-template-preview">
-          <div style={styles.selectedTemplatePreviewHeader}>
-            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111' }}>Selected Theme Preview</h4>
-            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#555' }}>
-              Your profile image, cover photo, and contact details appear here.
-            </p>
-          </div>
-          <div style={styles.selectedTemplatePreviewWrapper}>
-            {/* Use ProfilePreview to mirror QR scan view */}
-            <ProfilePreview
-              profile={liveFormData || userProfile}
-              themeOverride={selectedTemplate}
-            />
-          </div>
-        </div>
-      )}
+  <div style={styles.selectedTemplatePreviewCard} className="checkout-selected-template-preview">
+    <div style={styles.selectedTemplatePreviewHeader}>
+      <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111' }}>Selected Theme Preview</h4>
+      <p style={{ margin: '6px 0 0', fontSize: 12, color: '#555' }}>
+        Your profile image, cover photo, and contact details appear here.
+      </p>
+    </div>
+    <div style={styles.selectedTemplatePreviewWrapper}>
+      {/* Use ProfilePreview to mirror QR scan view */}
+      <ProfilePreview
+        profile={userProfile}
+        themeOverride={selectedTemplate}
+      />
+    </div>
+  </div>
+)}
     </div>
   );
 };
@@ -2015,11 +2015,13 @@ const CheckoutPage = () => {
                   {profileSaved && selectedTemplate && <span style={styles.checkmark}>✓</span>}
                 </div>
                 <div style={styles.addressContent} className="checkout-address-content">
-                  <TemplatePreviewSelector
-                    userProfile={liveFormData || userProfile}
-                    selectedTemplate={selectedTemplate}
-                    onTemplateSelect={handleTemplateSelect}
-                  />
+                  {(liveFormData || userProfile) && (
+                    <TemplatePreviewSelector
+                      userProfile={liveFormData || userProfile}
+                      selectedTemplate={selectedTemplate}
+                      onTemplateSelect={handleTemplateSelect}
+                    />
+                  )}
                   {liveFormData && (
                     <p style={{ 
                       fontSize: '12px', 
