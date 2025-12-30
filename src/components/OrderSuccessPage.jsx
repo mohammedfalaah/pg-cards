@@ -62,12 +62,32 @@ const OrderSuccessPage = () => {
           throw new Error(result?.message || 'Unable to load profile details');
         }
         setProfile(result.data);
-        const derivedTheme = (result.data.theme || result.data.selectedTemplate || localStorage.getItem('selectedCardTemplate') || 'standard')
-          .toString()
-          .toLowerCase()
-          .trim()
-          .replace(/^epi$/, 'epic');
-        setSelectedTheme(['standard', 'modern', 'epic'].includes(derivedTheme) ? derivedTheme : 'standard');
+        // Get theme from multiple sources with proper fallback
+        let derivedTheme = result.data.theme || 
+                          result.data.selectedTemplate || 
+                          localStorage.getItem('selectedCardTemplate') || 
+                          'standard';
+        
+        derivedTheme = derivedTheme.toString().toLowerCase().trim();
+        
+        // Handle theme name variations
+        if (derivedTheme === 'epi') derivedTheme = 'epic';
+        if (derivedTheme === 'linkedin') derivedTheme = 'modern'; // Map linkedin to modern
+        if (derivedTheme === 'map') derivedTheme = 'standard'; // Map map to standard
+        
+        // Ensure valid theme
+        const validThemes = ['standard', 'modern', 'epic'];
+        const finalTheme = validThemes.includes(derivedTheme) ? derivedTheme : 'standard';
+        
+        console.log('OrderSuccessPage theme selection:', {
+          originalTheme: result.data.theme,
+          selectedTemplate: result.data.selectedTemplate,
+          localStorage: localStorage.getItem('selectedCardTemplate'),
+          derivedTheme,
+          finalTheme
+        });
+        
+        setSelectedTheme(finalTheme);
       } catch (e) {
         console.error('Error loading profile for success page:', e);
         setProfileError(e.message || 'Unable to load profile details.');
@@ -98,24 +118,52 @@ const OrderSuccessPage = () => {
         if (result?.code === 200 && result.data) {
           setQrImage(result.data.qr || '');
 
-          // Build redirect honoring theme (epic/modern/standard)
+          // Build redirect URL with proper theme handling
           const storedProfileId = localStorage.getItem('userProfileId');
           const profileId = result.data.profileId || storedProfileId || result.data._id || userId;
-          const localTheme = localStorage.getItem('selectedCardTemplate');
-          let theme =
-            (result.data.theme || localTheme || '').toString().toLowerCase().trim();
+          
+          // Get theme from multiple sources
+          let theme = result.data.theme || 
+                     result.data.selectedTemplate || 
+                     localStorage.getItem('selectedCardTemplate') || 
+                     'standard';
+          
+          theme = theme.toString().toLowerCase().trim();
+          
+          // Handle theme name variations
           if (theme === 'epi') theme = 'epic';
+          if (theme === 'linkedin') theme = 'modern'; // Map linkedin to modern
+          if (theme === 'map') theme = 'standard'; // Map map to standard
+          
+          // Ensure valid theme
           const validThemes = ['standard', 'modern', 'epic'];
-          if (!validThemes.includes(theme)) theme = 'standard';
-          setSelectedTheme(theme);
+          const finalTheme = validThemes.includes(theme) ? theme : 'standard';
+          
+          console.log('OrderSuccessPage QR redirect theme:', {
+            originalTheme: result.data.theme,
+            selectedTemplate: result.data.selectedTemplate,
+            localStorage: localStorage.getItem('selectedCardTemplate'),
+            theme,
+            finalTheme,
+            profileId,
+            userId
+          });
+          
+          setSelectedTheme(finalTheme);
 
-          // Always build a themed route when we have a profileId; otherwise use ThemeRouter path
+          // Build the redirect URL - always use themed route if we have a profileId
           const targetId = profileId || userId;
-          const forcedRedirect = profileId
-            ? `${window.location.origin}/${theme}/${profileId}`
-            : `${window.location.origin}/user_profile/${targetId}`;
+          let redirectUrl;
+          
+          if (profileId) {
+            // Use themed route: /{theme}/{profileId}
+            redirectUrl = `${window.location.origin}/${finalTheme}/${profileId}`;
+          } else {
+            // Fallback to ThemeRouter path
+            redirectUrl = `${window.location.origin}/user_profile/${targetId}`;
+          }
 
-          setRedirectUrl(forcedRedirect);
+          setRedirectUrl(redirectUrl);
         }
       } catch (e) {
         console.error('Error loading QR for success page:', e);
@@ -149,8 +197,8 @@ const OrderSuccessPage = () => {
     const email = profile?.emails?.[0]?.emailAddress || 'john@company.com';
     const address = profile?.contactDetails?.address || 'Business Bay, Dubai, UAE';
     const mapLink = profile?.contactDetails?.googleMapLink;
-    const profilePic = profile?.profilePicture || '';
-    const cover = profile?.backgroundImage || '';
+    const profilePic = profile?.profilePicture || profile?.profileImage || '';
+    const cover = profile?.coverImage || profile?.backgroundImage || '';
 
     if (templateId === 'epic') {
       return (
@@ -158,11 +206,13 @@ const OrderSuccessPage = () => {
           style={{
             borderRadius: 24,
             padding: 24,
-            background:
-              'linear-gradient(135deg, #000000 0%, #1c1c1c 100%)',
+            background: cover 
+              ? `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url(${cover}) center/cover no-repeat`
+              : 'linear-gradient(135deg, #000000 0%, #1c1c1c 100%)',
             border: `2px solid ${primary}`,
             color: '#fff',
             textAlign: 'center',
+            minHeight: '300px',
           }}
         >
           {profilePic && (
@@ -230,38 +280,71 @@ const OrderSuccessPage = () => {
       );
     }
 
-    // Simple variations for other templates
-    const templateStyles = {
-      standard: {
-        background: '#ffffff',
-        color: '#000',
-        border: '1px solid #e0e0e0',
-      },
-      modern: {
-        background: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
-        color: '#ffffff',
-      },
-      linkedin: {
-        background: 'linear-gradient(135deg,#0077b5 0%,#00a0dc 100%)',
-        color: '#ffffff',
-      },
-      map: {
-        background: 'linear-gradient(135deg,#4285F4 0%,#34A853 100%)',
-        color: '#ffffff',
-      },
-    }[templateId] || {
-      background: '#ffffff',
-      color: '#000000',
-      border: '1px solid #e0e0e0',
-    };
+    if (templateId === 'modern') {
+      return (
+        <div
+          style={{
+            borderRadius: 24,
+            padding: 24,
+            background: cover 
+              ? `linear-gradient(rgba(156,136,255,0.9), rgba(118,75,162,0.9)), url(${cover}) center/cover no-repeat`
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: '#ffffff',
+            textAlign: 'center',
+            minHeight: '300px',
+          }}
+        >
+          {profilePic && (
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '3px solid rgba(255,255,255,0.3)',
+                marginBottom: 16,
+              }}
+            />
+          )}
+          <h2 style={{ ...commonText, color: '#fff', fontSize: 20, fontWeight: 700 }}>
+            {fullName}
+          </h2>
+          <p style={{ ...commonText, color: '#fff', fontSize: 14, opacity: 0.9 }}>
+            {designation}
+          </p>
+          <p style={{ ...commonText, color: '#fff', opacity: 0.8 }}>{company}</p>
+          {phone && (
+            <p style={{ ...commonText, color: '#fff', marginTop: 12 }}>
+              📞 {phone}
+            </p>
+          )}
+          {email && (
+            <p style={{ ...commonText, color: '#fff' }}>
+              📧 {email}
+            </p>
+          )}
+          {address && (
+            <p style={{ ...commonText, color: '#fff', fontSize: 12, marginTop: 8, opacity: 0.9 }}>
+              📍 {address}
+            </p>
+          )}
+        </div>
+      );
+    }
 
+    // Standard template (default)
     return (
       <div
         style={{
           borderRadius: 24,
           padding: 24,
-          ...templateStyles,
+          background: '#ffffff',
+          color: '#000',
+          border: '1px solid #e0e0e0',
           textAlign: 'center',
+          minHeight: '300px',
         }}
       >
         {cover && (
@@ -290,30 +373,30 @@ const OrderSuccessPage = () => {
               height: 80,
               borderRadius: '50%',
               objectFit: 'cover',
-              border: `3px solid ${primary}`,
+              border: '3px solid #81C784',
               marginBottom: 16,
             }}
           />
         )}
-        <h2 style={{ ...commonText, color: templateStyles.color, fontSize: 20, fontWeight: 700 }}>
+        <h2 style={{ ...commonText, color: '#000', fontSize: 20, fontWeight: 700 }}>
           {fullName}
         </h2>
         <p style={{ ...commonText, color: secondary, fontSize: 14 }}>
           {designation}
         </p>
-        <p style={{ ...commonText, opacity: 0.8 }}>{company}</p>
+        <p style={{ ...commonText, color: '#000', opacity: 0.8 }}>{company}</p>
         {phone && (
-          <p style={{ ...commonText, marginTop: 12 }}>
+          <p style={{ ...commonText, color: '#000', marginTop: 12 }}>
             📞 {phone}
           </p>
         )}
         {email && (
-          <p style={{ ...commonText }}>
+          <p style={{ ...commonText, color: '#000' }}>
             📧 {email}
           </p>
         )}
         {address && (
-          <p style={{ ...commonText, fontSize: 12, marginTop: 8 }}>
+          <p style={{ ...commonText, color: '#000', fontSize: 12, marginTop: 8 }}>
             📍 {address}
           </p>
         )}
@@ -375,29 +458,75 @@ const OrderSuccessPage = () => {
           <div style={styles.nextStepsCard} className="order-success-card">
             <h3 style={styles.nextStepsTitle}>Your Profile QR Code</h3>
             <p style={styles.subtitle}>
-              This QR is generated from your profile. Scan it to open your public profile page.
+              This QR code links to your public profile page with the selected theme.
             </p>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               {qrImage ? (
-                <a href={redirectUrl || '#'} target="_blank" rel="noopener noreferrer">
-                  <img
-                    src={qrImage}
-                    alt="Profile QR"
-                    style={{ width: 180, height: 180, borderRadius: 12, background: '#fff' }}
-                  />
-                </a>
-              ) : null}
+                <div>
+                  <a href={redirectUrl || '#'} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={qrImage}
+                      alt="Profile QR Code"
+                      style={{ 
+                        width: 180, 
+                        height: 180, 
+                        borderRadius: 12, 
+                        background: '#fff',
+                        border: '1px solid #e0e0e0'
+                      }}
+                      onError={(e) => {
+                        console.error('QR image failed to load:', qrImage);
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </a>
+                  <p style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+                    Click QR code to open profile
+                  </p>
+                </div>
+              ) : (
+                <div style={{ 
+                  width: 180, 
+                  height: 180, 
+                  borderRadius: 12, 
+                  background: '#f5f5f5',
+                  border: '1px solid #e0e0e0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto'
+                }}>
+                  <span style={{ color: '#666', fontSize: 14 }}>QR Code Not Available</span>
+                </div>
+              )}
             </div>
             {redirectUrl && (
-              <p style={{ fontSize: 14, wordBreak: 'break-all' }}>
-                <strong>Profile URL:</strong> {redirectUrl}
-              </p>
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+                  Profile URL ({selectedTheme} theme):
+                </p>
+                <a 
+                  href={redirectUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    fontSize: 13, 
+                    wordBreak: 'break-all', 
+                    color: '#ff6b35',
+                    textDecoration: 'none'
+                  }}
+                >
+                  {redirectUrl}
+                </a>
+              </div>
             )}
 
             {/* Profile preview with selected theme */}
             {profile && (
               <div style={{ marginTop: 24 }}>
-                <h4 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>Preview ({selectedTheme})</h4>
+                <h4 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>
+                  Preview ({selectedTheme} theme)
+                </h4>
                 {renderProfilePreview(selectedTheme)}
               </div>
             )}

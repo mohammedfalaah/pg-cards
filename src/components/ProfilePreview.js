@@ -5,6 +5,16 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
   const [profile, setProfile] = useState(profileProp || null);
   const [loading, setLoading] = useState(!profileProp);
   const [error, setError] = useState('');
+  const [urlTheme, setUrlTheme] = useState(null);
+
+  // Extract theme from URL if present
+  useEffect(() => {
+    const path = window.location.pathname;
+    const themeMatch = path.match(/^\/(standard|modern|epic)\/([^/]+)$/);
+    if (themeMatch && themeMatch[1]) {
+      setUrlTheme(themeMatch[1]);
+    }
+  }, []);
 
   useEffect(() => {
     // If profile prop is provided, skip fetch
@@ -19,16 +29,55 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
         setLoading(false);
         return;
       }
+      
       try {
-        const res = await axios.get(`https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`);
-        if ((res.data?.status === true || res.data?.code === 200) && res.data?.data) {
-          setProfile(res.data.data);
+        console.log('ProfilePreview: Fetching profile for userId:', userId);
+        console.log('ProfilePreview: Current URL:', window.location.href);
+        
+        // Try the main API endpoint first
+        let res;
+        try {
+          res = await axios.get(`https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`);
+        } catch (firstError) {
+          console.log('ProfilePreview: First API call failed, trying alternative endpoint');
+          // If the first call fails, try the alternative endpoint used by OrderSuccessPage
+          res = await axios.post('https://pg-cards.vercel.app/userProfile/getUser', {
+            userId: userId
+          });
+        }
+        
+        console.log('ProfilePreview: API response:', res.data);
+        
+        // Handle different response formats
+        let profileData = null;
+        if (res.data?.status === true && res.data?.data) {
+          profileData = res.data.data;
+        } else if (res.data?.code === 200 && res.data?.data) {
+          profileData = res.data.data;
+        } else if (res.data?.data) {
+          profileData = res.data.data;
+        } else if (res.data && typeof res.data === 'object' && res.data.fullName) {
+          // Direct profile object
+          profileData = res.data;
+        }
+        
+        if (profileData) {
+          console.log('ProfilePreview: Profile loaded successfully:', profileData);
+          setProfile(profileData);
+          setError('');
         } else {
+          console.error('ProfilePreview: Invalid response structure:', res.data);
           setError('Profile not available');
         }
       } catch (err) {
         console.error('ProfilePreview fetch error:', err);
-        setError('Unable to load profile');
+        if (err.response?.status === 404) {
+          setError('Profile not found');
+        } else if (err.response?.status >= 500) {
+          setError('Server error. Please try again later.');
+        } else {
+          setError('Unable to load profile');
+        }
       } finally {
         setLoading(false);
       }
@@ -139,7 +188,12 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
   if (loading) {
     return (
       <div style={styles.container}>
-        <p style={styles.statusText}>Loading profile...</p>
+        <div style={styles.card}>
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <div style={styles.spinner}></div>
+            <p style={styles.statusText}>Loading profile...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -147,22 +201,47 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
   if (error || !profile) {
     return (
       <div style={styles.container}>
-        <p style={styles.statusText}>{error || 'Profile not available'}</p>
+        <div style={styles.card}>
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <p style={styles.errorText}>{error || 'Profile not available'}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              style={styles.retryButton}
+            >
+              Try Again
+            </button>
+            <p style={styles.helpText}>
+              If the problem persists, please contact support.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const theme = (themeOverride || profile.theme || profile.selectedTemplate || 'standard')
+  // Determine theme with priority: themeOverride > urlTheme > profile.theme > profile.selectedTemplate > 'standard'
+  const theme = (themeOverride || urlTheme || profile?.theme || profile?.selectedTemplate || 'standard')
     .toString()
     .toLowerCase()
     .trim()
     .replace(/^epi$/, 'epic');
   const finalTheme = ['standard', 'modern', 'epic'].includes(theme) ? theme : 'standard';
 
+  console.log('ProfilePreview theme determination:', {
+    themeOverride,
+    urlTheme,
+    profileTheme: profile?.theme,
+    selectedTemplate: profile?.selectedTemplate,
+    finalTheme
+  });
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={{ margin: '0 0 12px', fontSize: 18, textAlign: 'center' }}>Profile Preview ({finalTheme})</h2>
+        <h2 style={{ margin: '0 0 12px', fontSize: 18, textAlign: 'center' }}>
+          Profile Preview ({finalTheme})
+        </h2>
         {renderCard(finalTheme)}
       </div>
     </div>
@@ -189,8 +268,56 @@ const styles = {
   statusText: {
     fontSize: 14,
     color: '#666',
+    margin: '8px 0',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#d32f2f',
+    margin: '16px 0',
+    fontWeight: '500',
+  },
+  helpText: {
+    fontSize: 12,
+    color: '#999',
+    margin: '16px 0 0',
+  },
+  retryButton: {
+    padding: '12px 24px',
+    backgroundColor: '#ff6b35',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    margin: '16px 0',
+    transition: 'background-color 0.3s',
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: '3px solid #f3f3f3',
+    borderTop: '3px solid #ff6b35',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+    margin: '0 auto 16px',
   },
 };
+
+// Add CSS animation for spinner
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  if (!document.head.querySelector('style[data-profile-preview]')) {
+    styleSheet.setAttribute('data-profile-preview', 'true');
+    document.head.appendChild(styleSheet);
+  }
+}
 
 
 

@@ -85,6 +85,14 @@ function App() {
           setActiveView('profile-preview');
         }
       }
+      // ✅ NEW: Themed profile routes (/{theme}/{profileId})
+      else if (path.match(/^\/(standard|modern|epic)\/([^/]+)$/)) {
+        const match = path.match(/^\/(standard|modern|epic)\/([^/]+)$/);
+        if (match && match[2]) {
+          setPreviewProfileId(match[2]);
+          setActiveView('profile-preview');
+        }
+      }
      
       // Check for product detail route
       else if (path.match(/^\/product\/[^/]+\/([^/]+)$/)) {
@@ -149,11 +157,12 @@ function App() {
 
   return (
     <div className="App">
-      {/* HEADER (hide on dashboard, admin panel, user profile, order success, public profile, theme router, and theme profiles) */}
+      {/* HEADER (hide on dashboard, admin panel, user profile, order success, public profile, and themed profiles) */}
       {activeView !== 'dashboard' && 
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
+       activeView !== 'profile-preview' &&
       (
         <Header
           user={auth.user}
@@ -213,22 +222,20 @@ function App() {
         />
       )}
 
-      {/* WHATSAPP → SHOW ON ALL PAGES except admin, user profile, order success, public profile, theme router, and theme profiles */}
+      {/* WHATSAPP → SHOW ON ALL PAGES except admin, user profile, order success, and profile preview */}
       {activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-  
-     
+       activeView !== 'profile-preview' &&
        <WhatsappChat />}
 
-      {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, order success, public profile, theme router, and theme profiles */}
+      {/* FOOTER → HIDE on dashboard, reset-password, admin, user profile, order success, and profile preview */}
       {activeView !== 'dashboard' && 
        activeView !== 'reset-password' && 
        activeView !== 'admin' && 
        activeView !== 'user-profile' &&
        activeView !== 'order-success' &&
-    
-     
+       activeView !== 'profile-preview' &&
        <Footer />}
     </div>
   );

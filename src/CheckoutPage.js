@@ -1931,14 +1931,18 @@ const CheckoutPage = () => {
       const result = await response.json();
       console.log('Profile saved before payment:', result);
 
-      // Store the profile ID
+      // Store the profile ID and theme
       try {
         const profileId = result?.data?._id || result?.data?.id;
         if (profileId) {
           localStorage.setItem('userProfileId', profileId);
         }
+        // Also save the selected theme to localStorage for consistency
+        if (selectedTemplate) {
+          localStorage.setItem('selectedCardTemplate', selectedTemplate);
+        }
       } catch (e) {
-        console.warn('Unable to cache profile id', e);
+        console.warn('Unable to cache profile id or theme', e);
       }
 
       // Update userProfile state
