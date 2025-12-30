@@ -20,6 +20,7 @@ const OrderSuccessPage = () => {
   const [qrLoading, setQrLoading] = useState(true);
   const [isTrial, setIsTrial] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState('standard');
+  const [qrUrlMismatch, setQrUrlMismatch] = useState(false);
 
   useEffect(() => {
     // Animation delay
@@ -121,7 +122,10 @@ const OrderSuccessPage = () => {
         console.log('OrderSuccessPage: QR API response:', result);
         
         if (result?.code === 200 && result.data) {
-          setQrImage(result.data.qr || '');
+          const qrImageUrl = result.data.qr || '';
+          setQrImage(qrImageUrl);
+          
+          console.log('OrderSuccessPage: QR Image URL from backend:', qrImageUrl);
 
           // Build redirect URL with proper theme handling
           const storedProfileId = localStorage.getItem('userProfileId');
@@ -178,19 +182,49 @@ const OrderSuccessPage = () => {
           
           setSelectedTheme(finalTheme);
 
-          // Build the redirect URL - always use themed route if we have a profileId
-          let redirectUrl;
+          // IMPORTANT: Check if the backend already provided a redirect URL
+          let redirectUrl = result.data.redirectUrl || result.data.profileUrl || result.data.url;
           
-          if (profileId) {
-            // Use themed route: /{theme}/{profileId}
-            redirectUrl = `${window.location.origin}/${finalTheme}/${profileId}`;
+          if (!redirectUrl) {
+            // Build the redirect URL only if backend didn't provide one
+            if (profileId) {
+              // Use themed route: /{theme}/{profileId}
+              redirectUrl = `${window.location.origin}/${finalTheme}/${profileId}`;
+            } else {
+              // Fallback to ThemeRouter path
+              redirectUrl = `${window.location.origin}/user_profile/${userId}`;
+            }
           } else {
-            // Fallback to ThemeRouter path
-            redirectUrl = `${window.location.origin}/user_profile/${userId}`;
+            console.log('OrderSuccessPage: Using backend-provided redirect URL:', redirectUrl);
+            
+            // If backend provided URL doesn't match our theme, update it
+            const urlMatch = redirectUrl.match(/\/(standard|modern|epic)\/([^/?]+)/);
+            if (urlMatch && urlMatch[1] !== finalTheme) {
+              // Update the theme in the URL to match our selected theme
+              redirectUrl = redirectUrl.replace(`/${urlMatch[1]}/`, `/${finalTheme}/`);
+              console.log('OrderSuccessPage: Updated redirect URL theme:', redirectUrl);
+            }
           }
 
           console.log('OrderSuccessPage: Final redirect URL:', redirectUrl);
           setRedirectUrl(redirectUrl);
+          
+          // Check if there might be a URL mismatch between QR and redirect URL
+          // This is a heuristic check since we can't decode the QR directly
+          if (qrImageUrl && redirectUrl) {
+            // If the QR image URL contains parameters that suggest it might have a different URL
+            // or if we detect common mismatch patterns, flag it
+            const suspiciousMismatch = 
+              qrImageUrl.includes('user_profile') && redirectUrl.includes(`/${finalTheme}/`) ||
+              qrImageUrl.includes('standard') && finalTheme !== 'standard' ||
+              qrImageUrl.includes('modern') && finalTheme !== 'modern' ||
+              qrImageUrl.includes('epic') && finalTheme !== 'epic';
+              
+            if (suspiciousMismatch) {
+              console.warn('Potential QR URL mismatch detected');
+              setQrUrlMismatch(true);
+            }
+          }
           
           // Test the profile ID by making a quick API call to verify it exists
           try {
@@ -225,6 +259,57 @@ const OrderSuccessPage = () => {
   const navigateTo = (path) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new Event('popstate'));
+  };
+
+  // Function to regenerate QR code with correct URL
+  const regenerateQrCode = async (correctUrl) => {
+    try {
+      console.log('Regenerating QR code with URL:', correctUrl);
+      
+      // First try to update the backend
+      const userId = localStorage.getItem('userId');
+      const profileId = localStorage.getItem('userProfileId');
+      
+      if (userId && profileId) {
+        // Try to update the profile with the correct theme and regenerate QR
+        const updateRes = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userId,
+            _id: profileId,
+            theme: selectedTheme,
+            // Add other required fields if needed
+          })
+        });
+        
+        if (updateRes.ok) {
+          // Refresh the QR code from backend
+          const qrRes = await fetch('https://pg-cards.vercel.app/userProfile/getUser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
+          });
+          
+          const qrResult = await qrRes.json();
+          if (qrResult?.code === 200 && qrResult.data?.qr) {
+            setQrImage(qrResult.data.qr);
+            setQrUrlMismatch(false);
+            console.log('QR code regenerated successfully from backend');
+            return;
+          }
+        }
+      }
+      
+      // Fallback: Generate QR code client-side using a QR service
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(correctUrl)}`;
+      setQrImage(qrApiUrl);
+      setQrUrlMismatch(false);
+      console.log('QR code generated client-side');
+      
+    } catch (error) {
+      console.error('Failed to regenerate QR code:', error);
+    }
   };
 
   const renderProfilePreview = (templateId) => {
@@ -508,9 +593,15 @@ const OrderSuccessPage = () => {
               <div><strong>User ID:</strong> {localStorage.getItem('userId') || 'Not found'}</div>
               <div><strong>Profile ID:</strong> {localStorage.getItem('userProfileId') || 'Not found'}</div>
               <div><strong>Selected Theme:</strong> {selectedTheme}</div>
-              <div><strong>Redirect URL:</strong> {redirectUrl || 'Not generated'}</div>
-              <div><strong>QR Image:</strong> {qrImage ? 'Available' : 'Not available'}</div>
+              <div><strong>Frontend Redirect URL:</strong> {redirectUrl || 'Not generated'}</div>
+              <div><strong>QR Image URL:</strong> {qrImage ? 'Available' : 'Not available'}</div>
               <div><strong>Profile Error:</strong> {profileError || 'None'}</div>
+              {qrImage && (
+                <div style={{ marginTop: '8px', padding: '8px', background: '#fff', borderRadius: '4px' }}>
+                  <div><strong>QR Image Source:</strong></div>
+                  <div style={{ wordBreak: 'break-all', fontSize: '10px' }}>{qrImage}</div>
+                </div>
+              )}
             </div>
             <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
               This debug info helps identify profile loading issues. Share this with support if needed.
@@ -535,20 +626,36 @@ const OrderSuccessPage = () => {
                 >
                   {redirectUrl}
                 </a>
-                <button
-                  onClick={() => window.open(redirectUrl, '_blank')}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#ff6b35',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Test Link
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => window.open(redirectUrl, '_blank')}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#ff6b35',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Test Link
+                  </button>
+                  <button
+                    onClick={() => regenerateQrCode(redirectUrl)}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#4CAF50',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Fix QR Code
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -560,6 +667,11 @@ const OrderSuccessPage = () => {
             <h3 style={styles.nextStepsTitle}>Your Profile QR Code</h3>
             <p style={styles.subtitle}>
               This QR code links to your public profile page with the selected theme.
+              {qrUrlMismatch && (
+                <span style={{ color: '#d32f2f', display: 'block', marginTop: '8px', fontSize: '14px' }}>
+                  ⚠️ The QR code might contain an outdated URL. Click "Fix QR Code" below to update it.
+                </span>
+              )}
             </p>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               {qrImage ? (

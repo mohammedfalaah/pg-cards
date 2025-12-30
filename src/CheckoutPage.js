@@ -1966,10 +1966,44 @@ const CheckoutPage = () => {
     toast.success('Profile information completed! Now choose your preview and proceed to payment.');
   };
 
-  const handleTemplateSelect = (templateId) => {
+  const handleTemplateSelect = async (templateId) => {
     setSelectedTemplate(templateId);
     localStorage.setItem('selectedCardTemplate', templateId);
-    // Template will be saved together with profile when user fills profile form
+    
+    // If we have profile data, immediately save the theme to backend
+    // This ensures the QR code is generated with the correct theme
+    if ((liveFormData || userProfile) && templateId) {
+      try {
+        const profileData = liveFormData || userProfile;
+        const userId = getUserId();
+        const profileId = localStorage.getItem('userProfileId');
+        
+        if (userId && profileId) {
+          console.log('Immediately saving theme selection:', templateId);
+          
+          const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...profileData,
+              userId: userId,
+              _id: profileId,
+              theme: templateId
+            })
+          });
+          
+          if (response.ok) {
+            console.log('Theme saved successfully to backend');
+          } else {
+            console.warn('Failed to save theme to backend');
+          }
+        }
+      } catch (error) {
+        console.warn('Error saving theme immediately:', error);
+      }
+    }
   };
 
   if (loading) {
