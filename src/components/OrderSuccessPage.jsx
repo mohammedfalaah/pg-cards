@@ -116,6 +116,18 @@ const OrderSuccessPage = () => {
             : `${window.location.origin}/user_profile/${targetId}`;
 
           setRedirectUrl(forcedRedirect);
+          
+          console.log('OrderSuccessPage QR Info:', {
+            theme,
+            profileId,
+            redirectUrl: forcedRedirect,
+            backendQr: result.data.qr ? 'Available' : 'Not available'
+          });
+          
+          // Generate a new QR code with the correct URL using a QR service
+          // This ensures the QR code always points to the correct themed URL
+          const correctQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(forcedRedirect)}`;
+          setQrImage(correctQrUrl);
         }
       } catch (e) {
         console.error('Error loading QR for success page:', e);
@@ -149,8 +161,35 @@ const OrderSuccessPage = () => {
     const email = profile?.emails?.[0]?.emailAddress || 'john@company.com';
     const address = profile?.contactDetails?.address || 'Business Bay, Dubai, UAE';
     const mapLink = profile?.contactDetails?.googleMapLink;
-    const profilePic = profile?.profilePicture || '';
-    const cover = profile?.backgroundImage || '';
+    // Handle multiple image field names from API
+    const rawProfilePic = profile?.profilePicture || profile?.profileImage || '';
+    const rawCover = profile?.coverImage || profile?.backgroundImage || '';
+
+    // Helper to convert Cloudinary HEIC URLs to web-friendly format
+    const convertCloudinaryUrl = (url) => {
+      if (!url) return url;
+      if (url.includes('cloudinary.com') && (url.endsWith('.heic') || url.endsWith('.HEIC'))) {
+        return url.replace(/\.heic$/i, '.jpg');
+      }
+      if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+        if (!url.includes('/f_auto') && !url.includes('/f_jpg') && !url.includes('/f_png')) {
+          return url.replace('/upload/', '/upload/f_auto,q_auto/');
+        }
+      }
+      return url;
+    };
+
+    const profilePic = convertCloudinaryUrl(rawProfilePic);
+    const cover = convertCloudinaryUrl(rawCover);
+
+    console.log('OrderSuccessPage renderProfilePreview - Images:', {
+      profilePicture: profile?.profilePicture,
+      profileImage: profile?.profileImage,
+      coverImage: profile?.coverImage,
+      backgroundImage: profile?.backgroundImage,
+      finalProfilePic: profilePic,
+      finalCover: cover
+    });
 
     if (templateId === 'epic') {
       return (
@@ -176,6 +215,11 @@ const OrderSuccessPage = () => {
                 objectFit: 'cover',
                 border: `3px solid ${primary}`,
                 marginBottom: 16,
+                backgroundColor: '#333',
+              }}
+              onError={(e) => {
+                console.error('Profile image failed to load:', profilePic);
+                e.target.style.display = 'none';
               }}
             />
           )}
@@ -278,6 +322,10 @@ const OrderSuccessPage = () => {
               src={cover}
               alt="Cover"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={(e) => {
+                console.error('Cover image failed to load:', cover);
+                e.target.parentElement.style.display = 'none';
+              }}
             />
           </div>
         )}
@@ -292,6 +340,11 @@ const OrderSuccessPage = () => {
               objectFit: 'cover',
               border: `3px solid ${primary}`,
               marginBottom: 16,
+              backgroundColor: '#f0f0f0',
+            }}
+            onError={(e) => {
+              console.error('Profile image failed to load:', profilePic);
+              e.target.style.display = 'none';
             }}
           />
         )}

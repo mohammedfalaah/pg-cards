@@ -85,6 +85,15 @@ function App() {
           setActiveView('profile-preview');
         }
       }
+      // Themed profile routes: /standard/{id}, /modern/{id}, /epic/{id}
+      else if (path.match(/^\/(standard|modern|epic)\/([^/]+)$/i)) {
+        const match = path.match(/^\/(standard|modern|epic)\/([^/]+)$/i);
+        if (match && match[2]) {
+          console.log('App.js: Themed route detected - Theme:', match[1], 'ProfileId:', match[2]);
+          setPreviewProfileId(match[2]);
+          setActiveView('profile-preview');
+        }
+      }
      
       // Check for product detail route
       else if (path.match(/^\/product\/[^/]+\/([^/]+)$/)) {
