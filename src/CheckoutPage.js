@@ -1786,6 +1786,7 @@ const CheckoutPage = () => {
       return sum + itemTotal;
     }, 0);
   };
+  
 
   const calculateDiscount = () => {
     let discount = 0;
