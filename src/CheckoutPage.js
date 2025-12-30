@@ -1788,6 +1788,7 @@ const CheckoutPage = () => {
   };
   
 
+
   const calculateDiscount = () => {
     let discount = 0;
     cartItems.forEach(item => {
