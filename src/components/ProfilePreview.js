@@ -34,31 +34,62 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
         console.log('ProfilePreview: Fetching profile for userId:', userId);
         console.log('ProfilePreview: Current URL:', window.location.href);
         
-        // Try the main API endpoint first
-        let res;
-        try {
-          res = await axios.get(`https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`);
-        } catch (firstError) {
-          console.log('ProfilePreview: First API call failed, trying alternative endpoint');
-          // If the first call fails, try the alternative endpoint used by OrderSuccessPage
-          res = await axios.post('https://pg-cards.vercel.app/userProfile/getUser', {
-            userId: userId
-          });
-        }
-        
-        console.log('ProfilePreview: API response:', res.data);
-        
-        // Handle different response formats
         let profileData = null;
-        if (res.data?.status === true && res.data?.data) {
-          profileData = res.data.data;
-        } else if (res.data?.code === 200 && res.data?.data) {
-          profileData = res.data.data;
-        } else if (res.data?.data) {
-          profileData = res.data.data;
-        } else if (res.data && typeof res.data === 'object' && res.data.fullName) {
-          // Direct profile object
-          profileData = res.data;
+        let lastError = null;
+        
+        // Try multiple API approaches to find the profile
+        const attempts = [
+          // Attempt 1: Primary API endpoint
+          async () => {
+            console.log('ProfilePreview: Trying primary API endpoint');
+            const res = await axios.get(`https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`);
+            return res.data;
+          },
+          // Attempt 2: Alternative POST endpoint
+          async () => {
+            console.log('ProfilePreview: Trying alternative POST endpoint');
+            const res = await axios.post('https://pg-cards.vercel.app/userProfile/getUser', {
+              userId: userId
+            });
+            return res.data;
+          },
+          // Attempt 3: Try with different ID format (if userId looks like it might be a profile ID)
+          async () => {
+            if (userId.length > 10) { // Likely a MongoDB ObjectId
+              console.log('ProfilePreview: Trying as profile lookup');
+              const res = await axios.get(`https://pg-cards.vercel.app/userProfile/getUserProfile/${userId}`);
+              return res.data;
+            }
+            throw new Error('Not applicable');
+          }
+        ];
+        
+        // Try each approach until one works
+        for (let i = 0; i < attempts.length; i++) {
+          try {
+            const result = await attempts[i]();
+            console.log(`ProfilePreview: Attempt ${i + 1} response:`, result);
+            
+            // Handle different response formats
+            if (result?.status === true && result?.data) {
+              profileData = result.data;
+              break;
+            } else if (result?.code === 200 && result?.data) {
+              profileData = result.data;
+              break;
+            } else if (result?.data && typeof result.data === 'object' && result.data.fullName) {
+              profileData = result.data;
+              break;
+            } else if (result && typeof result === 'object' && result.fullName) {
+              // Direct profile object
+              profileData = result;
+              break;
+            }
+          } catch (attemptError) {
+            console.log(`ProfilePreview: Attempt ${i + 1} failed:`, attemptError.message);
+            lastError = attemptError;
+            continue;
+          }
         }
         
         if (profileData) {
@@ -66,8 +97,14 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
           setProfile(profileData);
           setError('');
         } else {
-          console.error('ProfilePreview: Invalid response structure:', res.data);
-          setError('Profile not available');
+          console.error('ProfilePreview: All attempts failed. Last error:', lastError);
+          if (lastError?.response?.status === 404) {
+            setError('Profile not found');
+          } else if (lastError?.response?.status >= 500) {
+            setError('Server error. Please try again later.');
+          } else {
+            setError('Unable to load profile');
+          }
         }
       } catch (err) {
         console.error('ProfilePreview fetch error:', err);

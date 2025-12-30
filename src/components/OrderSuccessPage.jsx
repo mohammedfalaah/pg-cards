@@ -109,18 +109,44 @@ const OrderSuccessPage = () => {
 
     const fetchQr = async () => {
       try {
+        console.log('OrderSuccessPage: Starting QR fetch with userId:', userId);
+        
         const res = await fetch('https://pg-cards.vercel.app/userProfile/getUser', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId }),
         });
         const result = await res.json();
+        
+        console.log('OrderSuccessPage: QR API response:', result);
+        
         if (result?.code === 200 && result.data) {
           setQrImage(result.data.qr || '');
 
           // Build redirect URL with proper theme handling
           const storedProfileId = localStorage.getItem('userProfileId');
-          const profileId = result.data.profileId || storedProfileId || result.data._id || userId;
+          
+          // Try multiple sources for profile ID with better priority
+          let profileId = null;
+          
+          // Priority order: stored profile ID > API response profile ID > API response _id > userId
+          if (storedProfileId) {
+            profileId = storedProfileId;
+            console.log('OrderSuccessPage: Using stored profile ID:', profileId);
+          } else if (result.data.profileId) {
+            profileId = result.data.profileId;
+            console.log('OrderSuccessPage: Using API profileId:', profileId);
+            // Save it for future use
+            localStorage.setItem('userProfileId', profileId);
+          } else if (result.data._id) {
+            profileId = result.data._id;
+            console.log('OrderSuccessPage: Using API _id:', profileId);
+            // Save it for future use
+            localStorage.setItem('userProfileId', profileId);
+          } else {
+            profileId = userId;
+            console.log('OrderSuccessPage: Fallback to userId:', profileId);
+          }
           
           // Get theme from multiple sources
           let theme = result.data.theme || 
@@ -146,13 +172,13 @@ const OrderSuccessPage = () => {
             theme,
             finalTheme,
             profileId,
-            userId
+            userId,
+            storedProfileId
           });
           
           setSelectedTheme(finalTheme);
 
           // Build the redirect URL - always use themed route if we have a profileId
-          const targetId = profileId || userId;
           let redirectUrl;
           
           if (profileId) {
@@ -160,10 +186,31 @@ const OrderSuccessPage = () => {
             redirectUrl = `${window.location.origin}/${finalTheme}/${profileId}`;
           } else {
             // Fallback to ThemeRouter path
-            redirectUrl = `${window.location.origin}/user_profile/${targetId}`;
+            redirectUrl = `${window.location.origin}/user_profile/${userId}`;
           }
 
+          console.log('OrderSuccessPage: Final redirect URL:', redirectUrl);
           setRedirectUrl(redirectUrl);
+          
+          // Test the profile ID by making a quick API call to verify it exists
+          try {
+            const testRes = await fetch(`https://pg-cards.vercel.app/userProfile/getUserProfile/${profileId}`);
+            const testResult = await testRes.json();
+            if (testRes.ok && testResult?.data) {
+              console.log('OrderSuccessPage: Profile ID verified successfully');
+            } else {
+              console.warn('OrderSuccessPage: Profile ID verification failed, trying alternative');
+              // If the profile ID doesn't work, try using the userId directly
+              const altUrl = `${window.location.origin}/${finalTheme}/${userId}`;
+              console.log('OrderSuccessPage: Using alternative URL:', altUrl);
+              setRedirectUrl(altUrl);
+            }
+          } catch (testError) {
+            console.warn('OrderSuccessPage: Profile verification error:', testError);
+            // Fallback to userId-based URL
+            const altUrl = `${window.location.origin}/${finalTheme}/${userId}`;
+            setRedirectUrl(altUrl);
+          }
         }
       } catch (e) {
         console.error('Error loading QR for success page:', e);
@@ -453,6 +500,60 @@ const OrderSuccessPage = () => {
           </div>
         )}
 
+        {/* Debug info (only show in development or when there are issues) */}
+        {(process.env.NODE_ENV === 'development' || profileError) && (
+          <div style={styles.debugCard} className="order-success-card">
+            <h3 style={styles.nextStepsTitle}>Debug Information</h3>
+            <div style={{ fontSize: '12px', fontFamily: 'monospace', background: '#f5f5f5', padding: '12px', borderRadius: '8px' }}>
+              <div><strong>User ID:</strong> {localStorage.getItem('userId') || 'Not found'}</div>
+              <div><strong>Profile ID:</strong> {localStorage.getItem('userProfileId') || 'Not found'}</div>
+              <div><strong>Selected Theme:</strong> {selectedTheme}</div>
+              <div><strong>Redirect URL:</strong> {redirectUrl || 'Not generated'}</div>
+              <div><strong>QR Image:</strong> {qrImage ? 'Available' : 'Not available'}</div>
+              <div><strong>Profile Error:</strong> {profileError || 'None'}</div>
+            </div>
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+              This debug info helps identify profile loading issues. Share this with support if needed.
+            </p>
+            
+            {/* Manual test link */}
+            {redirectUrl && (
+              <div style={{ marginTop: '16px' }}>
+                <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Test Profile Link:</p>
+                <a 
+                  href={redirectUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    fontSize: '12px', 
+                    color: '#ff6b35',
+                    textDecoration: 'none',
+                    wordBreak: 'break-all',
+                    display: 'block',
+                    marginBottom: '8px'
+                  }}
+                >
+                  {redirectUrl}
+                </a>
+                <button
+                  onClick={() => window.open(redirectUrl, '_blank')}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#ff6b35',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Test Link
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* QR from backend (POST /userProfile/getUser) */}
         {!qrLoading && (qrImage || redirectUrl) && (
           <div style={styles.nextStepsCard} className="order-success-card">
@@ -650,6 +751,15 @@ const styles = {
     padding: '32px',
     marginBottom: '32px',
     border: '1px solid #e0e0e0',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    textAlign: 'left',
+  },
+  debugCard: {
+    backgroundColor: '#fff7e6',
+    borderRadius: '12px',
+    padding: '24px',
+    marginBottom: '32px',
+    border: '1px solid #ffd591',
     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
     textAlign: 'left',
   },
