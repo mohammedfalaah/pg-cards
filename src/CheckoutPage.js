@@ -46,9 +46,10 @@ const COUNTRY_CODES = [
 ];
 
 // Profile Form Component
-const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initialData, onFormDataReady }) => {
+const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initialData, onFormDataReady, onFileSelected }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadingImages, setUploadingImages] = useState({ profilePicture: false, coverImage: false });
   
   // Initialize form data with initialData if provided, or defaults
   const initializeFormData = () => {
@@ -101,8 +102,16 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
   
   // Upload helper for profile/cover to Cloudinary (returns hosted URL)
   const uploadImageToServer = async (file, label = 'image') => {
+    console.log(`uploadImageToServer called for ${label}:`, file?.name, file?.size, file?.type);
+    
     if (!CLOUDINARY_UPLOAD_PRESET) {
+      console.error('Cloudinary upload preset missing!');
       toast.error('Upload preset missing. Set REACT_APP_CLOUDINARY_UPLOAD_PRESET.');
+      return null;
+    }
+
+    if (!file) {
+      console.error('No file provided for upload');
       return null;
     }
 
@@ -110,6 +119,12 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
     formDataUpload.append('file', file);
     formDataUpload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     if (CLOUDINARY_FOLDER) formDataUpload.append('folder', CLOUDINARY_FOLDER);
+
+    console.log(`Uploading ${label} to Cloudinary...`, {
+      cloudName: CLOUDINARY_CLOUD_NAME,
+      preset: CLOUDINARY_UPLOAD_PRESET,
+      folder: CLOUDINARY_FOLDER
+    });
 
     try {
       const response = await axios.post(
@@ -120,9 +135,16 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         }
       );
 
+      console.log(`Cloudinary response for ${label}:`, response.data);
+
       const data = response.data || {};
       const uploadedUrl = data.secure_url || data.url;
-      if (uploadedUrl) return uploadedUrl;
+      if (uploadedUrl) {
+        console.log(`Successfully uploaded ${label}:`, uploadedUrl);
+        return uploadedUrl;
+      }
+      
+      console.error(`No URL in Cloudinary response for ${label}`);
       throw new Error('No URL returned');
     } catch (err) {
       console.error(`Upload failed for ${label}:`, err?.response?.data || err);
@@ -130,8 +152,7 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         err?.response?.data?.error?.message ||
         err?.message ||
         'Failed to upload';
-      toast.error(`${message}. Using local preview only.`);
-      // Fallback: keep local preview (data URL) so UI does not break
+      toast.error(`${message}. Please try again.`);
       return null;
     }
   };
@@ -161,9 +182,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         coverImage: initialData.coverImage || ''
       };
       setFormData(updatedData);
-      if (onFormDataChange) {
-        onFormDataChange(updatedData);
-      }
+      // Don't call onFormDataChange here - it causes infinite loop
+      // The parent already has this data since it passed it as initialData
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData]);
@@ -199,46 +219,66 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
     const file = fileEvent.target.files?.[0];
     if (!file) return;
   
+    console.log(`handleImageUpload called for ${field}:`, file.name, file.size, file.type);
+    
     // Create a URL for immediate preview
     const objectUrl = URL.createObjectURL(file);
     
-    // Set immediate preview with object URL
-    const updated = { ...formData, [field]: objectUrl };
-    setFormData(updated);
+    // Mark as uploading
+    setUploadingImages(prev => ({ ...prev, [field]: true }));
     
-    // Notify parent immediately
-    if (onFormDataChange) onFormDataChange(updated);
-    if (onFormDataReady) onFormDataReady(updated);
+    // Set immediate preview with object URL
+    setFormData(prevFormData => {
+      const updated = { ...prevFormData, [field]: objectUrl };
+      if (onFormDataChange) onFormDataChange(updated);
+      if (onFormDataReady) onFormDataReady(updated);
+      return updated;
+    });
+    
+    // Store the file reference for later upload if needed - IMPORTANT: do this before async upload
+    if (onFileSelected) {
+      console.log(`Storing file reference for ${field}:`, file.name);
+      onFileSelected(field, file);
+    }
   
-    // Also read as data URL for backup
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      // Update with data URL if object URL fails
-      const updatedWithDataUrl = { ...formData, [field]: reader.result };
-      setFormData(updatedWithDataUrl);
-      if (onFormDataChange) onFormDataChange(updatedWithDataUrl);
-      if (onFormDataReady) onFormDataReady(updatedWithDataUrl);
-    };
-    reader.readAsDataURL(file);
-  
-    // Upload to server
+    // Upload to Cloudinary immediately
     try {
+      console.log(`Starting Cloudinary upload for ${field}...`);
       const hostedUrl = await uploadImageToServer(
         file,
         field === 'coverImage' ? 'cover image' : 'profile image'
       );
+      
       if (hostedUrl) {
-        // Clean up object URL
+        console.log(`${field} uploaded successfully to Cloudinary:`, hostedUrl);
+        // Clean up object URL only after successful upload
         URL.revokeObjectURL(objectUrl);
         
-        const finalUpdated = { ...formData, [field]: hostedUrl };
-        setFormData(finalUpdated);
-        if (onFormDataChange) onFormDataChange(finalUpdated);
-        if (onFormDataReady) onFormDataReady(finalUpdated);
+        // Update with the hosted URL
+        setFormData(prevFormData => {
+          const updated = { ...prevFormData, [field]: hostedUrl };
+          // Also set backgroundImage if this is coverImage
+          if (field === 'coverImage') {
+            updated.backgroundImage = hostedUrl;
+          }
+          console.log(`Updating formData with ${field}:`, hostedUrl);
+          if (onFormDataChange) onFormDataChange(updated);
+          if (onFormDataReady) onFormDataReady(updated);
+          return updated;
+        });
+        
+        toast.success(`${field === 'coverImage' ? 'Cover' : 'Profile'} image uploaded!`);
+      } else {
+        console.error(`Failed to upload ${field} - no URL returned from Cloudinary`);
+        // Don't show error toast here - the file is stored and will be uploaded during save
+        console.log(`File stored for ${field}, will retry during save`);
       }
     } catch (err) {
-      // Keep the object URL or data URL if upload fails
-      console.error('Upload failed:', err);
+      console.error(`Upload failed for ${field}:`, err);
+      // Don't show error toast here - the file is stored and will be uploaded during save
+      console.log(`File stored for ${field}, will retry during save`);
+    } finally {
+      setUploadingImages(prev => ({ ...prev, [field]: false }));
     }
   };
 
@@ -471,14 +511,56 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
               accept="image/*"
               onChange={(e) => handleImageUpload('profilePicture', e)}
               style={styles.input}
+              disabled={uploadingImages.profilePicture}
             />
             {formData.profilePicture && (
-              <img
-                src={formData.profilePicture}
-                alt="Profile preview"
-                style={{ marginTop: 8, width: 120, height: 120, objectFit: 'cover', borderRadius: '12px' }}
-                onError={(e) => (e.target.style.display = 'none')}
-              />
+              <div style={{ marginTop: 8, position: 'relative', display: 'inline-block' }}>
+                <img
+                  src={formData.profilePicture}
+                  alt="Profile preview"
+                  style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '12px' }}
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+                {/* Show upload status */}
+                {uploadingImages.profilePicture ? (
+                  <div style={{ 
+                    position: 'absolute', 
+                    bottom: 4, 
+                    right: 4, 
+                    background: '#2196F3', 
+                    color: '#fff', 
+                    borderRadius: 4, 
+                    padding: '2px 6px',
+                    fontSize: 10
+                  }}>Uploading...</div>
+                ) : formData.profilePicture.startsWith('http') ? (
+                  <div style={{ 
+                    position: 'absolute', 
+                    bottom: 4, 
+                    right: 4, 
+                    background: '#4CAF50', 
+                    color: '#fff', 
+                    borderRadius: '50%', 
+                    width: 24, 
+                    height: 24, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    fontSize: 14
+                  }}>✓</div>
+                ) : (
+                  <div style={{ 
+                    position: 'absolute', 
+                    bottom: 4, 
+                    right: 4, 
+                    background: '#ff9800', 
+                    color: '#fff', 
+                    borderRadius: 4, 
+                    padding: '2px 6px',
+                    fontSize: 10
+                  }}>Pending</div>
+                )}
+              </div>
             )}
           </div>
 
@@ -489,14 +571,56 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
               accept="image/*"
               onChange={(e) => handleImageUpload('coverImage', e)}
               style={styles.input}
+              disabled={uploadingImages.coverImage}
             />
             {formData.coverImage && (
-              <img
-                src={formData.coverImage}
-                alt="Cover preview"
-                style={{ marginTop: 8, width: '100%', maxWidth: 280, height: 120, objectFit: 'cover', borderRadius: '12px' }}
-                onError={(e) => (e.target.style.display = 'none')}
-              />
+              <div style={{ marginTop: 8, position: 'relative', display: 'inline-block' }}>
+                <img
+                  src={formData.coverImage}
+                  alt="Cover preview"
+                  style={{ width: '100%', maxWidth: 280, height: 120, objectFit: 'cover', borderRadius: '12px' }}
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+                {/* Show upload status */}
+                {uploadingImages.coverImage ? (
+                  <div style={{ 
+                    position: 'absolute', 
+                    bottom: 4, 
+                    right: 4, 
+                    background: '#2196F3', 
+                    color: '#fff', 
+                    borderRadius: 4, 
+                    padding: '2px 6px',
+                    fontSize: 10
+                  }}>Uploading...</div>
+                ) : formData.coverImage.startsWith('http') ? (
+                  <div style={{ 
+                    position: 'absolute', 
+                    bottom: 4, 
+                    right: 4, 
+                    background: '#4CAF50', 
+                    color: '#fff', 
+                    borderRadius: '50%', 
+                    width: 24, 
+                    height: 24, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    fontSize: 14
+                  }}>✓</div>
+                ) : (
+                  <div style={{ 
+                    position: 'absolute', 
+                    bottom: 4, 
+                    right: 4, 
+                    background: '#ff9800', 
+                    color: '#fff', 
+                    borderRadius: 4, 
+                    padding: '2px 6px',
+                    fontSize: 10
+                  }}>Pending</div>
+                )}
+              </div>
             )}
           </div>
 
@@ -1171,7 +1295,7 @@ const AddressForm = ({
 };
 
 // Template Preview Component
-const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSelect }) => {
+const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSelect, liveFormData }) => {
   const renderAddToContactsButton = (styleOverrides = {}) => (
     <div style={{ marginTop: 'auto' }}>
       <button
@@ -1194,7 +1318,8 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     </div>
   );
   const renderTemplatePreview = (templateId) => {
-    const profileData = userProfile || {};
+    // Use liveFormData first (for real-time updates), then fall back to userProfile
+    const profileData = liveFormData || userProfile || {};
     const allPhones = (profileData?.phoneNumbers || []).map(phoneObj => {
       if (phoneObj.number && phoneObj.number.startsWith('+') && !phoneObj.countryCode) {
         return phoneObj.number;
@@ -1214,9 +1339,26 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     const address = contactDetails.address || '';
     const emirates = contactDetails.state || '';
     const country = contactDetails.country || '';
-    const profilePic = profileData?.profilePicture || profileData?.profileImage || '';
-    const coverImage = profileData?.coverImage || '';
+    const rawProfilePic = profileData?.profilePicture || profileData?.profileImage || '';
+    const rawCoverImage = profileData?.coverImage || '';
     const socialMedia = profileData?.socialMedia || [];
+
+    // Helper to convert Cloudinary HEIC URLs to web-friendly format
+    const convertCloudinaryUrl = (url) => {
+      if (!url) return url;
+      if (url.includes('cloudinary.com') && (url.endsWith('.heic') || url.endsWith('.HEIC'))) {
+        return url.replace(/\.heic$/i, '.jpg');
+      }
+      if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+        if (!url.includes('/f_auto') && !url.includes('/f_jpg') && !url.includes('/f_png')) {
+          return url.replace('/upload/', '/upload/f_auto,q_auto/');
+        }
+      }
+      return url;
+    };
+
+    const profilePic = convertCloudinaryUrl(rawProfilePic);
+    const coverImage = convertCloudinaryUrl(rawCoverImage);
 
     const baseCard = {
       borderRadius: 16,
@@ -1433,6 +1575,7 @@ const CheckoutPage = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [liveFormData, setLiveFormData] = useState(null); // For real-time preview updates
+  const [pendingFiles, setPendingFiles] = useState({ profilePicture: null, coverImage: null }); // Store file references for upload
 
   useEffect(() => {
     fetchCartItems();
@@ -1642,6 +1785,8 @@ const CheckoutPage = () => {
       return sum + itemTotal;
     }, 0);
   };
+  
+
 
   const calculateDiscount = () => {
     let discount = 0;
@@ -1672,55 +1817,97 @@ const CheckoutPage = () => {
   const uploadImageIfNeeded = async (imageValue, label = 'image') => {
     if (!imageValue) return '';
 
-    // Already a hosted URL
+    // Already a hosted URL (http/https)
     if (typeof imageValue === 'string' && /^https?:\/\//i.test(imageValue)) {
       return imageValue;
     }
 
     if (!CLOUDINARY_UPLOAD_PRESET) {
       toast.error('Missing Cloudinary preset. Set REACT_APP_CLOUDINARY_UPLOAD_PRESET.');
-      return imageValue; // fallback to existing value to avoid blocking
+      return ''; // Return empty to avoid saving blob URLs
     }
 
-    // If it's not a data URL, pass through
-    if (typeof imageValue !== 'string' || !imageValue.startsWith('data:')) {
-      return imageValue;
-    }
+    // Handle blob: URLs - these are temporary browser URLs that won't work on other devices
+    if (typeof imageValue === 'string' && imageValue.startsWith('blob:')) {
+      console.log(`Uploading blob URL for ${label}...`);
+      try {
+        const response = await fetch(imageValue);
+        const blob = await response.blob();
+        
+        const formData = new FormData();
+        const extension = blob.type?.split('/')?.[1] || 'png';
+        formData.append('file', blob, `upload-${Date.now()}.${extension}`);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        if (CLOUDINARY_FOLDER) formData.append('folder', CLOUDINARY_FOLDER);
 
-    try {
-      const blob = await (await fetch(imageValue)).blob();
-      const formData = new FormData();
-      const extension = blob.type?.split('/')?.[1] || 'png';
-      formData.append('file', blob, `upload-${Date.now()}.${extension}`);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      if (CLOUDINARY_FOLDER) formData.append('folder', CLOUDINARY_FOLDER);
+        const uploadResponse = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
 
-      const uploadResponse = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
+        const uploadJson = await uploadResponse.json().catch(() => ({}));
+        const uploadedUrl = uploadJson?.secure_url || uploadJson?.url;
+
+        if (uploadResponse.ok && uploadedUrl) {
+          console.log(`Successfully uploaded ${label}:`, uploadedUrl);
+          return uploadedUrl;
         }
-      );
 
-      const uploadJson = await uploadResponse.json().catch(() => ({}));
-      const uploadedUrl = uploadJson?.secure_url || uploadJson?.url;
-
-      if (uploadResponse.ok && uploadedUrl) {
-        return uploadedUrl;
+        const message = uploadJson?.error?.message || uploadJson?.message || 'Upload failed';
+        console.error(`Failed to upload ${label}:`, message);
+        toast.error(`Failed to upload ${label}. Please try again.`);
+        return ''; // Return empty to avoid saving blob URLs
+      } catch (err) {
+        console.error(`Failed to upload blob ${label}:`, err);
+        toast.error(`Failed to upload ${label}. Please try again.`);
+        return ''; // Return empty to avoid saving blob URLs
       }
-
-      const message =
-        uploadJson?.error?.message ||
-        uploadJson?.message ||
-        'Upload failed';
-      toast.error(`${message}. Using local image instead.`);
-      return imageValue; // fallback to base64/data URL so save can proceed
-    } catch (err) {
-      console.error(`Failed to upload ${label}:`, err);
-      toast.error(`Failed to upload ${label}. Using local image instead.`);
-      return imageValue; // fallback to avoid blocking
     }
+
+    // Handle data: URLs (base64)
+    if (typeof imageValue === 'string' && imageValue.startsWith('data:')) {
+      console.log(`Uploading data URL for ${label}...`);
+      try {
+        const blob = await (await fetch(imageValue)).blob();
+        const formData = new FormData();
+        const extension = blob.type?.split('/')?.[1] || 'png';
+        formData.append('file', blob, `upload-${Date.now()}.${extension}`);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        if (CLOUDINARY_FOLDER) formData.append('folder', CLOUDINARY_FOLDER);
+
+        const uploadResponse = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        const uploadJson = await uploadResponse.json().catch(() => ({}));
+        const uploadedUrl = uploadJson?.secure_url || uploadJson?.url;
+
+        if (uploadResponse.ok && uploadedUrl) {
+          console.log(`Successfully uploaded ${label}:`, uploadedUrl);
+          return uploadedUrl;
+        }
+
+        const message = uploadJson?.error?.message || uploadJson?.message || 'Upload failed';
+        console.error(`Failed to upload ${label}:`, message);
+        toast.error(`Failed to upload ${label}. Please try again.`);
+        return ''; // Return empty to avoid saving invalid URLs
+      } catch (err) {
+        console.error(`Failed to upload data URL ${label}:`, err);
+        toast.error(`Failed to upload ${label}. Please try again.`);
+        return ''; // Return empty to avoid saving invalid URLs
+      }
+    }
+
+    // If it's not a recognized format, return empty to avoid saving invalid URLs
+    console.warn(`Unrecognized image format for ${label}:`, imageValue?.substring(0, 50));
+    return '';
   };
 
   const calculateGST = () => {
@@ -1877,8 +2064,9 @@ const CheckoutPage = () => {
     try {
       // Use liveFormData if available, otherwise use userProfile
       const profileData = liveFormData || userProfile;
+      const currentUserId = getUserId();
       
-      // Combine country code with phone number
+      // Combine country code with phone number - format: [{label: "work", number: "+91 9876543210"}]
       const cleanedPhoneNumbers = profileData.phoneNumbers
         ?.filter(p => p && p.number && p.number.trim())
         .map(p => {
@@ -1892,35 +2080,133 @@ const CheckoutPage = () => {
           };
         }) || [];
       
-      // Upload images first (profile, cover, optional logo)
-      const rawProfileImage = profileData.profilePicture || profileData.profileImage || '';
-      const rawCoverImage = profileData.coverImage || '';
+      // Clean emails - format: [{emailAddress: "email@example.com"}]
+      const cleanedEmails = profileData.emails
+        ?.filter(e => e && e.emailAddress && e.emailAddress.trim())
+        .map(e => ({ emailAddress: e.emailAddress.trim() })) || [];
+      
+      // Clean social media - format: [{platform: "linkedin", url: "https://..."}]
+      const cleanedSocialMedia = profileData.socialMedia
+        ?.filter(s => s && s.platform && s.url && s.url.trim())
+        .map(s => ({ platform: s.platform, url: s.url.trim() })) || [];
+      
+      // Upload images first (profile, cover)
+      let rawProfileImage = profileData.profilePicture || profileData.profileImage || '';
+      let rawCoverImage = profileData.coverImage || profileData.backgroundImage || '';
 
-      const [profilePictureUrl, coverImageUrl] = await Promise.all([
-        uploadImageIfNeeded(rawProfileImage, 'profile image'),
-        uploadImageIfNeeded(rawCoverImage, 'cover image'),
-      ]);
+      console.log('Uploading images...');
+      console.log('Raw profile image:', rawProfileImage?.substring?.(0, 100) || rawProfileImage);
+      console.log('Raw cover image:', rawCoverImage?.substring?.(0, 100) || rawCoverImage);
+      console.log('Pending files:', { 
+        profilePicture: pendingFiles.profilePicture?.name, 
+        coverImage: pendingFiles.coverImage?.name 
+      });
 
-      const cleanedData = {
-        ...profileData,
-        // ensure images are uploaded then passed to API
-        profilePicture: profilePictureUrl || rawProfileImage,
-        profileImage: profilePictureUrl || rawProfileImage,
-        coverImage: coverImageUrl || rawCoverImage,
-        phoneNumbers: cleanedPhoneNumbers,
-        emails: profileData.emails?.filter(e => e.emailAddress?.trim()) || [],
-        // Include theme (backend expects 'theme' not 'selectedTemplate')
-        ...(selectedTemplate && { theme: selectedTemplate })
+      // Helper function to upload a file directly to Cloudinary
+      const uploadFileToCloudinary = async (file, label) => {
+        if (!file) return '';
+        console.log(`Uploading file ${file.name} for ${label}...`);
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        if (CLOUDINARY_FOLDER) formData.append('folder', CLOUDINARY_FOLDER);
+
+        try {
+          const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            { method: 'POST', body: formData }
+          );
+          const data = await response.json();
+          const url = data?.secure_url || data?.url;
+          if (url) {
+            console.log(`Successfully uploaded ${label}:`, url);
+            return url;
+          }
+          console.error(`Failed to upload ${label}:`, data?.error?.message || 'Unknown error');
+          return '';
+        } catch (err) {
+          console.error(`Error uploading ${label}:`, err);
+          return '';
+        }
       };
 
-      console.log('Saving profile with theme before payment:', cleanedData);
+      // Upload both images - use pending files if URL is not already a hosted URL
+      let profilePictureUrl = '';
+      let coverImageUrl = '';
+
+      // For profile picture
+      if (rawProfileImage && rawProfileImage.startsWith('http')) {
+        profilePictureUrl = rawProfileImage;
+      } else if (pendingFiles.profilePicture) {
+        // Use the stored file reference
+        profilePictureUrl = await uploadFileToCloudinary(pendingFiles.profilePicture, 'profile image');
+      } else if (rawProfileImage) {
+        // Try to upload from blob/data URL
+        profilePictureUrl = await uploadImageIfNeeded(rawProfileImage, 'profile image');
+      }
+
+      // For cover image
+      if (rawCoverImage && rawCoverImage.startsWith('http')) {
+        coverImageUrl = rawCoverImage;
+      } else if (pendingFiles.coverImage) {
+        // Use the stored file reference
+        coverImageUrl = await uploadFileToCloudinary(pendingFiles.coverImage, 'cover image');
+      } else if (rawCoverImage) {
+        // Try to upload from blob/data URL
+        coverImageUrl = await uploadImageIfNeeded(rawCoverImage, 'cover image');
+      }
+
+      console.log('Final uploaded URLs:', {
+        profilePicture: profilePictureUrl,
+        coverImage: coverImageUrl
+      });
+
+      // IMPORTANT: Only use uploaded URLs, never use blob: or data: URLs
+      const finalProfilePicture = profilePictureUrl && profilePictureUrl.startsWith('http') ? profilePictureUrl : '';
+      const finalCoverImage = coverImageUrl && coverImageUrl.startsWith('http') ? coverImageUrl : '';
+
+      // Log warning if images couldn't be uploaded but don't block the save
+      if (rawProfileImage && !finalProfilePicture) {
+        console.warn('Profile image could not be uploaded - will be empty in saved profile');
+      }
+      if (rawCoverImage && !finalCoverImage) {
+        console.warn('Cover image could not be uploaded - will be empty in saved profile');
+      }
+
+      // Build the API payload in the exact format expected
+      const apiPayload = {
+        userId: currentUserId,
+        fullName: profileData.fullName || '',
+        companyDesignation: profileData.companyDesignation || '',
+        companyName: profileData.companyName || '',
+        about: profileData.about || '',
+        phoneNumbers: cleanedPhoneNumbers,
+        emails: cleanedEmails,
+        contactDetails: {
+          address: profileData.contactDetails?.address || '',
+          state: profileData.contactDetails?.state || '',
+          country: profileData.contactDetails?.country || '',
+          googleMapLink: profileData.contactDetails?.googleMapLink || ''
+        },
+        socialMedia: cleanedSocialMedia,
+        theme: selectedTemplate || profileData.theme || 'standard',
+        // Image fields - use the same URL for both coverImage and backgroundImage
+        // Also include profileImage for backward compatibility
+        profilePicture: finalProfilePicture,
+        profileImage: finalProfilePicture, // Some APIs expect this field name
+        coverImage: finalCoverImage,
+        backgroundImage: finalCoverImage // Same as coverImage
+      };
+
+      console.log('Saving profile with API payload:', JSON.stringify(apiPayload, null, 2));
 
       const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(cleanedData)
+        body: JSON.stringify(apiPayload)
       });
 
       if (!response.ok) {
@@ -1929,15 +2215,16 @@ const CheckoutPage = () => {
       }
 
       const result = await response.json();
-      console.log('Profile saved before payment:', result);
+      console.log('Profile saved successfully:', result);
 
+      // Store the profile ID and theme
       // Store the profile ID and theme
       try {
         const profileId = result?.data?._id || result?.data?.id;
         if (profileId) {
           localStorage.setItem('userProfileId', profileId);
         }
-        // Also save the selected theme to localStorage for consistency
+        // Also save the selected theme to localStorage
         if (selectedTemplate) {
           localStorage.setItem('selectedCardTemplate', selectedTemplate);
         }
@@ -1945,9 +2232,9 @@ const CheckoutPage = () => {
         console.warn('Unable to cache profile id or theme', e);
       }
 
-      // Update userProfile state
-      setUserProfile(cleanedData);
-      setLiveFormData(cleanedData); // ensure previews keep the saved images/values
+      // Update userProfile state with the saved data
+      setUserProfile(apiPayload);
+      setLiveFormData(apiPayload); // ensure previews keep the saved images/values
       setProfileSaved(true);
       
       toast.success('Profile saved successfully!');
@@ -1966,42 +2253,40 @@ const CheckoutPage = () => {
     toast.success('Profile information completed! Now choose your preview and proceed to payment.');
   };
 
+  // Handler to store file references for later upload
+  const handleFileSelected = (field, file) => {
+    console.log(`File selected for ${field}:`, file?.name);
+    setPendingFiles(prev => ({ ...prev, [field]: file }));
+  };
+
   const handleTemplateSelect = async (templateId) => {
     setSelectedTemplate(templateId);
     localStorage.setItem('selectedCardTemplate', templateId);
     
-    // If we have profile data, immediately save the theme to backend
-    // This ensures the QR code is generated with the correct theme
-    if ((liveFormData || userProfile) && templateId) {
+    // Save theme to backend immediately if we have profile data
+    const profileId = localStorage.getItem('userProfileId');
+    const currentUserId = getUserId();
+    
+    if (profileId && (liveFormData || userProfile)) {
       try {
+        console.log('Saving theme to backend:', templateId);
         const profileData = liveFormData || userProfile;
-        const userId = getUserId();
-        const profileId = localStorage.getItem('userProfileId');
         
-        if (userId && profileId) {
-          console.log('Immediately saving theme selection:', templateId);
-          
-          const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ...profileData,
-              userId: userId,
-              _id: profileId,
-              theme: templateId
-            })
-          });
-          
-          if (response.ok) {
-            console.log('Theme saved successfully to backend');
-          } else {
-            console.warn('Failed to save theme to backend');
-          }
-        }
+        await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...profileData,
+            userId: currentUserId,
+            _id: profileId,
+            theme: templateId
+          })
+        });
+        
+        console.log('Theme saved successfully');
       } catch (error) {
-        console.warn('Error saving theme immediately:', error);
+        console.warn('Failed to save theme immediately:', error);
+        // Theme will be saved when profile is saved during checkout
       }
     }
   };
@@ -2053,13 +2338,12 @@ const CheckoutPage = () => {
                   {profileSaved && selectedTemplate && <span style={styles.checkmark}>✓</span>}
                 </div>
                 <div style={styles.addressContent} className="checkout-address-content">
-                  {(liveFormData || userProfile) && (
-                    <TemplatePreviewSelector
-                      userProfile={liveFormData || userProfile}
-                      selectedTemplate={selectedTemplate}
-                      onTemplateSelect={handleTemplateSelect}
-                    />
-                  )}
+<TemplatePreviewSelector
+  userProfile={liveFormData || userProfile}
+  selectedTemplate={selectedTemplate}
+  onTemplateSelect={handleTemplateSelect}
+  liveFormData={liveFormData} // Add this prop
+/>
                   {liveFormData && (
                     <p style={{ 
                       fontSize: '12px', 
@@ -2334,6 +2618,7 @@ const CheckoutPage = () => {
                 onFormDataChange={setLiveFormData}
                 onFormDataReady={setLiveFormData}
                 initialData={userProfile || liveFormData}
+                onFileSelected={handleFileSelected}
               />
             </div>
           </div>
