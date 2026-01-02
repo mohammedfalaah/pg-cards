@@ -18,6 +18,21 @@ const AdminPanel = ({ user, token, onLogout }) => {
     activeProducts: 0
   });
 
+  // Product Modal States
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [productForm, setProductForm] = useState({
+    title: '',
+    description: '',
+    category: 'Metal',
+    basePrice: '',
+    currency: 'INR',
+    material: '',
+    features: [''],
+    variants: [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   useEffect(() => {
     if (token) {
       fetchDashboardData();
@@ -132,6 +147,199 @@ const AdminPanel = ({ user, token, onLogout }) => {
     user.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
     user._id?.toLowerCase().includes(userSearch.toLowerCase())
   );
+
+  // Reset product form
+  const resetProductForm = () => {
+    setProductForm({
+      title: '',
+      description: '',
+      category: 'Metal',
+      basePrice: '',
+      currency: 'INR',
+      material: '',
+      features: [''],
+      variants: [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+    });
+    setEditingProduct(null);
+  };
+
+  // Open product modal for creating
+  const openCreateProductModal = () => {
+    resetProductForm();
+    setShowProductModal(true);
+  };
+
+  // Open product modal for editing
+  const openEditProductModal = (product) => {
+    setEditingProduct(product);
+    setProductForm({
+      title: product.title || '',
+      description: product.description || '',
+      category: product.category || 'Metal',
+      basePrice: product.basePrice || product.price || '',
+      currency: product.currency || 'INR',
+      material: product.material || '',
+      features: product.features?.length > 0 ? product.features : [''],
+      variants: product.variants?.length > 0 ? product.variants : [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+    });
+    setShowProductModal(true);
+  };
+
+  // Upload image to Cloudinary
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'pgcards_unsigned');
+    formData.append('folder', 'pgcards');
+
+    try {
+      setUploadingImage(true);
+      const response = await axios.post(
+        'https://api.cloudinary.com/v1_1/dhcwgdobf/image/upload',
+        formData
+      );
+      return response.data.secure_url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Handle image upload for variant
+  const handleVariantImageUpload = async (index, field, file) => {
+    const imageUrl = await uploadToCloudinary(file);
+    if (imageUrl) {
+      const newVariants = [...productForm.variants];
+      newVariants[index][field] = imageUrl;
+      setProductForm({ ...productForm, variants: newVariants });
+      toast.success('Image uploaded successfully');
+    }
+  };
+
+  // Add feature
+  const addFeature = () => {
+    setProductForm({ ...productForm, features: [...productForm.features, ''] });
+  };
+
+  // Remove feature
+  const removeFeature = (index) => {
+    const newFeatures = productForm.features.filter((_, i) => i !== index);
+    setProductForm({ ...productForm, features: newFeatures.length > 0 ? newFeatures : [''] });
+  };
+
+  // Update feature
+  const updateFeature = (index, value) => {
+    const newFeatures = [...productForm.features];
+    newFeatures[index] = value;
+    setProductForm({ ...productForm, features: newFeatures });
+  };
+
+  // Add variant
+  const addVariant = () => {
+    setProductForm({
+      ...productForm,
+      variants: [...productForm.variants, { color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+    });
+  };
+
+  // Remove variant
+  const removeVariant = (index) => {
+    const newVariants = productForm.variants.filter((_, i) => i !== index);
+    setProductForm({ ...productForm, variants: newVariants.length > 0 ? newVariants : [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }] });
+  };
+
+  // Update variant
+  const updateVariant = (index, field, value) => {
+    const newVariants = [...productForm.variants];
+    newVariants[index][field] = value;
+    setProductForm({ ...productForm, variants: newVariants });
+  };
+
+  // Create or Update Product
+  const handleSaveProduct = async () => {
+    // Validation
+    if (!productForm.title.trim()) {
+      toast.error('Product title is required');
+      return;
+    }
+    if (!productForm.basePrice) {
+      toast.error('Base price is required');
+      return;
+    }
+
+    // Filter out empty features
+    const cleanFeatures = productForm.features.filter(f => f.trim() !== '');
+    
+    // Filter out incomplete variants and validate
+    const cleanVariants = productForm.variants.filter(v => v.color.trim() !== '');
+
+    const productData = {
+      title: productForm.title,
+      description: productForm.description,
+      category: productForm.category,
+      basePrice: Number(productForm.basePrice),
+      currency: productForm.currency,
+      material: productForm.material,
+      features: cleanFeatures,
+      variants: cleanVariants.map(v => ({
+        ...v,
+        price: Number(v.price) || Number(productForm.basePrice)
+      }))
+    };
+
+    try {
+      if (editingProduct) {
+        // Update existing product
+        const response = await axios.put(
+          `https://pg-cards.vercel.app/admin/products/${editingProduct._id}`,
+          productData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        setProducts(products.map(p => 
+          p._id === editingProduct._id ? response.data.product : p
+        ));
+        toast.success('Product updated successfully');
+      } else {
+        // Create new product
+        const response = await axios.post(
+          'https://pg-cards.vercel.app/admin/createProduct',
+          productData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        setProducts([...products, response.data.product]);
+        toast.success('Product created successfully');
+      }
+      
+      setShowProductModal(false);
+      resetProductForm();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      toast.error(error.response?.data?.message || 'Failed to save product');
+    }
+  };
+
+  // Delete Product
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      await axios.delete(
+        `https://pg-cards.vercel.app/admin/products/${productId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setProducts(products.filter(p => p._id !== productId));
+      toast.success('Product deleted successfully');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+    }
+  };
 
   if (loading) {
     return (
@@ -442,7 +650,7 @@ const AdminPanel = ({ user, token, onLogout }) => {
           <div className="productsTab">
             <div className="tabHeader">
               <h2 className="tabTitle">🛍️ Product Management</h2>
-              <button className="addProductBtn">
+              <button className="addProductBtn" onClick={openCreateProductModal}>
                 ➕ Add New Product
               </button>
             </div>
@@ -452,28 +660,272 @@ const AdminPanel = ({ user, token, onLogout }) => {
                 <div key={product._id} className="productCard">
                   <div className="productImage">
                     <img 
-                      src={product.image || 'https://via.placeholder.com/150'} 
+                      src={product.variants?.[0]?.frontImage || product.image || 'https://via.placeholder.com/150'} 
                       alt={product.title}
                     />
                   </div>
                   <div className="productInfo">
                     <h3 className="productTitle">{product.title}</h3>
-                    <p className="productCategory">{product.category}</p>
+                    <p className="productCategory">{product.category} • {product.material}</p>
                     <div className="productPrice">
-                      AED {product.price}
-                      {product.originalPrice && (
-                        <span className="originalPrice">
-                          AED {product.originalPrice}
-                        </span>
-                      )}
+                      {product.currency || 'INR'} {product.basePrice || product.price}
                     </div>
+                    {product.variants?.length > 0 && (
+                      <p className="productVariants">{product.variants.length} variant(s)</p>
+                    )}
                     <div className="productActions">
-                      <button className="editBtn">✏️ Edit</button>
-                      <button className="deleteBtn">🗑️ Delete</button>
+                      <button className="editBtn" onClick={() => openEditProductModal(product)}>✏️ Edit</button>
+                      <button className="deleteBtn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+
+            {products.length === 0 && (
+              <div className="emptyState">
+                <div className="emptyIcon">🛍️</div>
+                <h3>No Products Yet</h3>
+                <p>Click "Add New Product" to create your first product</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Product Modal */}
+        {showProductModal && (
+          <div className="modalOverlay" onClick={() => setShowProductModal(false)}>
+            <div className="productModal" onClick={(e) => e.stopPropagation()}>
+              <div className="modalHeader">
+                <h2>{editingProduct ? '✏️ Edit Product' : '➕ Add New Product'}</h2>
+                <button className="closeModalBtn" onClick={() => setShowProductModal(false)}>✕</button>
+              </div>
+              
+              <div className="modalBody">
+                {/* Basic Info */}
+                <div className="formSection">
+                  <h3 className="sectionLabel">Basic Information</h3>
+                  
+                  <div className="formGroup">
+                    <label>Product Title *</label>
+                    <input
+                      type="text"
+                      value={productForm.title}
+                      onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+                      placeholder="e.g., Premium Metal NFC Card"
+                    />
+                  </div>
+
+                  <div className="formGroup">
+                    <label>Description</label>
+                    <textarea
+                      value={productForm.description}
+                      onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                      placeholder="Product description..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="formRow">
+                    <div className="formGroup">
+                      <label>Category</label>
+                      <select
+                        value={productForm.category}
+                        onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      >
+                        <option value="Metal">Metal</option>
+                        <option value="PVC">PVC</option>
+                        <option value="Wood">Wood</option>
+                        <option value="Bamboo">Bamboo</option>
+                        <option value="Premium">Premium</option>
+                      </select>
+                    </div>
+
+                    <div className="formGroup">
+                      <label>Material</label>
+                      <input
+                        type="text"
+                        value={productForm.material}
+                        onChange={(e) => setProductForm({ ...productForm, material: e.target.value })}
+                        placeholder="e.g., Stainless Steel"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="formRow">
+                    <div className="formGroup">
+                      <label>Base Price *</label>
+                      <input
+                        type="number"
+                        value={productForm.basePrice}
+                        onChange={(e) => setProductForm({ ...productForm, basePrice: e.target.value })}
+                        placeholder="899"
+                      />
+                    </div>
+
+                    <div className="formGroup">
+                      <label>Currency</label>
+                      <select
+                        value={productForm.currency}
+                        onChange={(e) => setProductForm({ ...productForm, currency: e.target.value })}
+                      >
+                        <option value="INR">INR</option>
+                        <option value="AED">AED</option>
+                        <option value="USD">USD</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <div className="formSection">
+                  <h3 className="sectionLabel">Features</h3>
+                  {productForm.features.map((feature, index) => (
+                    <div key={index} className="featureRow">
+                      <input
+                        type="text"
+                        value={feature}
+                        onChange={(e) => updateFeature(index, e.target.value)}
+                        placeholder="e.g., NFC enabled"
+                      />
+                      <button 
+                        type="button" 
+                        className="removeBtn"
+                        onClick={() => removeFeature(index)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" className="addMoreBtn" onClick={addFeature}>
+                    + Add Feature
+                  </button>
+                </div>
+
+                {/* Variants */}
+                <div className="formSection">
+                  <h3 className="sectionLabel">Variants</h3>
+                  {productForm.variants.map((variant, index) => (
+                    <div key={index} className="variantCard">
+                      <div className="variantHeader">
+                        <span>Variant {index + 1}</span>
+                        <button 
+                          type="button" 
+                          className="removeBtn"
+                          onClick={() => removeVariant(index)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      
+                      <div className="formRow">
+                        <div className="formGroup">
+                          <label>Color</label>
+                          <input
+                            type="text"
+                            value={variant.color}
+                            onChange={(e) => updateVariant(index, 'color', e.target.value)}
+                            placeholder="e.g., Silver"
+                          />
+                        </div>
+                        <div className="formGroup">
+                          <label>Price</label>
+                          <input
+                            type="number"
+                            value={variant.price}
+                            onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                            placeholder="999"
+                          />
+                        </div>
+                        <div className="formGroup">
+                          <label>Finish</label>
+                          <select
+                            value={variant.finish}
+                            onChange={(e) => updateVariant(index, 'finish', e.target.value)}
+                          >
+                            <option value="Glossy">Glossy</option>
+                            <option value="Matte">Matte</option>
+                            <option value="Brushed">Brushed</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="formRow">
+                        <div className="formGroup">
+                          <label>Front Image</label>
+                          <div className="imageUpload">
+                            {variant.frontImage ? (
+                              <div className="imagePreview">
+                                <img src={variant.frontImage} alt="Front" />
+                                <button 
+                                  type="button"
+                                  onClick={() => updateVariant(index, 'frontImage', '')}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="uploadLabel">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    if (e.target.files[0]) {
+                                      handleVariantImageUpload(index, 'frontImage', e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                                {uploadingImage ? '⏳ Uploading...' : '📷 Upload Front'}
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                        <div className="formGroup">
+                          <label>Back Image</label>
+                          <div className="imageUpload">
+                            {variant.backImage ? (
+                              <div className="imagePreview">
+                                <img src={variant.backImage} alt="Back" />
+                                <button 
+                                  type="button"
+                                  onClick={() => updateVariant(index, 'backImage', '')}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="uploadLabel">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    if (e.target.files[0]) {
+                                      handleVariantImageUpload(index, 'backImage', e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                                {uploadingImage ? '⏳ Uploading...' : '📷 Upload Back'}
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" className="addMoreBtn" onClick={addVariant}>
+                    + Add Variant
+                  </button>
+                </div>
+              </div>
+
+              <div className="modalFooter">
+                <button className="cancelBtn" onClick={() => setShowProductModal(false)}>
+                  Cancel
+                </button>
+                <button className="saveBtn" onClick={handleSaveProduct}>
+                  {editingProduct ? 'Update Product' : 'Create Product'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1122,6 +1574,12 @@ const AdminPanel = ({ user, token, onLogout }) => {
           margin-bottom: 15px;
         }
 
+        .productVariants {
+          color: #a0a0a0;
+          font-size: 12px;
+          margin: 0 0 15px 0;
+        }
+
         .originalPrice {
           text-decoration: line-through;
           color: #666;
@@ -1160,6 +1618,307 @@ const AdminPanel = ({ user, token, onLogout }) => {
 
         .deleteBtn:hover {
           background: rgba(255, 59, 48, 0.2);
+        }
+
+        .emptyState {
+          text-align: center;
+          padding: 60px 20px;
+          background: rgba(26, 26, 26, 0.5);
+          border-radius: 12px;
+          border: 1px dashed rgba(212, 175, 55, 0.2);
+        }
+
+        .emptyIcon {
+          font-size: 60px;
+          margin-bottom: 20px;
+        }
+
+        .emptyState h3 {
+          color: #ffffff;
+          margin: 0 0 10px 0;
+        }
+
+        .emptyState p {
+          color: #a0a0a0;
+          margin: 0;
+        }
+
+        /* Product Modal */
+        .modalOverlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .productModal {
+          background: #1a1a1a;
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          border-radius: 16px;
+          width: 100%;
+          max-width: 700px;
+          max-height: 90vh;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .modalHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .modalHeader h2 {
+          margin: 0;
+          color: #ffffff;
+          font-size: 20px;
+        }
+
+        .closeModalBtn {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(255, 59, 48, 0.1);
+          color: #ff3b30;
+          font-size: 18px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .closeModalBtn:hover {
+          background: rgba(255, 59, 48, 0.2);
+        }
+
+        .modalBody {
+          padding: 24px;
+          overflow-y: auto;
+          flex: 1;
+        }
+
+        .formSection {
+          margin-bottom: 30px;
+        }
+
+        .sectionLabel {
+          color: #d4af37;
+          font-size: 14px;
+          font-weight: 600;
+          margin: 0 0 15px 0;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .formGroup {
+          margin-bottom: 15px;
+        }
+
+        .formGroup label {
+          display: block;
+          color: #a0a0a0;
+          font-size: 13px;
+          margin-bottom: 6px;
+        }
+
+        .formGroup input,
+        .formGroup textarea,
+        .formGroup select {
+          width: 100%;
+          padding: 12px 16px;
+          background: rgba(10, 10, 10, 0.5);
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          border-radius: 8px;
+          color: #ffffff;
+          font-size: 14px;
+          transition: all 0.3s ease;
+        }
+
+        .formGroup input:focus,
+        .formGroup textarea:focus,
+        .formGroup select:focus {
+          outline: none;
+          border-color: rgba(212, 175, 55, 0.5);
+        }
+
+        .formGroup input::placeholder,
+        .formGroup textarea::placeholder {
+          color: #666;
+        }
+
+        .formGroup select option {
+          background: #1a1a1a;
+        }
+
+        .formRow {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 15px;
+        }
+
+        .featureRow {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+
+        .featureRow input {
+          flex: 1;
+          padding: 10px 14px;
+          background: rgba(10, 10, 10, 0.5);
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          border-radius: 8px;
+          color: #ffffff;
+          font-size: 14px;
+        }
+
+        .removeBtn {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          border: none;
+          background: rgba(255, 59, 48, 0.1);
+          color: #ff3b30;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .removeBtn:hover {
+          background: rgba(255, 59, 48, 0.2);
+        }
+
+        .addMoreBtn {
+          padding: 10px 20px;
+          background: rgba(212, 175, 55, 0.1);
+          border: 1px dashed rgba(212, 175, 55, 0.3);
+          border-radius: 8px;
+          color: #d4af37;
+          cursor: pointer;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          width: 100%;
+        }
+
+        .addMoreBtn:hover {
+          background: rgba(212, 175, 55, 0.2);
+        }
+
+        .variantCard {
+          background: rgba(10, 10, 10, 0.3);
+          border: 1px solid rgba(212, 175, 55, 0.1);
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 15px;
+        }
+
+        .variantHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+          color: #ffffff;
+          font-weight: 600;
+        }
+
+        .imageUpload {
+          border: 2px dashed rgba(212, 175, 55, 0.2);
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .uploadLabel {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          cursor: pointer;
+          color: #a0a0a0;
+          transition: all 0.3s ease;
+        }
+
+        .uploadLabel:hover {
+          background: rgba(212, 175, 55, 0.05);
+          color: #d4af37;
+        }
+
+        .uploadLabel input {
+          display: none;
+        }
+
+        .imagePreview {
+          position: relative;
+          width: 100%;
+          height: 100px;
+        }
+
+        .imagePreview img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .imagePreview button {
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(255, 59, 48, 0.9);
+          color: white;
+          cursor: pointer;
+          font-size: 12px;
+        }
+
+        .modalFooter {
+          display: flex;
+          gap: 15px;
+          padding: 20px 24px;
+          border-top: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .cancelBtn {
+          flex: 1;
+          padding: 14px 24px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          color: #a0a0a0;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .cancelBtn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+        }
+
+        .saveBtn {
+          flex: 1;
+          padding: 14px 24px;
+          background: linear-gradient(135deg, #d4af37 0%, #f0d97a 100%);
+          border: none;
+          border-radius: 8px;
+          color: #0a0a0a;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .saveBtn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
         }
 
         /* Orders Tab */

@@ -178,13 +178,38 @@ const Login = ({ onClose, onLogin }) => {
           body: JSON.stringify({ email: formData.email.trim(), password: formData.password }),
         });
         const result = await response.json();
+        console.log('Login API response:', result); // Debug log
         if (!response.ok) {
           toast.success('Unable to login. Please try again.',false) 
         }
-        const userData = result?.data?.data;
-        const token = result?.data?.token;
+        const userData = result?.data?.data || result?.data?.user || result?.user;
+        const token = result?.data?.token || result?.token;
+        console.log('User data:', userData); // Debug log to see if role is present
         if (!userData || !token) throw new Error('Invalid response from server.');
+        
+        // Decode token to get role if not in userData
+        let userRole = userData.role;
+        if (!userRole && token) {
+          try {
+            const decoded = jwtDecode(token);
+            console.log('Decoded token:', decoded);
+            userRole = decoded.role || decoded.user?.role;
+            // Merge role into userData
+            if (userRole) {
+              userData.role = userRole;
+            }
+          } catch (e) {
+            console.log('Token decode error:', e);
+          }
+        }
+        
+        // Check if user is admin and redirect
+        const isAdmin = userRole === 'admin' || userData.isAdmin === true;
         onLogin && onLogin({ user: userData, token });
+        
+        if (isAdmin) {
+          window.location.href = '/admin';
+        }
       } else {
         // REGISTER
         const registerRes = await fetch(`${API_BASE_URL}/user/register`, {
@@ -210,10 +235,31 @@ const Login = ({ onClose, onLogin }) => {
         });
         const loginResult = await loginRes.json();
         if (!loginRes.ok) throw new Error(loginResult?.msg || 'Login after registration failed.');
-        const userData = loginResult?.data?.data;
-        const token = loginResult?.data?.token;
+        const userData = loginResult?.data?.data || loginResult?.data?.user || loginResult?.user;
+        const token = loginResult?.data?.token || loginResult?.token;
         if (!userData || !token) throw new Error('Invalid response from server.');
+        
+        // Decode token to get role if not in userData
+        let userRole = userData.role;
+        if (!userRole && token) {
+          try {
+            const decoded = jwtDecode(token);
+            userRole = decoded.role || decoded.user?.role;
+            if (userRole) {
+              userData.role = userRole;
+            }
+          } catch (e) {
+            console.log('Token decode error:', e);
+          }
+        }
+        
+        // Check if user is admin and redirect
+        const isAdmin = userRole === 'admin' || userData.isAdmin === true;
         onLogin && onLogin({ user: userData, token });
+        
+        if (isAdmin) {
+          window.location.href = '/admin';
+        }
       }
     } catch (error) {
       console.error('Auth error:', error);
