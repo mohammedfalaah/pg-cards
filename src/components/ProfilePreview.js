@@ -315,114 +315,46 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, embedded 
       return icons[platform?.toLowerCase()] || '🔗';
     };
 
-    // Render all contact details section - big mobile style
+    // Render all contact details section - simple list
     const renderContactDetails = (textColor, linkColor) => (
-      <div style={{ fontSize: 16 }}>
+      <div style={{ fontSize: 15 }}>
         {/* All Phone Numbers */}
-        {allPhones.length > 0 ? (
-          allPhones.map((p, i) => (
-            <div key={`phone-${i}`} style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 12, 
-              marginBottom: 16,
-              padding: '12px 0',
-              borderBottom: `1px solid ${linkColor}22`
+        {allPhones.length > 0 && allPhones.map((p, i) => (
+          <div key={`phone-${i}`} style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12, 
+            marginBottom: 14,
+          }}>
+            <span style={{ fontSize: 20 }}>📞</span>
+            <a href={`tel:${p.number.replace(/\s/g, '')}`} style={{ 
+              color: linkColor, 
+              textDecoration: 'none', 
+              fontSize: 16,
             }}>
-              <span style={{ fontSize: 24 }}>📞</span>
-              <a href={`tel:${p.number.replace(/\s/g, '')}`} style={{ 
-                color: textColor, 
-                textDecoration: 'none', 
-                fontSize: 18,
-                fontWeight: 500
-              }}>
-                {p.number}
-              </a>
-            </div>
-          ))
-        ) : null}
+              {p.number}
+            </a>
+          </div>
+        ))}
         
         {/* All Emails */}
-        {allEmails.length > 0 ? (
-          allEmails.map((email, i) => (
-            <div key={`email-${i}`} style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 12, 
-              marginBottom: 16,
-              padding: '12px 0',
-              borderBottom: `1px solid ${linkColor}22`
-            }}>
-              <span style={{ fontSize: 24 }}>📧</span>
-              <a href={`mailto:${email}`} style={{ 
-                color: textColor, 
-                textDecoration: 'none', 
-                fontSize: 18,
-                fontWeight: 500
-              }}>
-                {email}
-              </a>
-            </div>
-          ))
-        ) : null}
-        
-        {/* Full Address with State & Country */}
-        {fullAddress && (
-          <div style={{ 
+        {allEmails.length > 0 && allEmails.map((email, i) => (
+          <div key={`email-${i}`} style={{ 
             display: 'flex', 
-            alignItems: 'flex-start', 
+            alignItems: 'center', 
             gap: 12, 
-            marginBottom: 16,
-            padding: '12px 0',
+            marginBottom: 14,
           }}>
-            <span style={{ fontSize: 24 }}>📍</span>
-            <div>
-              {googleMapLink ? (
-                <a href={googleMapLink} target="_blank" rel="noopener noreferrer" style={{ 
-                  color: textColor, 
-                  textDecoration: 'none', 
-                  fontSize: 18,
-                  fontWeight: 500,
-                  lineHeight: 1.4
-                }}>
-                  {fullAddress}
-                </a>
-              ) : (
-                <span style={{ color: textColor, fontSize: 18, fontWeight: 500, lineHeight: 1.4 }}>
-                  {fullAddress}
-                </span>
-              )}
-            </div>
+            <span style={{ fontSize: 20 }}>📧</span>
+            <a href={`mailto:${email}`} style={{ 
+              color: linkColor, 
+              textDecoration: 'none', 
+              fontSize: 16,
+            }}>
+              {email}
+            </a>
           </div>
-        )}
-        
-        {/* Social Media Links */}
-        {socialMedia.length > 0 && (
-          <div style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-            {socialMedia.map((social, i) => (
-              <a 
-                key={`social-${i}`}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '10px 16px',
-                  borderRadius: 25,
-                  background: `${linkColor}22`,
-                  color: linkColor,
-                  textDecoration: 'none',
-                  fontSize: 15,
-                  fontWeight: 600
-                }}
-              >
-                {getSocialIcon(social.platform)} {social.platform}
-              </a>
-            ))}
-          </div>
-        )}
+        ))}
       </div>
     );
 
@@ -432,31 +364,161 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, embedded 
           minHeight: '100vh',
           width: '100%',
           paddingBottom: '80px',
-          display: 'flex',
-          flexDirection: 'column',
-          background: displayCover
-            ? `linear-gradient(180deg, rgba(156,136,255,0.95) 0%, rgba(118,75,162,0.95) 100%), url(${displayCover}) center/cover no-repeat`
-            : 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
+          background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
         }}>
-          {/* Profile Section */}
+          {/* Cover Image */}
           <div style={{
-            padding: '50px 24px 30px',
-            textAlign: 'center',
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
+            width: '100%',
+            height: 180,
+            background: displayCover 
+              ? `linear-gradient(rgba(156,136,255,0.3), rgba(118,75,162,0.3)), url(${displayCover}) center/cover no-repeat`
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            position: 'relative',
           }}>
-            {renderProfileImage(120, 'rgba(255,255,255,0.5)', 4)}
-            <h1 style={{ color: '#fff', fontSize: 32, fontWeight: 700, margin: '20px 0 12px' }}>{fullName}</h1>
-            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 18, margin: '8px 0' }}>{designation}</p>
-            <p style={{ color: '#fff', fontSize: 17, fontWeight: 600, margin: '8px 0' }}>{company}</p>
-            
-            {/* Contact Details */}
-            <div style={{ marginTop: 30, textAlign: 'left', padding: '0 10px' }}>
-              {renderContactDetails('rgba(255,255,255,0.9)', '#fff')}
+            {/* Profile Picture - overlapping cover */}
+            <div style={{
+              position: 'absolute',
+              bottom: -50,
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}>
+              {displayProfilePic ? (
+                <img 
+                  src={displayProfilePic} 
+                  alt="Profile" 
+                  style={{ 
+                    width: 120, 
+                    height: 120, 
+                    borderRadius: '50%', 
+                    objectFit: 'cover', 
+                    border: '4px solid rgba(255,255,255,0.8)',
+                    backgroundColor: '#9c88ff',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIGZpbGw9IiM5Yzg4ZmYiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjM1IiByPSIxOCIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0yMCA4NWMwLTIwIDEzLTMwIDMwLTMwczMwIDEwIDMwIDMwIiBmaWxsPSIjZmZmIi8+PC9zdmc+';
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: 120, height: 120, borderRadius: '50%', 
+                  background: 'rgba(255,255,255,0.2)', border: '4px solid rgba(255,255,255,0.8)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 40, color: '#fff'
+                }}>👤</div>
+              )}
             </div>
           </div>
+          
+          {/* Profile Info Card */}
+          <div style={{
+            background: 'rgba(255,255,255,0.15)',
+            margin: '60px 16px 16px',
+            padding: '20px',
+            borderRadius: 16,
+            backdropFilter: 'blur(10px)',
+            textAlign: 'center',
+          }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>{fullName}</h1>
+            <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.9)', margin: '6px 0' }}>{designation}</p>
+            <p style={{ fontSize: 15, color: '#fff', fontWeight: 600, margin: '6px 0' }}>{company}</p>
+            {fullAddress && (
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', margin: '10px 0 0' }}>
+                📍 {fullAddress}
+              </p>
+            )}
+          </div>
+          
+          {/* About Section */}
+          {about && (
+            <div style={{
+              background: 'rgba(255,255,255,0.15)',
+              margin: '0 16px 16px',
+              padding: '16px 20px',
+              borderRadius: 16,
+              backdropFilter: 'blur(10px)',
+            }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>About</h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, margin: 0 }}>{about}</p>
+            </div>
+          )}
+          
+          {/* Contact Info Section */}
+          <div style={{
+            background: 'rgba(255,255,255,0.15)',
+            margin: '0 16px 16px',
+            padding: '16px 20px',
+            borderRadius: 16,
+            backdropFilter: 'blur(10px)',
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 16px' }}>Contact Info</h3>
+            {renderContactDetails('rgba(255,255,255,0.9)', '#fff')}
+          </div>
+          
+          {/* Social Links Section */}
+          {socialMedia.length > 0 && (
+            <div style={{
+              background: 'rgba(255,255,255,0.15)',
+              margin: '0 16px 16px',
+              padding: '16px 20px',
+              borderRadius: 16,
+              backdropFilter: 'blur(10px)',
+            }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 16px' }}>Social Links</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                {socialMedia.map((social, i) => (
+                  <a 
+                    key={`social-${i}`}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '10px 16px',
+                      borderRadius: 20,
+                      background: 'rgba(255,255,255,0.2)',
+                      color: '#fff',
+                      textDecoration: 'none',
+                      fontSize: 14,
+                      fontWeight: 600
+                    }}
+                  >
+                    {getSocialIcon(social.platform)} {social.platform}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Map Link */}
+          {googleMapLink && (
+            <div style={{
+              background: 'rgba(255,255,255,0.15)',
+              margin: '0 16px 16px',
+              padding: '16px 20px',
+              borderRadius: 16,
+              backdropFilter: 'blur(10px)',
+            }}>
+              <a 
+                href={googleMapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  color: '#fff',
+                  textDecoration: 'none',
+                  fontSize: 15,
+                  fontWeight: 600
+                }}
+              >
+                🗺️ View on Google Maps
+              </a>
+            </div>
+          )}
         </div>
       );
     }
@@ -467,67 +529,317 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, embedded 
           minHeight: '100vh',
           width: '100%',
           paddingBottom: '80px',
-          display: 'flex',
-          flexDirection: 'column',
-          background: displayCover
-            ? `linear-gradient(rgba(0,0,0,0.95), rgba(0,0,0,0.95)), url(${displayCover}) center/cover no-repeat`
-            : '#000',
+          background: '#0a0a0a',
         }}>
-          {/* Profile Section */}
+          {/* Cover Image */}
           <div style={{
-            padding: '50px 24px 30px',
-            textAlign: 'center',
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
+            width: '100%',
+            height: 180,
+            background: displayCover 
+              ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${displayCover}) center/cover no-repeat`
+              : 'linear-gradient(135deg, #1a1a1a 0%, #333 100%)',
+            position: 'relative',
+            borderBottom: '2px solid #ffeb3b',
           }}>
-            {renderProfileImage(120, '#ffeb3b', 4)}
-            <h1 style={{ color: '#fff', fontSize: 32, fontWeight: 700, margin: '20px 0 12px' }}>{fullName}</h1>
-            <p style={{ color: '#ffeb3b', fontSize: 18, fontWeight: 600, margin: '8px 0' }}>{designation}</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 17, fontWeight: 600, margin: '8px 0' }}>{company}</p>
-            
-            {/* Divider */}
-            <div style={{ height: 1, background: '#ffeb3b', margin: '25px 0', opacity: 0.5 }} />
-            
-            {/* Contact Details */}
-            <div style={{ textAlign: 'left', padding: '0 10px' }}>
-              {renderContactDetails('rgba(255,255,255,0.9)', '#ffeb3b')}
+            {/* Profile Picture */}
+            <div style={{
+              position: 'absolute',
+              bottom: -50,
+              left: 20,
+            }}>
+              {displayProfilePic ? (
+                <img 
+                  src={displayProfilePic} 
+                  alt="Profile" 
+                  style={{ 
+                    width: 120, 
+                    height: 120, 
+                    borderRadius: '50%', 
+                    objectFit: 'cover', 
+                    border: '4px solid #ffeb3b',
+                    backgroundColor: '#1a1a1a',
+                    boxShadow: '0 2px 8px rgba(255,235,59,0.3)'
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIGZpbGw9IiMxYTFhMWEiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjM1IiByPSIxOCIgZmlsbD0iIzMzMyIvPjxwYXRoIGQ9Ik0yMCA4NWMwLTIwIDEzLTMwIDMwLTMwczMwIDEwIDMwIDMwIiBmaWxsPSIjMzMzIi8+PC9zdmc+';
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: 120, height: 120, borderRadius: '50%', 
+                  background: '#1a1a1a', border: '4px solid #ffeb3b',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 40, color: '#ffeb3b'
+                }}>👤</div>
+              )}
             </div>
           </div>
+          
+          {/* Profile Info Card */}
+          <div style={{
+            background: '#111',
+            margin: '0 0 10px',
+            padding: '60px 20px 20px',
+            borderBottom: '1px solid #222',
+          }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{fullName}</h1>
+            <p style={{ fontSize: 16, color: '#ffeb3b', fontWeight: 600, margin: '4px 0' }}>{designation}</p>
+            <p style={{ fontSize: 14, color: '#999', margin: '4px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+              🏢 {company}
+            </p>
+            {fullAddress && (
+              <p style={{ fontSize: 14, color: '#888', margin: '8px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                📍 {fullAddress}
+              </p>
+            )}
+          </div>
+          
+          {/* About Section */}
+          {about && (
+            <div style={{
+              background: '#111',
+              margin: '0 0 10px',
+              padding: '16px 20px',
+              borderBottom: '1px solid #222',
+            }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#ffeb3b', margin: '0 0 12px' }}>About</h3>
+              <p style={{ fontSize: 14, color: '#ccc', lineHeight: 1.6, margin: 0 }}>{about}</p>
+            </div>
+          )}
+          
+          {/* Contact Info Section */}
+          <div style={{
+            background: '#111',
+            margin: '0 0 10px',
+            padding: '16px 20px',
+            borderBottom: '1px solid #222',
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#ffeb3b', margin: '0 0 16px' }}>Contact Info</h3>
+            {renderContactDetails('#ccc', '#ffeb3b')}
+          </div>
+          
+          {/* Social Links Section */}
+          {socialMedia.length > 0 && (
+            <div style={{
+              background: '#111',
+              margin: '0 0 10px',
+              padding: '16px 20px',
+              borderBottom: '1px solid #222',
+            }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#ffeb3b', margin: '0 0 16px' }}>Social Links</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                {socialMedia.map((social, i) => (
+                  <a 
+                    key={`social-${i}`}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '10px 16px',
+                      borderRadius: 20,
+                      background: '#1a1a1a',
+                      border: '1px solid #ffeb3b',
+                      color: '#ffeb3b',
+                      textDecoration: 'none',
+                      fontSize: 14,
+                      fontWeight: 600
+                    }}
+                  >
+                    {getSocialIcon(social.platform)} {social.platform}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Map Link */}
+          {googleMapLink && (
+            <div style={{
+              background: '#111',
+              margin: '0 0 10px',
+              padding: '16px 20px',
+            }}>
+              <a 
+                href={googleMapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  color: '#ffeb3b',
+                  textDecoration: 'none',
+                  fontSize: 15,
+                  fontWeight: 600
+                }}
+              >
+                🗺️ View on Google Maps
+              </a>
+            </div>
+          )}
         </div>
       );
     }
 
-    // standard - white/green theme
+    // standard - clean white/green theme
     return (
       <div className="profile-card-content" style={{
         minHeight: '100vh',
         width: '100%',
         paddingBottom: '80px',
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#fff',
+        background: '#f5f5f5',
       }}>
-        {/* Profile Section */}
+        {/* Cover Image */}
         <div style={{
-          padding: '50px 24px 30px',
-          textAlign: 'center',
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
+          width: '100%',
+          height: 180,
+          background: displayCover 
+            ? `url(${displayCover}) center/cover no-repeat`
+            : 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
+          position: 'relative',
         }}>
-          {renderProfileImage(120, '#4CAF50', 4)}
-          <h1 style={{ color: '#000', fontSize: 32, fontWeight: 700, margin: '20px 0 12px' }}>{fullName}</h1>
-          <p style={{ color: '#666', fontSize: 18, margin: '8px 0' }}>{designation}</p>
-          <p style={{ color: '#000', fontSize: 17, fontWeight: 600, margin: '8px 0' }}>{company}</p>
-          
-          {/* Contact Details */}
-          <div style={{ marginTop: 30, textAlign: 'left', padding: '0 10px' }}>
-            {renderContactDetails('#333', '#4CAF50')}
+          {/* Profile Picture */}
+          <div style={{
+            position: 'absolute',
+            bottom: -50,
+            left: 20,
+          }}>
+            {displayProfilePic ? (
+              <img 
+                src={displayProfilePic} 
+                alt="Profile" 
+                style={{ 
+                  width: 120, 
+                  height: 120, 
+                  borderRadius: '50%', 
+                  objectFit: 'cover', 
+                  border: '4px solid #fff',
+                  backgroundColor: '#f0f0f0',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIGZpbGw9IiNlMGUwZTAiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjM1IiByPSIxOCIgZmlsbD0iI2JkYmRiZCIvPjxwYXRoIGQ9Ik0yMCA4NWMwLTIwIDEzLTMwIDMwLTMwczMwIDEwIDMwIDMwIiBmaWxsPSIjYmRiZGJkIi8+PC9zdmc+';
+                }}
+              />
+            ) : (
+              <div style={{
+                width: 120, height: 120, borderRadius: '50%', 
+                background: '#e0e0e0', border: '4px solid #fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 40, color: '#999'
+              }}>👤</div>
+            )}
           </div>
         </div>
+        
+        {/* Profile Info Card */}
+        <div style={{
+          background: '#fff',
+          margin: '0 0 10px',
+          padding: '60px 20px 20px',
+          borderRadius: '0 0 10px 10px',
+        }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#000', margin: '0 0 4px' }}>{fullName}</h1>
+          <p style={{ fontSize: 16, color: '#333', margin: '4px 0' }}>{designation}</p>
+          <p style={{ fontSize: 14, color: '#666', margin: '4px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+            🏢 {company}
+          </p>
+          {fullAddress && (
+            <p style={{ fontSize: 14, color: '#666', margin: '8px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+              📍 {fullAddress}
+            </p>
+          )}
+        </div>
+        
+        {/* About Section */}
+        {about && (
+          <div style={{
+            background: '#fff',
+            margin: '0 0 10px',
+            padding: '16px 20px',
+            borderRadius: 10,
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#000', margin: '0 0 12px' }}>About</h3>
+            <p style={{ fontSize: 14, color: '#333', lineHeight: 1.6, margin: 0 }}>{about}</p>
+          </div>
+        )}
+        
+        {/* Contact Info Section */}
+        <div style={{
+          background: '#fff',
+          margin: '0 0 10px',
+          padding: '16px 20px',
+          borderRadius: 10,
+        }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#000', margin: '0 0 16px' }}>Contact Info</h3>
+          {renderContactDetails('#333', '#4CAF50')}
+        </div>
+        
+        {/* Social Links Section */}
+        {socialMedia.length > 0 && (
+          <div style={{
+            background: '#fff',
+            margin: '0 0 10px',
+            padding: '16px 20px',
+            borderRadius: 10,
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#000', margin: '0 0 16px' }}>Social Links</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {socialMedia.map((social, i) => (
+                <a 
+                  key={`social-${i}`}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 16px',
+                    borderRadius: 20,
+                    background: '#f5f5f5',
+                    color: '#4CAF50',
+                    textDecoration: 'none',
+                    fontSize: 14,
+                    fontWeight: 600
+                  }}
+                >
+                  {getSocialIcon(social.platform)} {social.platform}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Map Link */}
+        {googleMapLink && (
+          <div style={{
+            background: '#fff',
+            margin: '0 0 10px',
+            padding: '16px 20px',
+            borderRadius: 10,
+          }}>
+            <a 
+              href={googleMapLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                color: '#4CAF50',
+                textDecoration: 'none',
+                fontSize: 15,
+                fontWeight: 600
+              }}
+            >
+              🗺️ View on Google Maps
+            </a>
+          </div>
+        )}
       </div>
     );
   };
@@ -612,7 +924,7 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, embedded 
 
   // Get theme-based background color
   const getThemeBackground = () => {
-    if (finalTheme === 'epic') return '#000';
+    if (finalTheme === 'epic') return '#0a0a0a';
     if (finalTheme === 'modern') return 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)';
     return '#f5f5f5';
   };
