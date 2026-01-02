@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
+const ProfilePreview = ({ userId, profile: profileProp, themeOverride, embedded = false }) => {
   const [profile, setProfile] = useState(profileProp || null);
   const [loading, setLoading] = useState(!profileProp);
   const [error, setError] = useState('');
@@ -110,66 +110,92 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
     const allEmails = (activeProfile.emails || []).map(e => e.emailAddress).filter(e => e);
     
     const contactDetails = activeProfile.contactDetails || {};
-    const fullAddress = [
-      contactDetails.address,
-      contactDetails.state,
-      contactDetails.country
-    ].filter(Boolean).join(', ');
     
-    // Build vCard 3.0 format
-    let vcard = 'BEGIN:VCARD\n';
-    vcard += 'VERSION:3.0\n';
-    vcard += `FN:${activeProfile.fullName || 'Unknown'}\n`;
-    vcard += `ORG:${activeProfile.companyName || ''}\n`;
-    vcard += `TITLE:${activeProfile.companyDesignation || ''}\n`;
+    // Parse name - iOS needs proper first/last name split
+    const fullName = (activeProfile.fullName || '').trim();
+    const nameParts = fullName.split(' ').filter(p => p);
+    
+    // For "Mohammed Falah K": First=Mohammed, Last=Falah K
+    let firstName = fullName; // Default to full name as first name
+    let lastName = '';
+    
+    if (nameParts.length >= 2) {
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(' ');
+    }
+    
+    // Build vCard 3.0 - iOS compatible format
+    // Using simple format that iOS recognizes
+    const lines = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `N:${lastName};${firstName};;;`,
+      `FN:${fullName || 'Contact'}`,
+    ];
+    
+    // Organization (company name)
+    if (activeProfile.companyName) {
+      lines.push(`ORG:${activeProfile.companyName}`);
+    }
+    
+    // Job title
+    if (activeProfile.companyDesignation) {
+      lines.push(`TITLE:${activeProfile.companyDesignation}`);
+    }
     
     // Add phone numbers
     allPhones.forEach((phone, index) => {
-      const label = activeProfile.phoneNumbers[index]?.label || 'WORK';
-      vcard += `TEL;TYPE=${label.toUpperCase()}:${phone}\n`;
+      const label = activeProfile.phoneNumbers[index]?.label || 'CELL';
+      lines.push(`TEL;type=${label.toUpperCase()};type=VOICE:${phone}`);
     });
     
     // Add emails
     allEmails.forEach(email => {
-      vcard += `EMAIL:${email}\n`;
+      lines.push(`EMAIL;type=INTERNET;type=WORK:${email}`);
     });
     
     // Add address
-    if (fullAddress) {
-      vcard += `ADR:;;${fullAddress}\n`;
+    if (contactDetails.address || contactDetails.state || contactDetails.country) {
+      const street = contactDetails.address || '';
+      const state = contactDetails.state || '';
+      const country = contactDetails.country || '';
+      lines.push(`ADR;type=WORK:;;${street};;${state};;${country}`);
     }
     
     // Add URL if available
     if (contactDetails.googleMapLink) {
-      vcard += `URL:${contactDetails.googleMapLink}\n`;
+      lines.push(`URL:${contactDetails.googleMapLink}`);
     }
     
-    // Add social media as URLs
+    // Add social media
     (activeProfile.socialMedia || []).forEach(social => {
       if (social.url) {
-        vcard += `URL:${social.url}\n`;
+        lines.push(`URL;type=${(social.platform || 'other').toUpperCase()}:${social.url}`);
       }
     });
     
     // Add note/about
     if (activeProfile.about) {
-      vcard += `NOTE:${activeProfile.about}\n`;
+      lines.push(`NOTE:${activeProfile.about}`);
     }
     
-    vcard += 'END:VCARD';
+    lines.push('END:VCARD');
     
-    return vcard;
+    // Join with CRLF as per vCard spec
+    return lines.join('\r\n');
   };
 
   const downloadVCard = () => {
     setDownloadingVCard(true);
     try {
+      const activeProfile = profileProp || profile;
       const vcard = generateVCard();
+      console.log('vCard generated:', vcard); // Debug log
       const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${profile.fullName || 'contact'}.vcf`;
+      link.download = `${activeProfile?.fullName || 'contact'}.vcf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -289,51 +315,90 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
       return icons[platform?.toLowerCase()] || '🔗';
     };
 
-    // Render all contact details section
+    // Render all contact details section - big mobile style
     const renderContactDetails = (textColor, linkColor) => (
-      <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.8 }}>
+      <div style={{ fontSize: 16 }}>
         {/* All Phone Numbers */}
         {allPhones.length > 0 ? (
           allPhones.map((p, i) => (
-            <div key={`phone-${i}`}>
-              <a href={`tel:${p.number.replace(/\s/g, '')}`} style={{ color: linkColor, textDecoration: 'none' }}>
-                📞 {p.number} {p.label && <span style={{ opacity: 0.7, fontSize: 11 }}>({p.label})</span>}
+            <div key={`phone-${i}`} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 12, 
+              marginBottom: 16,
+              padding: '12px 0',
+              borderBottom: `1px solid ${linkColor}22`
+            }}>
+              <span style={{ fontSize: 24 }}>📞</span>
+              <a href={`tel:${p.number.replace(/\s/g, '')}`} style={{ 
+                color: textColor, 
+                textDecoration: 'none', 
+                fontSize: 18,
+                fontWeight: 500
+              }}>
+                {p.number}
               </a>
             </div>
           ))
-        ) : (
-          <div style={{ color: textColor }}>📞 +971 50 000 0000</div>
-        )}
+        ) : null}
         
         {/* All Emails */}
         {allEmails.length > 0 ? (
           allEmails.map((email, i) => (
-            <div key={`email-${i}`}>
-              <a href={`mailto:${email}`} style={{ color: linkColor, textDecoration: 'none' }}>
-                📧 {email}
+            <div key={`email-${i}`} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 12, 
+              marginBottom: 16,
+              padding: '12px 0',
+              borderBottom: `1px solid ${linkColor}22`
+            }}>
+              <span style={{ fontSize: 24 }}>📧</span>
+              <a href={`mailto:${email}`} style={{ 
+                color: textColor, 
+                textDecoration: 'none', 
+                fontSize: 18,
+                fontWeight: 500
+              }}>
+                {email}
               </a>
             </div>
           ))
-        ) : (
-          <div style={{ color: textColor }}>📧 john@company.com</div>
-        )}
+        ) : null}
         
         {/* Full Address with State & Country */}
         {fullAddress && (
-          <div>
-            {googleMapLink ? (
-              <a href={googleMapLink} target="_blank" rel="noopener noreferrer" style={{ color: linkColor, textDecoration: 'none' }}>
-                📍 {fullAddress}
-              </a>
-            ) : (
-              <span style={{ color: textColor }}>📍 {fullAddress}</span>
-            )}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            gap: 12, 
+            marginBottom: 16,
+            padding: '12px 0',
+          }}>
+            <span style={{ fontSize: 24 }}>📍</span>
+            <div>
+              {googleMapLink ? (
+                <a href={googleMapLink} target="_blank" rel="noopener noreferrer" style={{ 
+                  color: textColor, 
+                  textDecoration: 'none', 
+                  fontSize: 18,
+                  fontWeight: 500,
+                  lineHeight: 1.4
+                }}>
+                  {fullAddress}
+                </a>
+              ) : (
+                <span style={{ color: textColor, fontSize: 18, fontWeight: 500, lineHeight: 1.4 }}>
+                  {fullAddress}
+                </span>
+              )}
+            </div>
           </div>
         )}
         
         {/* Social Media Links */}
         {socialMedia.length > 0 && (
-          <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             {socialMedia.map((social, i) => (
               <a 
                 key={`social-${i}`}
@@ -343,13 +408,14 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 4,
-                  padding: '4px 10px',
-                  borderRadius: 16,
-                  background: 'rgba(255,255,255,0.15)',
+                  gap: 8,
+                  padding: '10px 16px',
+                  borderRadius: 25,
+                  background: `${linkColor}22`,
                   color: linkColor,
                   textDecoration: 'none',
-                  fontSize: 12
+                  fontSize: 15,
+                  fontWeight: 600
                 }}
               >
                 {getSocialIcon(social.platform)} {social.platform}
@@ -362,65 +428,106 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
 
     if (theme === 'modern') {
       return (
-        <div style={{
-          padding: 20,
-          borderRadius: 16,
-          color: '#fff',
+        <div className="profile-card-content" style={{
+          minHeight: '100vh',
+          width: '100%',
+          paddingBottom: '80px',
+          display: 'flex',
+          flexDirection: 'column',
           background: displayCover
-            ? `linear-gradient(180deg, rgba(156,136,255,0.9) 0%, rgba(118,75,162,0.9) 100%), url(${displayCover}) center/cover no-repeat`
+            ? `linear-gradient(180deg, rgba(156,136,255,0.95) 0%, rgba(118,75,162,0.95) 100%), url(${displayCover}) center/cover no-repeat`
             : 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)',
         }}>
-          {renderProfileImage(82, 'rgba(255,255,255,0.3)', 4)}
-          <h3 style={{ textAlign: 'center', margin: '6px 0' }}>{fullName}</h3>
-          <p style={{ textAlign: 'center', margin: '2px 0' }}>{designation}</p>
-          <p style={{ textAlign: 'center', margin: '2px 0' }}>{company}</p>
-          {about && <p style={{ marginTop: 12, opacity: 0.9, textAlign: 'center', fontSize: 13 }}>{about}</p>}
-          {renderContactDetails('#fff', '#fff')}
+          {/* Profile Section */}
+          <div style={{
+            padding: '50px 24px 30px',
+            textAlign: 'center',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}>
+            {renderProfileImage(120, 'rgba(255,255,255,0.5)', 4)}
+            <h1 style={{ color: '#fff', fontSize: 32, fontWeight: 700, margin: '20px 0 12px' }}>{fullName}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 18, margin: '8px 0' }}>{designation}</p>
+            <p style={{ color: '#fff', fontSize: 17, fontWeight: 600, margin: '8px 0' }}>{company}</p>
+            
+            {/* Contact Details */}
+            <div style={{ marginTop: 30, textAlign: 'left', padding: '0 10px' }}>
+              {renderContactDetails('rgba(255,255,255,0.9)', '#fff')}
+            </div>
+          </div>
         </div>
       );
     }
 
     if (theme === 'epic') {
       return (
-        <div style={{
-          padding: 20,
-          borderRadius: 16,
-          color: '#fff',
-          border: '2px solid #ffeb3b',
+        <div className="profile-card-content" style={{
+          minHeight: '100vh',
+          width: '100%',
+          paddingBottom: '80px',
+          display: 'flex',
+          flexDirection: 'column',
           background: displayCover
-            ? `linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url(${displayCover}) center/cover no-repeat`
+            ? `linear-gradient(rgba(0,0,0,0.95), rgba(0,0,0,0.95)), url(${displayCover}) center/cover no-repeat`
             : '#000',
         }}>
-          {renderProfileImage(82, '#ffeb3b', 4)}
-          <h3 style={{ textAlign: 'center', margin: '6px 0' }}>{fullName}</h3>
-          <p style={{ textAlign: 'center', margin: '2px 0', color: '#ffeb3b' }}>{designation}</p>
-          <p style={{ textAlign: 'center', margin: '2px 0', opacity: 0.8 }}>{company}</p>
-          {about && <p style={{ marginTop: 10, opacity: 0.7, fontSize: 12, textAlign: 'center' }}>{about}</p>}
-          <div style={{ height: 1, background: '#ffeb3b', margin: '12px 0' }} />
-          {renderContactDetails('#fff', '#ffeb3b')}
+          {/* Profile Section */}
+          <div style={{
+            padding: '50px 24px 30px',
+            textAlign: 'center',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}>
+            {renderProfileImage(120, '#ffeb3b', 4)}
+            <h1 style={{ color: '#fff', fontSize: 32, fontWeight: 700, margin: '20px 0 12px' }}>{fullName}</h1>
+            <p style={{ color: '#ffeb3b', fontSize: 18, fontWeight: 600, margin: '8px 0' }}>{designation}</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 17, fontWeight: 600, margin: '8px 0' }}>{company}</p>
+            
+            {/* Divider */}
+            <div style={{ height: 1, background: '#ffeb3b', margin: '25px 0', opacity: 0.5 }} />
+            
+            {/* Contact Details */}
+            <div style={{ textAlign: 'left', padding: '0 10px' }}>
+              {renderContactDetails('rgba(255,255,255,0.9)', '#ffeb3b')}
+            </div>
+          </div>
         </div>
       );
     }
 
-    // standard
+    // standard - white/green theme
     return (
-      <div style={{
-        padding: 18,
-        borderRadius: 12,
-        border: '1px solid #e0e0e0',
+      <div className="profile-card-content" style={{
+        minHeight: '100vh',
+        width: '100%',
+        paddingBottom: '80px',
+        display: 'flex',
+        flexDirection: 'column',
         background: '#fff',
       }}>
-        {displayCover && (
-          <div style={{ borderRadius: 10, overflow: 'hidden', marginBottom: 10 }}>
-            <div style={{ width: '100%', height: 120, background: `url(${displayCover}) center/cover no-repeat` }} />
+        {/* Profile Section */}
+        <div style={{
+          padding: '50px 24px 30px',
+          textAlign: 'center',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}>
+          {renderProfileImage(120, '#4CAF50', 4)}
+          <h1 style={{ color: '#000', fontSize: 32, fontWeight: 700, margin: '20px 0 12px' }}>{fullName}</h1>
+          <p style={{ color: '#666', fontSize: 18, margin: '8px 0' }}>{designation}</p>
+          <p style={{ color: '#000', fontSize: 17, fontWeight: 600, margin: '8px 0' }}>{company}</p>
+          
+          {/* Contact Details */}
+          <div style={{ marginTop: 30, textAlign: 'left', padding: '0 10px' }}>
+            {renderContactDetails('#333', '#4CAF50')}
           </div>
-        )}
-        {renderProfileImage(76, '#81C784', 3)}
-        <h3 style={{ textAlign: 'center', margin: '4px 0', color: '#000' }}>{fullName}</h3>
-        <p style={{ textAlign: 'center', margin: '2px 0', color: '#666' }}>{designation}</p>
-        <p style={{ textAlign: 'center', margin: '2px 0', color: '#000' }}>{company}</p>
-        {about && <p style={{ marginTop: 10, color: '#555', fontSize: 12, textAlign: 'center' }}>{about}</p>}
-        {renderContactDetails('#333', '#2196F3')}
+        </div>
       </div>
     );
   };
@@ -503,40 +610,66 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
     profileImage: activeProfile?.profileImage
   });
 
-  return (
-    <div style={styles.container} className="profile-preview-container">
-      <div style={styles.card} className="profile-preview-card">
-        {/* Theme indicator */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          marginBottom: 16,
-          padding: '8px 16px',
-          background: finalTheme === 'epic' ? '#000' : finalTheme === 'modern' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5',
-          borderRadius: 8,
-          border: finalTheme === 'epic' ? '2px solid #ffeb3b' : 'none',
-        }}>
-          <span style={{ 
-            fontSize: 14, 
-            fontWeight: 600,
-            color: finalTheme === 'standard' ? '#333' : '#fff'
-          }}>
-            {finalTheme === 'epic' ? '⚡' : finalTheme === 'modern' ? '✨' : '📋'} {finalTheme.charAt(0).toUpperCase() + finalTheme.slice(1)} Theme
-          </span>
-        </div>
-        
+  // Get theme-based background color
+  const getThemeBackground = () => {
+    if (finalTheme === 'epic') return '#000';
+    if (finalTheme === 'modern') return 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)';
+    return '#f5f5f5';
+  };
+
+  // If embedded in checkout page, show compact preview without fixed button
+  if (embedded) {
+    return (
+      <div style={{ 
+        background: getThemeBackground(),
+        borderRadius: 16,
+        overflow: 'hidden',
+      }}>
         {renderCard(finalTheme)}
-        
-        {/* Add to Contacts Button */}
+      </div>
+    );
+  }
+
+  // Standalone view (after QR scan) - SAME design as embedded but full screen
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        background: getThemeBackground(),
+        margin: 0,
+        padding: 0,
+        overflow: 'auto',
+        zIndex: 9999,
+      }} 
+      className="profile-preview-standalone"
+    >
+      {renderCard(finalTheme)}
+      
+      {/* Fixed Add to Contacts Button at bottom */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 16px',
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        background: finalTheme === 'epic' ? 'rgba(0,0,0,0.95)' : finalTheme === 'modern' ? 'rgba(118,75,162,0.95)' : 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        zIndex: 10000,
+      }}>
         <button
           onClick={downloadVCard}
           disabled={downloadingVCard}
           style={{
             width: '100%',
-            marginTop: 16,
-            padding: '14px 20px',
+            padding: '16px 24px',
             background: finalTheme === 'epic' 
               ? 'linear-gradient(135deg, #ffeb3b 0%, #ffc107 100%)' 
               : finalTheme === 'modern' 
@@ -544,67 +677,32 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride }) => {
                 : 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
             color: finalTheme === 'epic' ? '#000' : '#fff',
             border: 'none',
-            borderRadius: 10,
-            fontSize: 15,
-            fontWeight: 600,
+            borderRadius: 30,
+            fontSize: 17,
+            fontWeight: 700,
             cursor: downloadingVCard ? 'not-allowed' : 'pointer',
             opacity: downloadingVCard ? 0.7 : 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 8,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-          }}
-          onMouseOver={(e) => {
-            if (!downloadingVCard) {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
-            }
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            gap: 10,
+            boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
           }}
         >
-          {downloadingVCard ? (
-            <>
-              <span style={{ 
-                width: 16, 
-                height: 16, 
-                border: '2px solid currentColor', 
-                borderTopColor: 'transparent', 
-                borderRadius: '50%', 
-                animation: 'spin 1s linear infinite' 
-              }}></span>
-              Saving...
-            </>
-          ) : (
-            <>
-              <span style={{ fontSize: 18 }}>👤</span>
-              Add to Contacts
-            </>
-          )}
+          {downloadingVCard ? 'Saving...' : 'Add to Contacts'}
         </button>
       </div>
       
-      {/* Responsive styles for mobile full-screen */}
+      {/* Full screen styles for mobile */}
       <style>{`
-        @media (min-width: 480px) {
-          .profile-preview-container {
-            padding: 20px !important;
-            align-items: center !important;
-          }
-          .profile-preview-card {
-            max-width: 420px !important;
-            min-height: auto !important;
-            border-radius: 14px !important;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important;
-          }
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          background: ${finalTheme === 'epic' ? '#000' : finalTheme === 'modern' ? '#764ba2' : '#fff'} !important;
         }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        .profile-preview-standalone {
+          -webkit-overflow-scrolling: touch;
         }
       `}</style>
     </div>
@@ -617,16 +715,15 @@ const styles = {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'center',
-    background: '#f5f5f5',
+    background: '#000', // Match epic theme background
     padding: '0',
   },
   card: {
     width: '100%',
     maxWidth: '100%',
-    minHeight: '100vh',
-    background: '#fff',
+    background: 'transparent',
     borderRadius: 0,
-    padding: '16px',
+    padding: '12px',
     boxShadow: 'none',
   },
   // Desktop styles applied via media query in component

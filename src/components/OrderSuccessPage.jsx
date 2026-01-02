@@ -471,7 +471,7 @@ const styles = {
   },
   orderCard: {
     backgroundColor: '#fff',
-    borderRadius: '12px',
+     borderRadius: '12px',
     padding: '32px',
     marginBottom: '32px',
     border: '1px solid #e0e0e0',

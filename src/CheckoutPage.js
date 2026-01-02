@@ -1547,6 +1547,7 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
       <ProfilePreview
         profile={userProfile}
         themeOverride={selectedTemplate}
+        embedded={true}
       />
     </div>
   </div>
