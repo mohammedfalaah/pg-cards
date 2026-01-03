@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const AdminPanel = ({ user, token, onLogout }) => {
+const AdminPanel = ({ user, token: propToken, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [products, setProducts] = useState([]);
@@ -17,6 +17,9 @@ const AdminPanel = ({ user, token, onLogout }) => {
     totalRevenue: 0,
     activeProducts: 0
   });
+
+  // Get token from prop or localStorage
+  const token = propToken || localStorage.getItem('token') || localStorage.getItem('authToken');
 
   // Product Modal States
   const [showProductModal, setShowProductModal] = useState(false);
@@ -34,48 +37,67 @@ const AdminPanel = ({ user, token, onLogout }) => {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      fetchDashboardData();
-    }
-  }, [token]);
+    fetchDashboardData();
+  }, []);
 
   const fetchDashboardData = async () => {
+    const authToken = token || localStorage.getItem('token') || localStorage.getItem('authToken');
+    
+    if (!authToken) {
+      setLoading(false);
+      toast.error('No authentication token found');
+      return;
+    }
+
     try {
       setLoading(true);
       
-      // Fetch users
-      const usersRes = await axios.get(
-        'https://pg-cards.vercel.app/admin/users',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUsers(usersRes.data.users || []);
+      // Fetch products first (most important)
+      try {
+        const productsRes = await axios.get(
+          'https://pg-cards.vercel.app/admin/getProducts',
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
+        setProducts(productsRes.data.products || productsRes.data.data || productsRes.data || []);
+      } catch (e) {
+        console.log('Products fetch error:', e);
+        setProducts([]);
+      }
 
-      // Fetch products
-      const productsRes = await axios.get(
-        'https://pg-cards.vercel.app/admin/products',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProducts(productsRes.data.products || []);
+      // Fetch users
+      try {
+        const usersRes = await axios.get(
+          'https://pg-cards.vercel.app/admin/users',
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
+        setUsers(usersRes.data.users || usersRes.data.data || usersRes.data || []);
+      } catch (e) {
+        console.log('Users fetch error:', e);
+        setUsers([]);
+      }
 
       // Fetch orders
-      const ordersRes = await axios.get(
-        'https://pg-cards.vercel.app/admin/orders',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setOrders(ordersRes.data.orders || []);
+      try {
+        const ordersRes = await axios.get(
+          'https://pg-cards.vercel.app/admin/orders',
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        );
+        setOrders(ordersRes.data.orders || ordersRes.data.data || ordersRes.data || []);
+      } catch (e) {
+        console.log('Orders fetch error:', e);
+        setOrders([]);
+      }
 
       // Calculate stats
-      const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
       setStats({
-        totalUsers: usersRes.data.users?.length || 0,
-        totalOrders: ordersRes.data.orders?.length || 0,
-        totalRevenue,
-        activeProducts: productsRes.data.products?.length || 0
+        totalUsers: users.length || 0,
+        totalOrders: orders.length || 0,
+        totalRevenue: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
+        activeProducts: products.length || 0
       });
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -294,32 +316,35 @@ const AdminPanel = ({ user, token, onLogout }) => {
       if (editingProduct) {
         // Update existing product
         const response = await axios.put(
-          `https://pg-cards.vercel.app/admin/products/${editingProduct._id}`,
+          `https://pg-cards.vercel.app/admin/updateProduct/${editingProduct._id}`,
           productData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
         setProducts(products.map(p => 
-          p._id === editingProduct._id ? response.data.product : p
+          p._id === editingProduct._id ? response.data.product || response.data.data : p
         ));
         toast.success('Product updated successfully');
       } else {
         // Create new product
         const response = await axios.post(
-          'https://pg-cards.vercel.app/admin/createProduct',
+          'https://pg-cards.vercel.app/createProduct',
           productData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        setProducts([...products, response.data.product]);
+        const newProduct = response.data.product || response.data.data || response.data;
+        setProducts([...products, newProduct]);
         toast.success('Product created successfully');
       }
       
       setShowProductModal(false);
       resetProductForm();
+      // Refresh products list
+      fetchDashboardData();
     } catch (error) {
       console.error('Error saving product:', error);
-      toast.error(error.response?.data?.message || 'Failed to save product');
+      toast.error(error.response?.data?.message || error.response?.data?.msg || 'Failed to save product');
     }
   };
 

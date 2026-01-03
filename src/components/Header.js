@@ -1,7 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import PGCardsLogo from './PGCardsLogo';
 import Login from './Login';
 import './Header.css';
+
+// Simple admin check from token
+const checkIsAdmin = () => {
+  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+  if (!token) return false;
+  try {
+    const decoded = jwtDecode(token);
+    return decoded.role === 'admin';
+  } catch (e) {
+    return false;
+  }
+};
 
 const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -203,7 +216,8 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       <button
         className="btn-primary"
         onClick={() => {
-          window.history.pushState({}, '', '/dashboard');
+          const isAdmin = checkIsAdmin();
+          window.history.pushState({}, '', isAdmin ? '/admin' : '/dashboard');
           window.dispatchEvent(new Event('navigate'));
         }}
       >
@@ -220,15 +234,27 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       <div className="user-dropdown">
         <div className="user-name">{currentUser.name || 'User'}</div>
         <div className="user-email">{currentUser.email}</div>
-        <button 
-          className="dropdown-item"
-          onClick={() => {
-            window.history.pushState({}, '', '/dashboard');
-            window.dispatchEvent(new Event('navigate'));
-          }}
-        >
-          <span>📊</span> Dashboard
-        </button>
+        {checkIsAdmin() ? (
+          <button 
+            className="dropdown-item"
+            onClick={() => {
+              window.history.pushState({}, '', '/admin');
+              window.dispatchEvent(new Event('navigate'));
+            }}
+          >
+            <span>⚙️</span> Admin Panel
+          </button>
+        ) : (
+          <button 
+            className="dropdown-item"
+            onClick={() => {
+              window.history.pushState({}, '', '/dashboard');
+              window.dispatchEvent(new Event('navigate'));
+            }}
+          >
+            <span>📊</span> Dashboard
+          </button>
+        )}
         <button 
           className="dropdown-item"
           onClick={() => {

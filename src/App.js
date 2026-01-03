@@ -1,5 +1,6 @@
 // App.js - Fixed with proper User Profile and Order Success routing
 import React, { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -23,6 +24,22 @@ import OrderSuccessPage from './components/OrderSuccessPage';
 import ProfilePreview from './components/ProfilePreview';
 import './App.css';
 
+// Helper function to check if token has admin role
+const checkAdminFromToken = (token) => {
+  if (!token) return false;
+  try {
+    const decoded = jwtDecode(token);
+    return decoded.role === 'admin';
+  } catch (e) {
+    return false;
+  }
+};
+
+// Helper function to get token from localStorage
+const getToken = () => {
+  return localStorage.getItem('token') || localStorage.getItem('authToken');
+};
+
 function App() {
   const [activeView, setActiveView] = useState('landing');
   const [productId, setProductId] = useState(null);
@@ -33,40 +50,40 @@ function App() {
       return { user: null, token: null };
     }
 
-    try {
-      const stored = localStorage.getItem('pgcards-auth');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return {
-          user: parsed.user || null,
-          token: parsed.token || null,
+    const token = getToken();
+    let user = null;
+    
+    // Try to get user from token
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        user = {
+          _id: decoded.id,
+          role: decoded.role,
+          email: decoded.email,
+          name: decoded.name
         };
-      }
-    } catch (error) {
-      console.error('Failed to parse auth from storage:', error);
+      } catch (e) {}
     }
 
-    return { user: null, token: null };
+    return { user, token };
   });
-
-  // Helper function to check if user is admin
-  const isAdmin = (user) => {
-    if (!user) return false;
-    return user.role === 'admin' || user.isAdmin === true;
-  };
 
   useEffect(() => {
     const checkRoute = () => {
       const path = window.location.pathname;
+      const token = getToken();
+      const isAdminUser = checkAdminFromToken(token);
 
       // Check for admin route
       if (path.startsWith('/admin')) {
-        if (auth?.user && auth?.token && isAdmin(auth.user)) {
+        if (token && isAdminUser) {
           setActiveView('admin');
         } else {
           setActiveView('landing');
           window.history.replaceState({}, '', '/');
         }
+        return;
       }
       // Check for user profile route (authenticated user dashboard)
       else if ((path.startsWith('/user-profile') && !path.match(/^\/user-profile\/([^/]+)$/)) || 
@@ -141,15 +158,29 @@ function App() {
   }, [auth]);
 
   const handleLoginSuccess = ({ user, token }) => {
+    // Store token in localStorage
+    if (token) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('authToken', token);
+    }
+    
     setAuth({ user, token });
     
-    if (isAdmin(user)) {
+    // Check if admin from token and redirect
+    if (checkAdminFromToken(token)) {
       setActiveView('admin');
       window.history.pushState({}, '', '/admin');
     }
   };
 
   const handleLogout = () => {
+    // Clear all auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('pgcards-auth');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('user');
+    
     setAuth({ user: null, token: null });
     setActiveView('landing');
     window.history.pushState({}, '', '/');
