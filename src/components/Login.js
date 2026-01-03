@@ -178,37 +178,42 @@ const Login = ({ onClose, onLogin }) => {
           body: JSON.stringify({ email: formData.email.trim(), password: formData.password }),
         });
         const result = await response.json();
-        console.log('Login API response:', result); // Debug log
+        console.log('Login API response:', result);
         if (!response.ok) {
-          toast.success('Unable to login. Please try again.',false) 
+          toast.error('Unable to login. Please try again.');
+          throw new Error('Login failed');
         }
         const userData = result?.data?.data || result?.data?.user || result?.user;
         const token = result?.data?.token || result?.token;
-        console.log('User data:', userData); // Debug log to see if role is present
+        console.log('User data:', userData);
         if (!userData || !token) throw new Error('Invalid response from server.');
         
-        // Decode token to get role if not in userData
+        // Always decode token to get role
         let userRole = userData.role;
-        if (!userRole && token) {
-          try {
-            const decoded = jwtDecode(token);
-            console.log('Decoded token:', decoded);
-            userRole = decoded.role || decoded.user?.role;
-            // Merge role into userData
-            if (userRole) {
-              userData.role = userRole;
-            }
-          } catch (e) {
-            console.log('Token decode error:', e);
+        try {
+          const decoded = jwtDecode(token);
+          console.log('Decoded token:', decoded);
+          // Check multiple possible locations for role in token
+          userRole = decoded.role || decoded.data?.role || decoded.user?.role || userData.role;
+          console.log('User role from token:', userRole);
+          // Merge role into userData
+          if (userRole) {
+            userData.role = userRole;
           }
+        } catch (e) {
+          console.log('Token decode error:', e);
         }
         
-        // Check if user is admin and redirect
-        const isAdmin = userRole === 'admin' || userData.isAdmin === true;
+        // Save to localStorage and call onLogin
         onLogin && onLogin({ user: userData, token });
         
-        if (isAdmin) {
-          window.location.href = '/admin';
+        // Check if user is admin and redirect
+        if (userRole === 'admin') {
+          console.log('Admin detected, redirecting to /admin');
+          setTimeout(() => {
+            window.location.href = '/admin';
+          }, 100);
+          return;
         }
       } else {
         // REGISTER
