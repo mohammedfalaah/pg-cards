@@ -328,7 +328,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       } else {
         // Create new product
         const response = await axios.post(
-          'https://pg-cards.vercel.app/createProduct',
+          'https://pg-cards.vercel.app/card/createProduct',
           productData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
