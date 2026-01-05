@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 import PGCardsLogo from './PGCardsLogo';
 import Login from './Login';
 import './Header.css';
@@ -22,6 +23,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [logoSize, setLogoSize] = useState(120);
   const [currentUser, setCurrentUser] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
 
   // Check for user in localStorage on mount
   useEffect(() => {
@@ -57,6 +59,34 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       setCurrentUser(user);
     }
   }, [user]);
+
+  // Fetch cart count
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      
+      if (!userId || !token) return;
+
+      try {
+        const response = await axios.post(
+          'https://pg-cards.vercel.app/cart/getUserCart',
+          { userId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.code === 200 && response.data.data?.items) {
+          setCartCount(response.data.data.items.length);
+        }
+      } catch (error) {
+        console.log('Cart fetch error:', error);
+      }
+    };
+
+    if (currentUser) {
+      fetchCartCount();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -209,10 +239,24 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             ) : (
               <button style={{textWrap:'nowrap'}} className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
             )}
+
+            {/* Cart Icon */}
+            {currentUser && !isDashboard && (
+              <button 
+                className="cart-icon-btn"
+                onClick={() => {
+                  window.history.pushState({}, '', '/cart');
+                  window.dispatchEvent(new Event('navigate'));
+                }}
+              >
+                🛒
+                {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+              </button>
+            )}
             
            {currentUser ? (
   <>
-    {!isDashboard && (
+    {/* {!isDashboard && (
       <button
         className="btn-primary"
         onClick={() => {
@@ -223,14 +267,14 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       >
         My Account
       </button>
-    )}
+    )} */}
     <div className="profile-section">
-      <img
-        src={currentUser.profileImage || "/default-profile.png"}
-        alt="Profile"
-        className="profile-icon"
-        title={currentUser.name || currentUser.email}
-      />
+      <div className="profile-icon-wrapper" title={currentUser.name || currentUser.email}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
       <div className="user-dropdown">
         <div className="user-name">{currentUser.name || 'User'}</div>
         <div className="user-email">{currentUser.email}</div>

@@ -22,6 +22,7 @@ import CheckoutPage from './CheckoutPage';
 import UserProfile from './components/userProfile';
 import OrderSuccessPage from './components/OrderSuccessPage';
 import ProfilePreview from './components/ProfilePreview';
+import Cart from './components/Cart';
 import './App.css';
 
 // Helper function to check if token has admin role
@@ -119,6 +120,7 @@ function App() {
       }
       else if (path.startsWith('/customize')) setActiveView('customize');
       else if (path.startsWith('/checkout')) setActiveView('checkout');
+      else if (path.startsWith('/cart')) setActiveView('cart');
       else if (path.startsWith('/dashboard')) {
         if (auth?.user && auth?.token) {
           setActiveView('dashboard');
@@ -217,6 +219,7 @@ function App() {
       {activeView === 'shop' && <ShopPage />}
       {activeView === 'product-detail' && <ProductDetailPage productId={productId} />}
       {activeView === 'checkout' && <CheckoutPage />}
+      {activeView === 'cart' && <Cart />}
       {activeView === 'reset-password' && <ResetPassword />}
       {activeView === 'blog' && <Blog />}
       {activeView === 'contact' && <ContactUs />}
