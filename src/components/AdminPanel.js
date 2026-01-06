@@ -64,13 +64,15 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
         setProducts([]);
       }
 
-      // Fetch users
+      // Fetch users from userProfile API
       try {
-        const usersRes = await axios.get(
-          'https://pg-cards.vercel.app/admin/users',
+        const usersRes = await axios.post(
+          'https://pg-cards.vercel.app/userProfile/getAllUserProfiles',
+          {},
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
-        setUsers(usersRes.data.users || usersRes.data.data || usersRes.data || []);
+        const usersList = usersRes.data.data?.list || usersRes.data.data || [];
+        setUsers(usersList);
       } catch (e) {
         console.log('Users fetch error:', e);
         setUsers([]);
@@ -164,10 +166,12 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   };
 
   // Filter users based on search
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
-    user.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
-    user._id?.toLowerCase().includes(userSearch.toLowerCase())
+  const filteredUsers = users.filter(profile =>
+    profile.fullName?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    profile.user?.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    profile.user?.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    profile.companyName?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    profile._id?.toLowerCase().includes(userSearch.toLowerCase())
   );
 
   // Reset product form
@@ -509,56 +513,79 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
               <table className="usersTable">
                 <thead>
                   <tr>
+                    <th>Profile</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>User ID</th>
-                    <th>Role</th>
+                    <th>Company</th>
+                    <th>Theme</th>
+                    <th>Status</th>
                     <th>Joined</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user._id}>
+                  {filteredUsers.map((profile) => (
+                    <tr key={profile._id}>
                       <td>
                         <div className="userCell">
-                          <div className="userAvatar">
-                            {user.name?.charAt(0) || 'U'}
-                          </div>
-                          {user.name || 'No Name'}
+                          {profile.profilePicture && !profile.profilePicture.startsWith('blob:') ? (
+                            <img 
+                              src={profile.profilePicture} 
+                              alt={profile.fullName}
+                              className="userAvatarImg"
+                            />
+                          ) : (
+                            <div className="userAvatar">
+                              {profile.fullName?.charAt(0) || profile.user?.name?.charAt(0) || 'U'}
+                            </div>
+                          )}
                         </div>
                       </td>
-                      <td>{user.email || 'No Email'}</td>
-                      <td className="userIdCell">{user._id?.slice(-8) || 'N/A'}</td>
                       <td>
-                        <select
-                          value={user.role || 'user'}
-                          onChange={(e) => updateUserRole(user._id, e.target.value)}
-                          className="roleSelect"
-                        >
-                          <option value="user">User</option>
-                          <option value="admin">Admin</option>
-                          <option value="moderator">Moderator</option>
-                        </select>
+                        <div className="userNameCell">
+                          <span className="userName">{profile.fullName || profile.user?.name || 'No Name'}</span>
+                          <span className="userDesignation">{profile.companyDesignation}</span>
+                        </div>
+                      </td>
+                      <td>{profile.user?.email || 'No Email'}</td>
+                      <td>{profile.companyName || '-'}</td>
+                      <td>
+                        <span className={`themeBadge theme-${profile.theme}`}>
+                          {profile.theme || 'standard'}
+                        </span>
                       </td>
                       <td>
-                        {user.createdAt 
-                          ? new Date(user.createdAt).toLocaleDateString()
+                        <span className={`statusBadge ${profile.isPurchase ? 'purchased' : 'trial'}`}>
+                          {profile.isPurchase ? '✅ Purchased' : '⏳ Trial'}
+                        </span>
+                      </td>
+                      <td>
+                        {profile.createdAt 
+                          ? new Date(profile.createdAt).toLocaleDateString()
                           : 'N/A'
                         }
                       </td>
                       <td>
                         <div className="actionButtons">
                           <button
+                            className="actionBtn viewBtn"
+                            onClick={() => {
+                              window.open(`/${profile.theme || 'standard'}/${profile._id}`, '_blank');
+                            }}
+                            title="View Profile"
+                          >
+                            👁️
+                          </button>
+                          <button
                             className="actionBtn qrBtn"
-                            onClick={() => generateQRForUser(user._id, user.name)}
+                            onClick={() => generateQRForUser(profile._id, profile.fullName || profile.user?.name)}
                             title="Generate QR Code"
                           >
                             🔳
                           </button>
                           <button
                             className="actionBtn deleteBtn"
-                            onClick={() => deleteUser(user._id)}
+                            onClick={() => deleteUser(profile.user?._id)}
                             title="Delete User"
                           >
                             🗑️
@@ -570,6 +597,14 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                 </tbody>
               </table>
             </div>
+
+            {filteredUsers.length === 0 && (
+              <div className="emptyState">
+                <div className="emptyIcon">👥</div>
+                <h3>No Users Found</h3>
+                <p>No users match your search criteria</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -1299,8 +1334,8 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
         }
 
         .userAvatar, .customerAvatar {
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           background: linear-gradient(135deg, #d4af37 0%, #f0d97a 100%);
           border-radius: 50%;
           display: flex;
@@ -1308,6 +1343,81 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
           justify-content: center;
           font-weight: 600;
           color: #0a0a0a;
+          font-size: 16px;
+        }
+
+        .userAvatarImg {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .userNameCell {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .userName {
+          font-weight: 600;
+          color: #ffffff;
+        }
+
+        .userDesignation {
+          font-size: 12px;
+          color: #a0a0a0;
+        }
+
+        .themeBadge {
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: capitalize;
+        }
+
+        .themeBadge.theme-standard {
+          background: rgba(52, 199, 89, 0.1);
+          color: #34c759;
+        }
+
+        .themeBadge.theme-modern {
+          background: rgba(156, 136, 255, 0.1);
+          color: #9c88ff;
+        }
+
+        .themeBadge.theme-epic {
+          background: rgba(212, 175, 55, 0.1);
+          color: #d4af37;
+        }
+
+        .statusBadge {
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .statusBadge.purchased {
+          background: rgba(52, 199, 89, 0.1);
+          color: #34c759;
+        }
+
+        .statusBadge.trial {
+          background: rgba(255, 149, 0, 0.1);
+          color: #ff9500;
+        }
+
+        .viewBtn {
+          background: rgba(52, 199, 89, 0.1);
+          color: #34c759;
+        }
+
+        .viewBtn:hover {
+          background: rgba(52, 199, 89, 0.2);
+          transform: scale(1.1);
         }
 
         .userIdCell {
