@@ -420,12 +420,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
         >
           📦 Orders
         </button>
-        <button 
-          className={`adminNavBtn ${activeTab === 'qrcodes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('qrcodes')}
-        >
-          🔳 QR Codes
-        </button>
+      
       </div>
 
       {/* Main Content */}
@@ -520,7 +515,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                     <th>Theme</th>
                     <th>Status</th>
                     <th>Joined</th>
-                    <th>Actions</th>
+                   
                   </tr>
                 </thead>
                 <tbody>
@@ -565,33 +560,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                           : 'N/A'
                         }
                       </td>
-                      <td>
-                        <div className="actionButtons">
-                          <button
-                            className="actionBtn viewBtn"
-                            onClick={() => {
-                              window.open(`/${profile.theme || 'standard'}/${profile._id}`, '_blank');
-                            }}
-                            title="View Profile"
-                          >
-                            👁️
-                          </button>
-                          <button
-                            className="actionBtn qrBtn"
-                            onClick={() => generateQRForUser(profile._id, profile.fullName || profile.user?.name)}
-                            title="Generate QR Code"
-                          >
-                            🔳
-                          </button>
-                          <button
-                            className="actionBtn deleteBtn"
-                            onClick={() => deleteUser(profile.user?._id)}
-                            title="Delete User"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
+                    
                     </tr>
                   ))}
                 </tbody>
@@ -609,101 +578,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
         )}
 
         {/* QR Codes Tab */}
-        {activeTab === 'qrcodes' && (
-          <div className="qrTab">
-            <h2 className="tabTitle">🔳 QR Code Management</h2>
-            <p className="tabSubtitle">
-              Generate and manage QR codes for user profiles
-            </p>
-
-            <div className="qrGenerator">
-              {selectedUser && (
-                <div className="selectedUserInfo">
-                  <h3>QR Code for: <strong>{selectedUser.name}</strong></h3>
-                  <p>User ID: {selectedUser.id}</p>
-                </div>
-              )}
-
-              {qrData ? (
-                <div className="qrDisplaySection">
-                  <div className="qrImageWrapper">
-                    <img 
-                      src={qrData} 
-                      alt="User QR Code" 
-                      className="qrImage"
-                    />
-                  </div>
-                  
-                  <div className="qrActions">
-                    <button
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = qrData;
-                        link.download = `${selectedUser?.name || 'user'}-qr.png`;
-                        link.click();
-                      }}
-                      className="downloadQrBtn"
-                    >
-                      📥 Download QR
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(qrData);
-                        toast.success('QR copied to clipboard');
-                      }}
-                      className="copyQrBtn"
-                    >
-                      📋 Copy QR
-                    </button>
-                    
-                    <button
-                      onClick={() => setQrData('')}
-                      className="clearQrBtn"
-                    >
-                      🗑️ Clear QR
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="qrInstructions">
-                  <div className="qrInstructionIcon">🔳</div>
-                  <h3>Generate QR Code</h3>
-                  <p>Select a user from the Users tab and click the QR button to generate their profile QR code.</p>
-                  <button
-                    className="goToUsersBtn"
-                    onClick={() => setActiveTab('users')}
-                  >
-                    👥 Go to Users
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* QR Code Usage Guide */}
-            <div className="qrGuide">
-              <h3 className="guideTitle">📚 QR Code Usage Guide</h3>
-              <div className="guideSteps">
-                <div className="guideStep">
-                  <div className="stepNumber">1</div>
-                  <p>Navigate to <strong>Users</strong> tab</p>
-                </div>
-                <div className="guideStep">
-                  <div className="stepNumber">2</div>
-                  <p>Click the <strong>🔳 QR button</strong> on any user</p>
-                </div>
-                <div className="guideStep">
-                  <div className="stepNumber">3</div>
-                  <p>Download or copy the generated QR code</p>
-                </div>
-                <div className="guideStep">
-                  <div className="stepNumber">4</div>
-                  <p>Share QR code with user for profile access</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+       
 
         {/* Products Tab */}
         {activeTab === 'products' && (

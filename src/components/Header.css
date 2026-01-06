@@ -454,6 +454,32 @@
   margin-bottom: 12px;
 }
 
+.user-dropdown .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.user-dropdown .dropdown-item:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: #d4af37;
+}
+
+.user-dropdown .dropdown-item span {
+  font-size: 16px;
+}
+
 .user-dropdown .logout-btn {
   width: 100%;
   padding: 10px;
