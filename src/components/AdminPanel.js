@@ -29,7 +29,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     description: '',
     category: 'Metal',
     basePrice: '',
-    currency: 'INR',
+    currency: 'AED',
     material: '',
     features: [''],
     variants: [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
@@ -54,8 +54,8 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       
       // Fetch products first (most important)
       try {
-        const productsRes = await axios.get(
-          'https://pg-cards.vercel.app/admin/getProducts',
+        const productsRes = await axios.post(
+          'https://pg-cards.vercel.app/card/getProducts',
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
         setProducts(productsRes.data.products || productsRes.data.data || productsRes.data || []);
@@ -608,10 +608,10 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                     {product.variants?.length > 0 && (
                       <p className="productVariants">{product.variants.length} variant(s)</p>
                     )}
-                    <div className="productActions">
+                    {/* <div className="productActions">
                       <button className="editBtn" onClick={() => openEditProductModal(product)}>✏️ Edit</button>
                       <button className="deleteBtn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               ))}
@@ -704,9 +704,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                         value={productForm.currency}
                         onChange={(e) => setProductForm({ ...productForm, currency: e.target.value })}
                       >
-                        <option value="INR">INR</option>
                         <option value="AED">AED</option>
-                        <option value="USD">USD</option>
                       </select>
                     </div>
                   </div>
