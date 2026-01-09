@@ -307,7 +307,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       description: productForm.description,
       category: productForm.category,
       basePrice: Number(productForm.basePrice),
-      currency: productForm.currency,
+      currency: "AED",
       material: productForm.material,
       features: cleanFeatures,
       variants: cleanVariants.map(v => ({
