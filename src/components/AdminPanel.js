@@ -357,8 +357,9 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      await axios.delete(
-        `https://pg-cards.vercel.app/admin/products/${productId}`,
+      await axios.post(
+        'https://pg-cards.vercel.app/card/deleteProduct',
+        { id: productId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -608,10 +609,10 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                     {product.variants?.length > 0 && (
                       <p className="productVariants">{product.variants.length} variant(s)</p>
                     )}
-                    {/* <div className="productActions">
-                      <button className="editBtn" onClick={() => openEditProductModal(product)}>✏️ Edit</button>
+                    <div className="productActions">
+                      {/* <button className="editBtn" onClick={() => openEditProductModal(product)}>✏️ Edit</button> */}
                       <button className="deleteBtn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
               ))}
