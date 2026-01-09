@@ -181,7 +181,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       description: '',
       category: 'Metal',
       basePrice: '',
-      currency: 'INR',
+      currency: 'AED',
       material: '',
       features: [''],
       variants: [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
@@ -203,7 +203,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       description: product.description || '',
       category: product.category || 'Metal',
       basePrice: product.basePrice || product.price || '',
-      currency: product.currency || 'INR',
+      currency: product.currency || 'AED',
       material: product.material || '',
       features: product.features?.length > 0 ? product.features : [''],
       variants: product.variants?.length > 0 ? product.variants : [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
@@ -607,7 +607,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                     <h3 className="productTitle">{product.title}</h3>
                     <p className="productCategory">{product.category} • {product.material}</p>
                     <div className="productPrice">
-                      {product.currency || 'INR'} {product.basePrice || product.price}
+                      {product.currency || 'AED'} {product.basePrice || product.price}
                     </div>
                     {product.variants?.length > 0 && (
                       <p className="productVariants">{product.variants.length} variant(s)</p>

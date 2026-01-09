@@ -140,7 +140,7 @@ const Cart = () => {
               <div className="item-details">
                 <h3 className="item-title">{item.productId?.title}</h3>
                 <p className="item-category">{item.productId?.category} • {item.productId?.material}</p>
-                <p className="item-price">{item.productId?.currency || 'INR'} {item.price}</p>
+                <p className="item-price">{item.productId?.currency || 'AED'} {item.price}</p>
               </div>
 
               <div className="item-quantity">
@@ -161,7 +161,7 @@ const Cart = () => {
 
               <div className="item-total">
                 <p className="total-label">Total</p>
-                <p className="total-value">{item.productId?.currency || 'INR'} {item.price * item.quantity}</p>
+                <p className="total-value">{item.productId?.currency || 'AED'} {item.price * item.quantity}</p>
               </div>
 
               <button 
@@ -179,7 +179,7 @@ const Cart = () => {
           
           <div className="summary-row">
             <span>Subtotal</span>
-            <span>INR {cart.totalAmount}</span>
+            <span>AED {cart.totalAmount}</span>
           </div>
           
           <div className="summary-row">
@@ -191,7 +191,7 @@ const Cart = () => {
           
           <div className="summary-row total">
             <span>Total</span>
-            <span>INR {cart.totalAmount}</span>
+            <span>AED {cart.totalAmount}</span>
           </div>
 
           <button className="checkout-btn" onClick={handleCheckout}>
