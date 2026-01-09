@@ -13,6 +13,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { getUserId } from './components/Utils';
 import ProfilePreview from './components/ProfilePreview';
+import ImageCropper from './components/ImageCropper';
 
 // Cloudinary config (unsigned upload). Keep secrets out of frontend.
 const CLOUDINARY_CLOUD_NAME = 'dhcwgdobf';
@@ -50,6 +51,11 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadingImages, setUploadingImages] = useState({ profilePicture: false, coverImage: false });
+  
+  // Image cropper state
+  const [cropperImage, setCropperImage] = useState(null);
+  const [cropperField, setCropperField] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
   
   // Initialize form data with initialData if provided, or defaults
   const initializeFormData = () => {
@@ -218,11 +224,30 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
   const handleImageUpload = async (field, fileEvent) => {
     const file = fileEvent.target.files?.[0];
     if (!file) return;
-  
+
     console.log(`handleImageUpload called for ${field}:`, file.name, file.size, file.type);
     
-    // Create a URL for immediate preview
+    // Create a URL for the cropper
     const objectUrl = URL.createObjectURL(file);
+    
+    // Show cropper for the image
+    setCropperImage(objectUrl);
+    setCropperField(field);
+    setShowCropper(true);
+  };
+
+  const handleCropComplete = async (croppedFile) => {
+    const field = cropperField;
+    setShowCropper(false);
+    setCropperImage(null);
+    setCropperField(null);
+
+    if (!croppedFile || !field) return;
+
+    console.log(`Cropped image for ${field}:`, croppedFile.name, croppedFile.size);
+    
+    // Create a URL for immediate preview
+    const objectUrl = URL.createObjectURL(croppedFile);
     
     // Mark as uploading
     setUploadingImages(prev => ({ ...prev, [field]: true }));
@@ -235,29 +260,26 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
       return updated;
     });
     
-    // Store the file reference for later upload if needed - IMPORTANT: do this before async upload
+    // Store the file reference for later upload if needed
     if (onFileSelected) {
-      console.log(`Storing file reference for ${field}:`, file.name);
-      onFileSelected(field, file);
+      console.log(`Storing file reference for ${field}:`, croppedFile.name);
+      onFileSelected(field, croppedFile);
     }
   
     // Upload to Cloudinary immediately
     try {
       console.log(`Starting Cloudinary upload for ${field}...`);
       const hostedUrl = await uploadImageToServer(
-        file,
+        croppedFile,
         field === 'coverImage' ? 'cover image' : 'profile image'
       );
       
       if (hostedUrl) {
         console.log(`${field} uploaded successfully to Cloudinary:`, hostedUrl);
-        // Clean up object URL only after successful upload
         URL.revokeObjectURL(objectUrl);
         
-        // Update with the hosted URL
         setFormData(prevFormData => {
           const updated = { ...prevFormData, [field]: hostedUrl };
-          // Also set backgroundImage if this is coverImage
           if (field === 'coverImage') {
             updated.backgroundImage = hostedUrl;
           }
@@ -270,16 +292,23 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         toast.success(`${field === 'coverImage' ? 'Cover' : 'Profile'} image uploaded!`);
       } else {
         console.error(`Failed to upload ${field} - no URL returned from Cloudinary`);
-        // Don't show error toast here - the file is stored and will be uploaded during save
         console.log(`File stored for ${field}, will retry during save`);
       }
     } catch (err) {
       console.error(`Upload failed for ${field}:`, err);
-      // Don't show error toast here - the file is stored and will be uploaded during save
       console.log(`File stored for ${field}, will retry during save`);
     } finally {
       setUploadingImages(prev => ({ ...prev, [field]: false }));
     }
+  };
+
+  const handleCropCancel = () => {
+    if (cropperImage) {
+      URL.revokeObjectURL(cropperImage);
+    }
+    setShowCropper(false);
+    setCropperImage(null);
+    setCropperField(null);
   };
 
   const handlePhoneChange = (index, field, value) => {
@@ -437,6 +466,17 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
 
   return (
     <div style={styles.profileContainer}>
+      {/* Image Cropper Modal */}
+      {showCropper && cropperImage && (
+        <ImageCropper
+          image={cropperImage}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={cropperField === 'profilePicture' ? 1 : 16/9}
+          cropShape={cropperField === 'profilePicture' ? 'round' : 'rect'}
+        />
+      )}
+
       <div style={styles.header}>
         <p style={styles.subtitle}>
           Fill in your details for your business card order
