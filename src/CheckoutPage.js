@@ -28,8 +28,8 @@ const stripePromise = loadStripe('pk_test_51SYlQeCt0GZs5TLdv40gy5CFNFZQwjJBKKafh
 // Template Options - Only 3 distinct designs
 const TEMPLATE_OPTIONS = [
   { id: 'standard', label: 'Standard', description: 'Clean white background with green accents' },
-  { id: 'modern', label: 'Modern', description: 'Purple-blue gradient design' },
-  { id: 'epic', label: 'Epic', description: 'Dark theme with yellow accents' },
+  { id: 'modern', label: 'Modern', description: 'Purple gradient with glass effect' },
+  { id: 'epic', label: 'Epic', description: 'Dark theme with gold accents' },
 ];
 
 // Country codes for phone numbers
@@ -1335,7 +1335,7 @@ const AddressForm = ({
 };
 
 // Template Preview Component
-const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSelect, liveFormData }) => {
+const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSelect, liveFormData, accentColor, setAccentColor }) => {
   const renderAddToContactsButton = (styleOverrides = {}) => (
     <div style={{ marginTop: 'auto' }}>
       <button
@@ -1374,14 +1374,12 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     const fullName = profileData?.fullName || 'John Doe';
     const designation = profileData?.companyDesignation || 'Software Engineer';
     const company = profileData?.companyName || 'Tech Company Inc.';
-    const about = profileData?.about || '';
     const contactDetails = profileData?.contactDetails || {};
     const address = contactDetails.address || '';
     const emirates = contactDetails.state || '';
     const country = contactDetails.country || '';
     const rawProfilePic = profileData?.profilePicture || profileData?.profileImage || '';
     const rawCoverImage = profileData?.coverImage || '';
-    const socialMedia = profileData?.socialMedia || [];
 
     // Helper to convert Cloudinary HEIC URLs to web-friendly format
     const convertCloudinaryUrl = (url) => {
@@ -1399,11 +1397,23 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
 
     const profilePic = convertCloudinaryUrl(rawProfilePic);
     const coverImage = convertCloudinaryUrl(rawCoverImage);
+    const fullAddress = [address, emirates, country].filter(Boolean).join(', ');
 
+    // Get theme accent color (use custom accentColor if set, otherwise default)
+    const getThemeAccent = () => {
+      if (accentColor) return accentColor;
+      if (templateId === 'standard') return '#4CAF50';
+      if (templateId === 'modern') return '#0a66c2';
+      if (templateId === 'epic') return '#ffeb3b';
+      return '#4CAF50';
+    };
+    const themeAccent = getThemeAccent();
+
+    // LinkedIn/Facebook style card - same as ProfilePreview
     const baseCard = {
-      borderRadius: 16,
-      padding: '16px',
-      minHeight: '280px',
+      borderRadius: 8,
+      overflow: 'hidden',
+      minHeight: '320px',
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box'
@@ -1411,135 +1421,199 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
 
     if (templateId === 'standard') {
       return (
-        <div style={{ ...baseCard, background: '#fff', border: '1px solid #e0e0e0' }}>
-          {coverImage && (
-            <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
-              <div style={{ width: '100%', height: 120, background: `url(${coverImage}) center/cover no-repeat` }} />
+        <div style={{ ...baseCard, background: '#f5f5f5' }}>
+          {/* Cover Image */}
+          <div style={{
+            width: '100%',
+            height: 80,
+            background: coverImage 
+              ? `url(${coverImage}) center/cover no-repeat`
+              : `linear-gradient(135deg, ${themeAccent} 0%, ${themeAccent}cc 100%)`,
+            borderRadius: '0 0 6px 6px',
+          }} />
+          
+          {/* Profile Header Card */}
+          <div style={{
+            background: '#fff',
+            margin: '0 8px 8px',
+            marginTop: -25,
+            borderRadius: 6,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            position: 'relative',
+            padding: '45px 12px 12px',
+          }}>
+            {/* Profile Picture */}
+            <div style={{
+              position: 'absolute',
+              top: -30,
+              left: 12,
+            }}>
+              {profilePic ? (
+                <img src={profilePic} alt="Profile" style={{ 
+                  width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', 
+                  border: '3px solid #fff', backgroundColor: '#f0f0f0',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                }} />
+              ) : (
+                <div style={{
+                  width: 60, height: 60, borderRadius: '50%', 
+                  background: '#e0e0e0', border: '3px solid #fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 24, color: '#999'
+                }}>👤</div>
+              )}
             </div>
-          )}
-          {profilePic && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-              <img src={profilePic} alt="Profile" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid #81C784' }} />
-            </div>
-          )}
-          <h3 style={{ textAlign: 'center', margin: '4px 0', color: '#000' }}>{fullName}</h3>
-          <p style={{ textAlign: 'center', margin: '2px 0', color: '#666' }}>{designation}</p>
-          <p style={{ textAlign: 'center', margin: '2px 0', color: '#000' }}>{company}</p>
-          {about && <p style={{ marginTop: 12, color: '#555', fontSize: 12 }}>{about}</p>}
-          <div style={{ marginTop: 12, fontSize: 12, color: '#000' }}>
-            {phone && <div>📞 {phone}</div>}
-            {email && <div>📧 {email}</div>}
-            {address && <div>📍 {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}</div>}
+            
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#000', margin: '0 0 2px' }}>{fullName}</h3>
+            <p style={{ fontSize: 12, color: '#333', margin: '0 0 2px' }}>{designation}</p>
+            <p style={{ fontSize: 11, color: '#666', margin: 0 }}>{company}</p>
           </div>
-          {socialMedia.length > 0 && (
-            <div style={{ marginTop: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {socialMedia.slice(0, 3).map((s, i) => (
-                <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ padding: '6px 10px', border: '1px solid #81C784', borderRadius: 6, fontSize: 11, color: '#000', textDecoration: 'none' }}>
-                  {s.platform || 'Link'}
-                </a>
-              ))}
-            </div>
-          )}
-          {renderAddToContactsButton({ marginTop: 12 })}
+          
+          {/* Contact Info */}
+          <div style={{
+            background: '#fff',
+            margin: '0 8px 8px',
+            padding: '10px 12px',
+            borderRadius: 6,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            fontSize: 11,
+          }}>
+            {phone && <div style={{ marginBottom: 4, color: themeAccent }}>📞 {phone}</div>}
+            {email && <div style={{ marginBottom: 4, color: themeAccent }}>📧 {email}</div>}
+            {fullAddress && <div style={{ color: '#666' }}>📍 {fullAddress}</div>}
+          </div>
         </div>
       );
     }
 
     if (templateId === 'modern') {
+      // Modern theme - Purple gradient with glassmorphism
+      const gradientBg = accentColor 
+        ? `linear-gradient(135deg, ${themeAccent} 0%, ${themeAccent}cc 50%, ${themeAccent}99 100%)`
+        : 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
+      
       return (
-        <div style={{ ...baseCard, background: coverImage ? `linear-gradient(180deg, rgba(156,136,255,0.9) 0%, rgba(118,75,162,0.9) 100%), url(${coverImage}) center/cover no-repeat` : 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)', color: '#fff' }}>
-          {profilePic && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-              <img src={profilePic} alt="Profile" style={{ width: 78, height: 78, borderRadius: '50%', objectFit: 'cover', border: '4px solid rgba(255,255,255,0.3)' }} />
-            </div>
+        <div style={{ ...baseCard, background: gradientBg }}>
+          {/* Cover with overlay if exists */}
+          {coverImage && (
+            <div style={{
+              width: '100%',
+              height: 70,
+              background: `linear-gradient(to bottom, transparent 0%, rgba(102,126,234,0.8) 100%), url(${coverImage}) center/cover no-repeat`,
+            }} />
           )}
-          <h3 style={{ textAlign: 'center', margin: '4px 0' }}>{fullName}</h3>
-          <p style={{ textAlign: 'center', margin: '2px 0' }}>{designation}</p>
-          <p style={{ textAlign: 'center', margin: '2px 0' }}>{company}</p>
-          {about && <p style={{ marginTop: 12, color: '#fff', opacity: 0.9, fontSize: 12 }}>{about}</p>}
-          <div style={{ marginTop: 12, fontSize: 12 }}>
-            {phone && <div>📞 {phone}</div>}
-            {email && <div>📧 {email}</div>}
-            {address && <div>📍 {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}</div>}
+          
+          {/* Profile Section - Centered */}
+          <div style={{
+            textAlign: 'center',
+            padding: coverImage ? '0 12px 12px' : '20px 12px 12px',
+            marginTop: coverImage ? -25 : 0,
+          }}>
+            {/* Profile Picture */}
+            {profilePic ? (
+              <img src={profilePic} alt="Profile" style={{ 
+                width: 55, height: 55, borderRadius: '50%', objectFit: 'cover', 
+                border: '3px solid rgba(255,255,255,0.8)',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+              }} />
+            ) : (
+              <div style={{
+                width: 55, height: 55, borderRadius: '50%', 
+                background: 'rgba(255,255,255,0.2)', 
+                border: '3px solid rgba(255,255,255,0.8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22, color: '#fff',
+                margin: '0 auto',
+              }}>👤</div>
+            )}
+            
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#fff', margin: '8px 0 2px', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>{fullName}</h3>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.9)', margin: '0 0 2px' }}>{designation}</p>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', margin: 0 }}>{company}</p>
           </div>
-          {socialMedia.length > 0 && (
-            <div style={{ marginTop: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {socialMedia.slice(0, 3).map((s, i) => (
-                <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ padding: '8px 12px', background: '#005885', color: '#fff', borderRadius: 8, fontSize: 11, textDecoration: 'none' }}>
-                  {s.platform || 'Link'}
-                </a>
-              ))}
-            </div>
-          )}
-          {renderAddToContactsButton({ background: 'linear-gradient(180deg, #9c88ff 0%, #764ba2 100%)', color: '#fff', marginTop: 12 })}
+          
+          {/* Contact Info - Glass Card */}
+          <div style={{
+            background: 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(10px)',
+            margin: '0 8px 8px',
+            padding: '10px 12px',
+            borderRadius: 10,
+            border: '1px solid rgba(255,255,255,0.2)',
+            fontSize: 11,
+          }}>
+            {phone && <div style={{ marginBottom: 4, color: '#fff' }}>📞 {phone}</div>}
+            {email && <div style={{ marginBottom: 4, color: '#fff' }}>📧 {email}</div>}
+            {fullAddress && <div style={{ color: 'rgba(255,255,255,0.8)' }}>📍 {fullAddress}</div>}
+          </div>
         </div>
       );
     }
 
-    if (templateId === 'map') {
-      return (
-        <div style={{ ...baseCard, background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)', color: '#fff' }}>
-          {(coverImage || profilePic) && (
-            <div style={{ position: 'relative', marginBottom: 12 }}>
-              <div style={{ height: 110, borderRadius: 12, background: coverImage ? `url(${coverImage}) center/cover no-repeat` : 'rgba(255,255,255,0.12)' }} />
-              {profilePic && (
-                <img src={profilePic} alt="Profile" style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '3px solid #fff', position: 'absolute', left: '50%', bottom: -35, transform: 'translateX(-50%)' }} />
-              )}
-            </div>
-          )}
-          <div style={{ textAlign: 'center', marginTop: profilePic ? 40 : 0, marginBottom: 12 }}>
-            <h3 style={{ margin: '4px 0' }}>{fullName}</h3>
-            <p style={{ margin: '2px 0' }}>{designation}</p>
-            <p style={{ margin: '2px 0' }}>{company}</p>
-          </div>
-          <div style={{ fontSize: 12, marginBottom: 12 }}>
-            {phone && <div>📞 {phone}</div>}
-            {email && <div>📧 {email}</div>}
-          </div>
-          {socialMedia.length > 0 && (
-            <div style={{ marginTop: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {socialMedia.slice(0, 3).map((s, i) => (
-                <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ padding: '8px 12px', background: '#2E7D32', color: '#fff', borderRadius: 8, fontSize: 11, textDecoration: 'none' }}>
-                  {s.platform || 'Link'}
-                </a>
-              ))}
-            </div>
-          )}
-          {renderAddToContactsButton({ background: 'linear-gradient(135deg, #34A853 0%, #0b8043 100%)', color: '#fff', marginTop: 12 })}
-        </div>
-      );
-    }
-
-    // Epic
+    // Epic theme
     return (
-      <div style={{ ...baseCard, background: coverImage ? `linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url(${coverImage}) center/cover no-repeat` : '#000', color: '#fff', border: '2px solid #ffeb3b' }}>
-        <div style={{ textAlign: 'center', marginBottom: 12 }}>
-          {profilePic && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-              <img src={profilePic} alt="Profile" style={{ width: 78, height: 78, borderRadius: '50%', objectFit: 'cover', border: '4px solid #ffeb3b' }} />
-            </div>
-          )}
-          <h3 style={{ margin: '4px 0' }}>{fullName}</h3>
-          <p style={{ margin: '2px 0', color: '#ffeb3b' }}>{designation}</p>
-          <p style={{ margin: '2px 0', opacity: 0.8 }}>{company}</p>
-        </div>
-        {about && <p style={{ textAlign: 'center', color: '#fff', opacity: 0.7, fontSize: 11 }}>{about}</p>}
-        <div style={{ height: 1, background: '#ffeb3b', margin: '10px 0' }} />
-        <div style={{ fontSize: 11, marginBottom: 12 }}>
-          {allPhones.map((p, i) => <div key={i}>📞 {p}</div>)}
-          {allEmails.map((e, i) => <div key={i}>📧 {e}</div>)}
-          {address && <div>📍 {address}{emirates ? `, ${emirates}` : ''}{country ? `, ${country}` : ''}</div>}
-        </div>
-        {socialMedia.length > 0 && (
-          <div style={{ marginTop: 'auto', display: 'flex', gap: 8 }}>
-            {socialMedia.slice(0, 3).map((s, i) => (
-              <a key={i} href={s.url || '#'} onClick={e => !s.url && e.preventDefault()} style={{ flex: 1, padding: '8px 10px', border: '1px solid #ffeb3b', color: '#fff', textAlign: 'center', borderRadius: 8, fontSize: 11, textDecoration: 'none' }}>
-                {s.platform || 'Link'}
-              </a>
-            ))}
+      <div style={{ ...baseCard, background: '#000' }}>
+        {/* Cover Image */}
+        <div style={{
+          width: '100%',
+          height: 80,
+          background: coverImage 
+            ? `url(${coverImage}) center/cover no-repeat`
+            : 'linear-gradient(135deg, #1a1a1a 0%, #333 100%)',
+          borderRadius: '0 0 6px 6px',
+          borderBottom: `2px solid ${themeAccent}`,
+        }} />
+        
+        {/* Profile Header Card */}
+        <div style={{
+          background: '#111',
+          margin: '0 8px 8px',
+          marginTop: -25,
+          borderRadius: 6,
+          border: '1px solid #222',
+          position: 'relative',
+          padding: '45px 12px 12px',
+        }}>
+          {/* Profile Picture */}
+          <div style={{
+            position: 'absolute',
+            top: -30,
+            left: 12,
+          }}>
+            {profilePic ? (
+              <img src={profilePic} alt="Profile" style={{ 
+                width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', 
+                border: `3px solid ${themeAccent}`, backgroundColor: '#1a1a1a',
+                boxShadow: `0 2px 6px ${themeAccent}33`
+              }} />
+            ) : (
+              <div style={{
+                width: 60, height: 60, borderRadius: '50%', 
+                background: '#1a1a1a', border: `3px solid ${themeAccent}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 24, color: themeAccent
+              }}>👤</div>
+            )}
           </div>
-        )}
-        {renderAddToContactsButton({ background: '#ffeb3b', color: '#000', marginTop: 12 })}
+          
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#fff', margin: '0 0 2px' }}>{fullName}</h3>
+          <p style={{ fontSize: 12, color: themeAccent, margin: '0 0 2px' }}>{designation}</p>
+          <p style={{ fontSize: 11, color: '#999', margin: 0 }}>{company}</p>
+        </div>
+        
+        {/* Contact Info */}
+        <div style={{
+          background: '#111',
+          margin: '0 8px 8px',
+          padding: '10px 12px',
+          borderRadius: 6,
+          border: '1px solid #222',
+          fontSize: 11,
+        }}>
+          {phone && <div style={{ marginBottom: 4, color: themeAccent }}>📞 {phone}</div>}
+          {email && <div style={{ marginBottom: 4, color: themeAccent }}>📧 {email}</div>}
+          {fullAddress && <div style={{ color: '#888' }}>📍 {fullAddress}</div>}
+        </div>
       </div>
     );
   };
@@ -1547,7 +1621,7 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
   return (
     <div style={styles.templateSelector}>
       <p style={styles.templateSelectorDesc} className="checkout-template-selector-desc">
-        Choose a design template for your business card preview
+        Selected Theme Preview
       </p>
       <div style={styles.templatesGrid} className="checkout-template-grid">
         {TEMPLATE_OPTIONS.map((template) => (
@@ -1582,11 +1656,94 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
         Your profile image, cover photo, and contact details appear here.
       </p>
     </div>
+    
+    {/* Color Picker Section */}
+    <div style={{ padding: '12px 16px', borderBottom: '1px solid #eee' }}>
+      <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#333' }}>Accent Color</p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Preset colors based on theme */}
+        {(selectedTemplate === 'standard' ? ['#4CAF50', '#2196F3', '#9C27B0', '#FF5722', '#607D8B'] :
+          selectedTemplate === 'modern' ? ['#0a66c2', '#6366f1', '#ec4899', '#14b8a6', '#f59e0b'] :
+          ['#ffeb3b', '#ff6b6b', '#4ecdc4', '#a855f7', '#f97316']).map((color) => (
+          <button
+            key={color}
+            onClick={() => {
+              setAccentColor(color);
+              localStorage.setItem('selectedAccentColor', color);
+            }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: color,
+              border: accentColor === color ? '3px solid #333' : '2px solid #ddd',
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              transform: accentColor === color ? 'scale(1.1)' : 'scale(1)',
+            }}
+            title={color}
+          />
+        ))}
+        {/* Custom color picker */}
+        <label style={{ position: 'relative', cursor: 'pointer' }}>
+          <input
+            type="color"
+            value={accentColor || '#4CAF50'}
+            onChange={(e) => {
+              setAccentColor(e.target.value);
+              localStorage.setItem('selectedAccentColor', e.target.value);
+            }}
+            style={{
+              position: 'absolute',
+              opacity: 0,
+              width: 32,
+              height: 32,
+              cursor: 'pointer',
+            }}
+          />
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
+            border: '2px solid #ddd',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 14,
+          }}>
+            🎨
+          </div>
+        </label>
+        {/* Reset button */}
+        {accentColor && (
+          <button
+            onClick={() => {
+              setAccentColor(null);
+              localStorage.removeItem('selectedAccentColor');
+            }}
+            style={{
+              padding: '6px 12px',
+              fontSize: 12,
+              background: '#f5f5f5',
+              border: '1px solid #ddd',
+              borderRadius: 16,
+              cursor: 'pointer',
+              color: '#666',
+            }}
+          >
+            Reset
+          </button>
+        )}
+      </div>
+    </div>
+    
     <div style={styles.selectedTemplatePreviewWrapper}>
       {/* Use ProfilePreview to mirror QR scan view */}
       <ProfilePreview
         profile={userProfile}
         themeOverride={selectedTemplate}
+        accentColor={accentColor}
         embedded={true}
       />
     </div>
@@ -1617,6 +1774,7 @@ const CheckoutPage = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [liveFormData, setLiveFormData] = useState(null); // For real-time preview updates
   const [pendingFiles, setPendingFiles] = useState({ profilePicture: null, coverImage: null }); // Store file references for upload
+  const [accentColor, setAccentColor] = useState(null); // Custom accent color for theme
 
   useEffect(() => {
     fetchCartItems();
@@ -1626,6 +1784,11 @@ const CheckoutPage = () => {
     const savedTemplate = localStorage.getItem('selectedCardTemplate');
     if (savedTemplate) {
       setSelectedTemplate(savedTemplate);
+    }
+    // Load accent color from localStorage
+    const savedAccentColor = localStorage.getItem('selectedAccentColor');
+    if (savedAccentColor) {
+      setAccentColor(savedAccentColor);
     }
   }, []);
 
@@ -2383,7 +2546,9 @@ const CheckoutPage = () => {
   userProfile={liveFormData || userProfile}
   selectedTemplate={selectedTemplate}
   onTemplateSelect={handleTemplateSelect}
-  liveFormData={liveFormData} // Add this prop
+  liveFormData={liveFormData}
+  accentColor={accentColor}
+  setAccentColor={setAccentColor}
 />
                   {liveFormData && (
                     <p style={{ 
