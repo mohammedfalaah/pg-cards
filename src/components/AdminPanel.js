@@ -319,14 +319,17 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     try {
       if (editingProduct) {
         // Update existing product
-        const response = await axios.put(
-          `https://pg-cards.vercel.app/admin/updateProduct/${editingProduct._id}`,
-          productData,
+        const response = await axios.post(
+          'https://pg-cards.vercel.app/card/updateProduct',
+          { 
+            id: editingProduct._id,
+            updatedData: productData
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
         setProducts(products.map(p => 
-          p._id === editingProduct._id ? response.data.product || response.data.data : p
+          p._id === editingProduct._id ? response.data.product || response.data.data || { ...p, ...productData } : p
         ));
         toast.success('Product updated successfully');
       } else {
@@ -610,7 +613,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                       <p className="productVariants">{product.variants.length} variant(s)</p>
                     )}
                     <div className="productActions">
-                      {/* <button className="editBtn" onClick={() => openEditProductModal(product)}>✏️ Edit</button> */}
+                       <button className="editBtn" onClick={() => openEditProductModal(product)}>✏️ Edit</button> 
                       <button className="deleteBtn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>
                     </div>
                   </div>
