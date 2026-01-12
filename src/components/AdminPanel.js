@@ -32,7 +32,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     currency: 'AED',
     material: '',
     features: [''],
-    variants: [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+    variants: [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -184,7 +184,7 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       currency: 'AED',
       material: '',
       features: [''],
-      variants: [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+      variants: [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
     });
     setEditingProduct(null);
   };
@@ -206,7 +206,9 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       currency: product.currency || 'AED',
       material: product.material || '',
       features: product.features?.length > 0 ? product.features : [''],
-      variants: product.variants?.length > 0 ? product.variants : [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+      variants: product.variants?.length > 0 
+        ? product.variants.map(v => ({ ...v, additionalImages: v.additionalImages || [] }))
+        : [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
     });
     setShowProductModal(true);
   };
@@ -245,6 +247,27 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     }
   };
 
+  // Handle additional image upload for variant
+  const handleAdditionalImageUpload = async (variantIndex, file) => {
+    const imageUrl = await uploadToCloudinary(file);
+    if (imageUrl) {
+      const newVariants = [...productForm.variants];
+      if (!newVariants[variantIndex].additionalImages) {
+        newVariants[variantIndex].additionalImages = [];
+      }
+      newVariants[variantIndex].additionalImages.push(imageUrl);
+      setProductForm({ ...productForm, variants: newVariants });
+      toast.success('Additional image uploaded successfully');
+    }
+  };
+
+  // Remove additional image from variant
+  const removeAdditionalImage = (variantIndex, imageIndex) => {
+    const newVariants = [...productForm.variants];
+    newVariants[variantIndex].additionalImages.splice(imageIndex, 1);
+    setProductForm({ ...productForm, variants: newVariants });
+  };
+
   // Add feature
   const addFeature = () => {
     setProductForm({ ...productForm, features: [...productForm.features, ''] });
@@ -267,14 +290,14 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   const addVariant = () => {
     setProductForm({
       ...productForm,
-      variants: [...productForm.variants, { color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }]
+      variants: [...productForm.variants, { color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
     });
   };
 
   // Remove variant
   const removeVariant = (index) => {
     const newVariants = productForm.variants.filter((_, i) => i !== index);
-    setProductForm({ ...productForm, variants: newVariants.length > 0 ? newVariants : [{ color: '', frontImage: '', backImage: '', price: '', finish: 'Glossy' }] });
+    setProductForm({ ...productForm, variants: newVariants.length > 0 ? newVariants : [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }] });
   };
 
   // Update variant
@@ -845,6 +868,36 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                               </label>
                             )}
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Additional Images Section */}
+                      <div className="formGroup additionalImagesSection">
+                        <label>Additional Images</label>
+                        <div className="additionalImagesGrid">
+                          {variant.additionalImages?.map((img, imgIndex) => (
+                            <div key={imgIndex} className="imagePreview additionalImagePreview">
+                              <img src={img} alt={`Additional ${imgIndex + 1}`} />
+                              <button 
+                                type="button"
+                                onClick={() => removeAdditionalImage(index, imgIndex)}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                          <label className="uploadLabel addMoreImages">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files[0]) {
+                                  handleAdditionalImageUpload(index, e.target.files[0]);
+                                }
+                              }}
+                            />
+                            {uploadingImage ? '⏳ Uploading...' : '➕ Add Image'}
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -1890,6 +1943,44 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
           color: white;
           cursor: pointer;
           font-size: 12px;
+        }
+
+        /* Additional Images Section */
+        .additionalImagesSection {
+          margin-top: 15px;
+        }
+
+        .additionalImagesGrid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          gap: 10px;
+          margin-top: 8px;
+        }
+
+        .additionalImagePreview {
+          width: 100px;
+          height: 100px;
+          border-radius: 8px;
+          overflow: hidden;
+          border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .addMoreImages {
+          width: 100px;
+          height: 100px;
+          border: 2px dashed rgba(212, 175, 55, 0.3);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          padding: 10px;
+          text-align: center;
+        }
+
+        .addMoreImages:hover {
+          border-color: #d4af37;
+          background: rgba(212, 175, 55, 0.1);
         }
 
         .modalFooter {
