@@ -287,6 +287,7 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
     const displayCover = convertCloudinaryUrl(cover);
 
     // Helper to render profile image with error handling
+    // eslint-disable-next-line no-unused-vars
     const renderProfileImage = (size, borderColor, borderWidth = 3) => {
       if (!displayProfilePic) return null;
       

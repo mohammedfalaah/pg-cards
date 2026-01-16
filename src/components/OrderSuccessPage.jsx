@@ -5,14 +5,14 @@ const OrderSuccessPage = () => {
   const [orderDetails, setOrderDetails] = useState(null);
   const [animationComplete, setAnimationComplete] = useState(false);
   const [profile, setProfile] = useState(null);
-  const [profileError, setProfileError] = useState('');
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [, setProfileError] = useState('');
+  const [, setLoadingProfile] = useState(true);
   const [qrImage, setQrImage] = useState('');
   const [redirectUrl, setRedirectUrl] = useState('');
   const [qrLoading, setQrLoading] = useState(true);
   const [isTrial, setIsTrial] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState('standard');
-  const [qrUrlMismatch, setQrUrlMismatch] = useState(false);
+  const [, setQrUrlMismatch] = useState(false);
 
   useEffect(() => {
     setTimeout(() => {
@@ -127,6 +127,7 @@ const OrderSuccessPage = () => {
   }, []);
 
   // Helper to convert Cloudinary HEIC URLs to web-friendly format
+  // eslint-disable-next-line no-unused-vars
   const convertCloudinaryUrl = (url) => {
     if (!url) return url;
     if (url.includes('cloudinary.com') && (url.endsWith('.heic') || url.endsWith('.HEIC'))) {
@@ -141,6 +142,7 @@ const OrderSuccessPage = () => {
   };
 
   // Function to regenerate QR code with correct URL
+  // eslint-disable-next-line no-unused-vars
   const regenerateQrCode = async (correctUrl) => {
     try {
       console.log('Regenerating QR code with URL:', correctUrl);

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import PGCardsLogo from './PGCardsLogo';
 import './Login.css';
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import toast from 'react-hot-toast';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://pg-cards.vercel.app';
-// const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '340844493737-ldev50489jene365c0smg0ttgm2siba5.apps.googleusercontent.com';
 
 const Login = ({ onClose, onLogin }) => {
   const [formData, setFormData] = useState({

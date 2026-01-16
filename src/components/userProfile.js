@@ -10,7 +10,7 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
-  const [orders, setOrders] = useState([]);
+  const [, setOrders] = useState([]);
   const [qrLoading, setQrLoading] = useState(false);
   const [qrImage, setQrImage] = useState('');
   const [redirectUrl, setRedirectUrl] = useState('');
