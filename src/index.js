@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 const GOOGLE_CLIENT_ID ='1020234324057-4l2u2ctn6jtq2sgolg569u3mf3aqd9pm.apps.googleusercontent.com';
 
 console.log("Google Client ID:", GOOGLE_CLIENT_ID);
+console.log("Google Client ID:", GOOGLE_CLIENT_ID);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -18,6 +19,7 @@ root.render(
   position="top-center"
   reverseOrder={false}
 />
+
     </GoogleOAuthProvider>
   </React.StrictMode>
 );
