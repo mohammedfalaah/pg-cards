@@ -11,23 +11,20 @@ const ProductDetailPage = ({ productId }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showLogin, setShowLogin] = useState(false);
+  const [allImages, setAllImages] = useState([]); // Store all images for carousel
+
   useEffect(() => {
     const urlProductId = productId || window.location.pathname.split('/').pop();
     fetchProductDetails(urlProductId);
   }, [productId]);
 
   const handleLoginSuccess = ({ user, token }) => {
-  // Store user data and token
-  localStorage.setItem('userId', user._id || user.id);
-  localStorage.setItem('token', token);
-  localStorage.setItem('user', JSON.stringify(user));
-  
-  // Close the login modal
-  setShowLogin(false);
-  
-  // Show success message
-  toast.success('Login successful!');
-};
+    localStorage.setItem('userId', user._id || user.id);
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    setShowLogin(false);
+    toast.success('Login successful!');
+  };
 
   const fetchProductDetails = async (id) => {
     try {
@@ -42,15 +39,35 @@ const ProductDetailPage = ({ productId }) => {
         const foundProduct = data.data.find(p => p._id === id);
         if (foundProduct) {
           setProduct(foundProduct);
-          setSelectedVariant(foundProduct.variants[0]);
-          setSelectedImage(foundProduct.variants[0]?.frontImage);
+          const firstVariant = foundProduct.variants[0];
+          setSelectedVariant(firstVariant);
+          setSelectedImage(firstVariant?.frontImage);
+          
+          // Collect all images from the selected variant
+          collectAllImages(firstVariant);
         }
       }
     } catch (error) {
       console.error('Error fetching product:', error);
+      toast.error('Failed to load product details');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Collect all images from a variant for the image gallery
+  const collectAllImages = (variant) => {
+    const images = [];
+    if (variant?.frontImage) images.push({ src: variant.frontImage, alt: 'Front View' });
+    if (variant?.backImage) images.push({ src: variant.backImage, alt: 'Back View' });
+    if (variant?.leftSideView) images.push({ src: variant.leftSideView, alt: 'Left Side View' });
+    if (variant?.rightSideView) images.push({ src: variant.rightSideView, alt: 'Right Side View' });
+    if (variant?.additionalImages?.length > 0) {
+      variant.additionalImages.forEach((img, idx) => {
+        images.push({ src: img, alt: `Additional View ${idx + 1}` });
+      });
+    }
+    setAllImages(images);
   };
 
   const navigateTo = (path) => {
@@ -58,47 +75,56 @@ const ProductDetailPage = ({ productId }) => {
     window.dispatchEvent(new Event('popstate'));
   };
 
-// ✅ CORRECTED handleAddToCart function
-const handleAddToCart = async () => {
-  const userId = getUserId();
+  const handleAddToCart = async () => {
+    const userId = getUserId();
 
-  if (!userId) {
-    setShowLogin(true);
-    return;
-  }
-
-  // Get product ID from localStorage or use the current product's ID
-  const productIdToAdd = localStorage.getItem('selectedProductId') || product._id;
-
-  try {
-    const response = await axios.post(
-      "https://pg-cards.vercel.app/cart/addToCart",
-      {
-        userId,
-        productId: productIdToAdd
-      }
-    );
-
-    if (response.status === 200) {
-      toast.success("Added to cart successfully!");
+    if (!userId) {
+      setShowLogin(true);
+      return;
     }
-  } catch (error) {
-    console.error("Cart error:", error);
-    toast.error("Something went wrong");
-  }
-};
+
+    if (!product || !selectedVariant) {
+      toast.error('Please select a product variant');
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "https://pg-cards.vercel.app/cart/addToCart",
+        {
+          userId,
+          productId: product._id,
+          variantId: selectedVariant._id, // Include variant ID if needed
+          quantity
+        }
+      );
+
+      if (response.status === 200 || response.data.code === 200) {
+        toast.success("Added to cart successfully!");
+      }
+    } catch (error) {
+      console.error("Cart error:", error);
+      toast.error(error.response?.data?.msg || "Something went wrong");
+    }
+  };
 
   const handleBuyNow = async () => {
-  const userId = localStorage.getItem('userId');
-  
-  if (!userId) {
-    setShowLogin(true);
-    return;
-  }
+    const userId = localStorage.getItem('userId');
+    
+    if (!userId) {
+      setShowLogin(true);
+      return;
+    }
 
-  await handleAddToCart();
-  navigateTo('/checkout');
-};
+    await handleAddToCart();
+    navigateTo('/checkout');
+  };
+
+  const handleVariantChange = (variant) => {
+    setSelectedVariant(variant);
+    setSelectedImage(variant?.frontImage);
+    collectAllImages(variant); // Update images when variant changes
+  };
 
   const calculateDiscount = (originalPrice, currentPrice) => {
     if (!originalPrice || originalPrice <= currentPrice) return null;
@@ -107,7 +133,9 @@ const handleAddToCart = async () => {
   };
 
   const getColorCode = (colorName) => {
-    const color = colorName?.toLowerCase() || '';
+    if (!colorName) return '#999999';
+    
+    const color = colorName.toLowerCase();
     const colorMap = {
       'black': '#000000',
       'white': '#FFFFFF',
@@ -118,7 +146,21 @@ const handleAddToCart = async () => {
       'dark blue': '#00008B',
       'blue': '#0000FF',
       'silver': '#C0C0C0',
+      'red': '#FF0000',
+      'green': '#008000',
+      'yellow': '#FFFF00',
+      'orange': '#FFA500',
+      'pink': '#FFC0CB',
+      'brown': '#A52A2A',
+      'navy': '#000080',
+      'teal': '#008080',
+      'maroon': '#800000',
     };
+    
+    // Try to extract hex code if present in the color name
+    const hexMatch = colorName.match(/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/);
+    if (hexMatch) return hexMatch[0];
+    
     return colorMap[color] || '#999999';
   };
 
@@ -168,38 +210,72 @@ const handleAddToCart = async () => {
                 e.target.src = 'https://via.placeholder.com/600x400?text=Product+Image';
               }}
             />
+            
+            {/* Image Navigation Buttons */}
+            {allImages.length > 1 && (
+              <>
+                <button 
+                  className="imageNavButton prevButton"
+                  onClick={() => {
+                    const currentIndex = allImages.findIndex(img => img.src === selectedImage);
+                    const prevIndex = (currentIndex - 1 + allImages.length) % allImages.length;
+                    setSelectedImage(allImages[prevIndex].src);
+                  }}
+                >
+                  ‹
+                </button>
+                <button 
+                  className="imageNavButton nextButton"
+                  onClick={() => {
+                    const currentIndex = allImages.findIndex(img => img.src === selectedImage);
+                    const nextIndex = (currentIndex + 1) % allImages.length;
+                    setSelectedImage(allImages[nextIndex].src);
+                  }}
+                >
+                  ›
+                </button>
+              </>
+            )}
           </div>
           
+          {/* Image Gallery Thumbnails */}
           <div className="thumbnailGallery">
-            {selectedVariant?.frontImage && (
+            {allImages.map((img, index) => (
               <div
-                className={`thumbnail ${selectedImage === selectedVariant?.frontImage ? 'thumbnailActive' : ''}`}
-                onClick={() => setSelectedImage(selectedVariant?.frontImage)}
+                key={index}
+                className={`thumbnail ${selectedImage === img.src ? 'thumbnailActive' : ''}`}
+                onClick={() => setSelectedImage(img.src)}
               >
                 <img
-                  src={selectedVariant.frontImage}
-                  alt="Front view"
+                  src={img.src}
+                  alt={img.alt}
                   className="thumbnailImage"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/80x80?text=Image';
+                  }}
                 />
               </div>
-            )}
-            {selectedVariant?.backImage && (
-              <div
-                className={`thumbnail ${selectedImage === selectedVariant?.backImage ? 'thumbnailActive' : ''}`}
-                onClick={() => setSelectedImage(selectedVariant?.backImage)}
-              >
-                <img
-                  src={selectedVariant.backImage}
-                  alt="Back view"
-                  className="thumbnailImage"
-                />
-              </div>
-            )}
+            ))}
           </div>
+          
+          {/* Image Counter */}
+          {allImages.length > 0 && (
+            <div className="imageCounter">
+              {allImages.findIndex(img => img.src === selectedImage) + 1} / {allImages.length}
+            </div>
+          )}
         </div>
 
         <div className="infoSection">
           <h1 className="productTitle">{product.title}</h1>
+          
+          {/* Category and Material Badges */}
+          <div className="productBadges">
+            <span className="badge categoryBadge">{product.category}</span>
+            {product.material && (
+              <span className="badge materialBadge">{product.material}</span>
+            )}
+          </div>
 
           <div className="priceSection">
             {originalPrice && discount ? (
@@ -221,6 +297,7 @@ const handleAddToCart = async () => {
 
           <p className="description">{product.description}</p>
 
+          {/* Product Details */}
           <div className="detailsGrid">
             <div className="detailItem">
               <span className="detailLabel">Category</span>
@@ -230,44 +307,53 @@ const handleAddToCart = async () => {
               <span className="detailLabel">Material</span>
               <span className="detailValue">{product.material}</span>
             </div>
+            {selectedVariant?.finish && (
+              <div className="detailItem">
+                <span className="detailLabel">Finish</span>
+                <span className="detailValue">{selectedVariant.finish}</span>
+              </div>
+            )}
           </div>
 
-          <div className="variantSection">
-            <h3 className="variantTitle">Select Variant</h3>
-            <div className="variantsGrid">
-              {product.variants.map((variant, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    setSelectedVariant(variant);
-                    setSelectedImage(variant.frontImage);
-                  }}
-                  className={`variantCard ${selectedVariant === variant ? 'variantCardActive' : ''}`}
-                >
-                  <div className="variantColorSection">
-                    <div
-                      className="colorCircle"
-                      style={{ backgroundColor: getColorCode(variant.color) }}
-                    />
-                    <div>
-                      <div className="variantColorName">{variant.color}</div>
-                      <div className="variantFinish">{variant.finish}</div>
+          {/* Variant Selection */}
+          {product.variants && product.variants.length > 1 && (
+            <div className="variantSection">
+              <h3 className="variantTitle">Select Variant</h3>
+              <div className="variantsGrid">
+                {product.variants.map((variant, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handleVariantChange(variant)}
+                    className={`variantCard ${selectedVariant === variant ? 'variantCardActive' : ''}`}
+                  >
+                    <div className="variantColorSection">
+                      <div
+                        className="colorCircle"
+                        style={{ backgroundColor: getColorCode(variant.color) }}
+                        title={variant.color}
+                      />
+                      <div>
+                        <div className="variantColorName">{variant.color}</div>
+                        <div className="variantFinish">{variant.finish}</div>
+                      </div>
+                    </div>
+                    <div className="variantPrice">
+                      AED {variant.price}
                     </div>
                   </div>
-                  <div className="variantPrice">
-                    AED {variant.price}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* Quantity Selector */}
           <div className="quantitySection">
             <span className="quantityLabel">Quantity</span>
             <div className="quantityControls">
               <button
                 className="quantityButton"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
               >
                 -
               </button>
@@ -279,23 +365,30 @@ const handleAddToCart = async () => {
                 +
               </button>
             </div>
+            <div className="totalPrice">
+              Total: AED {(currentPrice * quantity).toLocaleString()}
+            </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="actionButtons">
             <button
               className="addToCartBtn"
               onClick={handleAddToCart}
+              disabled={!selectedVariant}
             >
               <span>Add to Cart</span>
             </button>
             <button
               className="buyNowBtn"
               onClick={handleBuyNow}
+              disabled={!selectedVariant}
             >
               Buy Now
             </button>
           </div>
 
+          {/* Features List */}
           {product.features && product.features.length > 0 && (
             <div className="featuresSection">
               <h3 className="featuresTitle">Key Features</h3>
@@ -310,6 +403,7 @@ const handleAddToCart = async () => {
             </div>
           )}
 
+          {/* Info Boxes */}
           <div className="infoBoxes">
             <div className="infoBox">
               <div className="infoBoxIcon">🚚</div>
@@ -336,12 +430,12 @@ const handleAddToCart = async () => {
         </div>
       </div>
 
-  {showLogin && (
-  <Login 
-    onClose={() => setShowLogin(false)} 
-    onLogin={handleLoginSuccess}
-  />
-)}
+      {showLogin && (
+        <Login 
+          onClose={() => setShowLogin(false)} 
+          onLogin={handleLoginSuccess}
+        />
+      )}
 
       <style>{`
         /* CSS Variables */

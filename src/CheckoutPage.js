@@ -22,8 +22,8 @@ const CLOUDINARY_UPLOAD_PRESET =
   process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'pgcards_unsigned';
 const CLOUDINARY_FOLDER = process.env.REACT_APP_CLOUDINARY_FOLDER || 'pgcards';
 
-// Initialize Stripe
-const stripePromise = loadStripe('pk_test_51SYlQeCt0GZs5TLdv40gy5CFNFZQwjJBKKafhRcRkAteocPEM5UVtYrXtiOMGeuFrci9HUgwn8rPIua4wuqysHsw00cCrrypSt');
+// Initialize Stripe. pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPR
+const stripePromise = loadStripe('pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPR');
 
 // Template Options - Only 3 distinct designs
 const TEMPLATE_OPTIONS = [

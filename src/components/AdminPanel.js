@@ -24,16 +24,35 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   // Product Modal States
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  // const [productForm, setProductForm] = useState({
+  //   title: '',
+  //   description: '',
+  //   category: 'Metal',
+  //   basePrice: '',
+  //   currency: 'AED',
+  //   material: '',
+  //   features: [''],
+  //   variants: [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
+  // });
   const [productForm, setProductForm] = useState({
-    title: '',
-    description: '',
-    category: 'Metal',
-    basePrice: '',
-    currency: 'AED',
-    material: '',
-    features: [''],
-    variants: [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
-  });
+  title: '',
+  description: '',
+  category: 'Metal',
+  basePrice: '',
+  currency: 'AED',
+  material: '',
+  features: [''],
+  variants: [{
+    color: '',
+    frontImage: '',
+    backImage: '',
+    leftSideView: '',
+    rightSideView: '',
+    additionalImages: [],
+    price: '',
+    finish: 'Glossy'
+  }]
+});
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
@@ -287,12 +306,27 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   };
 
   // Add variant
+  // const addVariant = () => {
+  //   setProductForm({
+  //     ...productForm,
+  //     variants: [...productForm.variants, { color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
+  //   });
+  // };
   const addVariant = () => {
-    setProductForm({
-      ...productForm,
-      variants: [...productForm.variants, { color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
-    });
-  };
+  setProductForm({
+    ...productForm,
+    variants: [...productForm.variants, {
+      color: '',
+      frontImage: '',
+      backImage: '',
+      leftSideView: '',
+      rightSideView: '',
+      additionalImages: [],
+      price: '',
+      finish: 'Glossy'
+    }]
+  });
+};
 
   // Remove variant
   const removeVariant = (index) => {
@@ -308,76 +342,162 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   };
 
   // Create or Update Product
-  const handleSaveProduct = async () => {
-    // Validation
-    if (!productForm.title.trim()) {
-      toast.error('Product title is required');
-      return;
-    }
-    if (!productForm.basePrice) {
-      toast.error('Base price is required');
-      return;
-    }
+  // const handleSaveProduct = async () => {
+  //   // Validation
+  //   if (!productForm.title.trim()) {
+  //     toast.error('Product title is required');
+  //     return;
+  //   }
+  //   if (!productForm.basePrice) {
+  //     toast.error('Base price is required');
+  //     return;
+  //   }
 
-    // Filter out empty features
-    const cleanFeatures = productForm.features.filter(f => f.trim() !== '');
+  //   // Filter out empty features
+  //   const cleanFeatures = productForm.features.filter(f => f.trim() !== '');
     
-    // Filter out incomplete variants and validate
-    const cleanVariants = productForm.variants.filter(v => v.color.trim() !== '');
+  //   // Filter out incomplete variants and validate
+  //   const cleanVariants = productForm.variants.filter(v => v.color.trim() !== '');
 
-    const productData = {
-      title: productForm.title,
-      description: productForm.description,
-      category: productForm.category,
-      basePrice: Number(productForm.basePrice),
-      currency: "AED",
-      material: productForm.material,
-      features: cleanFeatures,
-      variants: cleanVariants.map(v => ({
-        ...v,
-        price: Number(v.price) || Number(productForm.basePrice)
-      }))
-    };
+  //   const productData = {
+  //     title: productForm.title,
+  //     description: productForm.description,
+  //     category: productForm.category,
+  //     basePrice: Number(productForm.basePrice),
+  //     currency: "AED",
+  //     material: productForm.material,
+  //     features: cleanFeatures,
+  //     variants: cleanVariants.map(v => ({
+  //       ...v,
+  //       price: Number(v.price) || Number(productForm.basePrice)
+  //     }))
+  //   };
 
-    try {
-      if (editingProduct) {
-        // Update existing product
-        const response = await axios.post(
-          'https://pg-cards.vercel.app/card/updateProduct',
-          { 
-            id: editingProduct._id,
-            updatedData: productData
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+  //   try {
+  //     if (editingProduct) {
+  //       // Update existing product
+  //       const response = await axios.post(
+  //         'https://pg-cards.vercel.app/card/updateProduct',
+  //         { 
+  //           id: editingProduct._id,
+  //           updatedData: productData
+  //         },
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
         
-        setProducts(products.map(p => 
-          p._id === editingProduct._id ? response.data.product || response.data.data || { ...p, ...productData } : p
-        ));
-        toast.success('Product updated successfully');
-      } else {
-        // Create new product
-        const response = await axios.post(
-          'https://pg-cards.vercel.app/card/createProduct',
-          productData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+  //       setProducts(products.map(p => 
+  //         p._id === editingProduct._id ? response.data.product || response.data.data || { ...p, ...productData } : p
+  //       ));
+  //       toast.success('Product updated successfully');
+  //     } else {
+  //       // Create new product
+  //       const response = await axios.post(
+  //         'https://pg-cards.vercel.app/card/createProduct',
+  //         productData,
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
         
-        const newProduct = response.data.product || response.data.data || response.data;
-        setProducts([...products, newProduct]);
-        toast.success('Product created successfully');
-      }
+  //       const newProduct = response.data.product || response.data.data || response.data;
+  //       setProducts([...products, newProduct]);
+  //       toast.success('Product created successfully');
+  //     }
       
-      setShowProductModal(false);
-      resetProductForm();
-      // Refresh products list
-      fetchDashboardData();
-    } catch (error) {
-      console.error('Error saving product:', error);
-      toast.error(error.response?.data?.message || error.response?.data?.msg || 'Failed to save product');
-    }
+  //     setShowProductModal(false);
+  //     resetProductForm();
+  //     // Refresh products list
+  //     fetchDashboardData();
+  //   } catch (error) {
+  //     console.error('Error saving product:', error);
+  //     toast.error(error.response?.data?.message || error.response?.data?.msg || 'Failed to save product');
+  //   }
+  // };
+const handleSaveProduct = async () => {
+  // Validation
+  if (!productForm.title.trim()) {
+    toast.error('Product title is required');
+    return;
+  }
+  if (!productForm.basePrice) {
+    toast.error('Base price is required');
+    return;
+  }
+
+  // Filter out empty features
+  const cleanFeatures = productForm.features.filter(f => f.trim() !== '');
+  
+  // Filter out incomplete variants and validate
+  const cleanVariants = productForm.variants
+    .filter(v => v.color.trim() !== '')
+    .map(v => ({
+      color: v.color,
+      frontImage: v.frontImage || '',
+      backImage: v.backImage || '',
+      leftSideView: v.leftSideView || '',
+      rightSideView: v.rightSideView || '',
+      additionalImages: v.additionalImages || [],
+      price: Number(v.price) || Number(productForm.basePrice),
+      finish: v.finish || 'Glossy'
+    }));
+
+  const productData = {
+    title: productForm.title,
+    description: productForm.description,
+    category: productForm.category,
+    basePrice: Number(productForm.basePrice),
+    currency: productForm.currency || "AED",
+    material: productForm.material,
+    features: cleanFeatures,
+    variants: cleanVariants
   };
 
+  try {
+    if (editingProduct) {
+      // Update existing product
+      const response = await axios.post(
+        'https://pg-cards.vercel.app/card/updateProduct',
+        { 
+          id: editingProduct._id,
+          updatedData: productData
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setProducts(products.map(p => 
+        p._id === editingProduct._id ? response.data.data || { ...p, ...productData } : p
+      ));
+      toast.success('Product updated successfully');
+    } else {
+      // Create new product
+      const response = await axios.post(
+        'https://pg-cards.vercel.app/card/createProduct',
+        productData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const newProduct = response.data.data;
+      setProducts([...products, newProduct]);
+      toast.success('Product created successfully');
+    }
+    
+    setShowProductModal(false);
+    resetProductForm();
+    fetchDashboardData();
+  } catch (error) {
+    console.error('Error saving product:', error);
+    toast.error(error.response?.data?.msg || 'Failed to save product');
+  }
+};
+
+// Add side view upload handlers
+const handleSideViewUpload = async (index, field, file) => {
+  const imageUrl = await uploadToCloudinary(file);
+  if (imageUrl) {
+    const newVariants = [...productForm.variants];
+    newVariants[index][field] = imageUrl;
+    setProductForm({ ...productForm, variants: newVariants });
+    toast.success('Side view image uploaded successfully');
+  }
+};
   // Delete Product
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
@@ -870,6 +990,66 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
                           </div>
                         </div>
                       </div>
+<div className="formRow">
+  <div className="formGroup">
+    <label>Image</label>
+    <div className="imageUpload">
+      {variant.leftSideView ? (
+        <div className="imagePreview">
+          <img src={variant.leftSideView} alt="Left Side" />
+          <button 
+            type="button"
+            onClick={() => updateVariant(index, 'leftSideView', '')}
+          >
+            ✕
+          </button>
+        </div>
+      ) : (
+        <label className="uploadLabel">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files[0]) {
+                handleSideViewUpload(index, 'leftSideView', e.target.files[0]);
+              }
+            }}
+          />
+          {uploadingImage ? '⏳ Uploading...' : '📷 Left Side'}
+        </label>
+      )}
+    </div>
+  </div>
+  <div className="formGroup">
+    <label>Image</label>
+    <div className="imageUpload">
+      {variant.rightSideView ? (
+        <div className="imagePreview">
+          <img src={variant.rightSideView} alt="Right Side" />
+          <button 
+            type="button"
+            onClick={() => updateVariant(index, 'rightSideView', '')}
+          >
+            ✕
+          </button>
+        </div>
+      ) : (
+        <label className="uploadLabel">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files[0]) {
+                handleSideViewUpload(index, 'rightSideView', e.target.files[0]);
+              }
+            }}
+          />
+          {uploadingImage ? '⏳ Uploading...' : '📷 Right Side'}
+        </label>
+      )}
+    </div>
+  </div>
+</div>
 
                       {/* Additional Images Section */}
                       <div className="formGroup additionalImagesSection">
