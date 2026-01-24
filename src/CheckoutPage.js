@@ -2538,6 +2538,22 @@ const CheckoutPage = () => {
         console.warn('Cover image could not be uploaded - will be empty in saved profile');
       }
 
+      // Handle carousel images - ensure they are all uploaded URLs
+      const processedCarouselImages = [];
+      if (profileData.carouselImages && Array.isArray(profileData.carouselImages)) {
+        for (let i = 0; i < profileData.carouselImages.length; i++) {
+          const imageUrl = profileData.carouselImages[i];
+          if (imageUrl && imageUrl.startsWith('http')) {
+            // Already uploaded URL
+            processedCarouselImages.push(imageUrl);
+          } else if (imageUrl && imageUrl.startsWith('blob:')) {
+            // Need to upload blob URL - this shouldn't happen if upload worked correctly
+            console.warn(`Carousel image ${i + 1} is still a blob URL, skipping:`, imageUrl);
+            // Skip blob URLs as they can't be saved to backend
+          }
+        }
+      }
+
       // Build the API payload in the exact format expected
       const apiPayload = {
         userId: currentUserId,
@@ -2560,7 +2576,8 @@ const CheckoutPage = () => {
         profilePicture: finalProfilePicture,
         profileImage: finalProfilePicture, // Some APIs expect this field name
         coverImage: finalCoverImage,
-        backgroundImage: finalCoverImage // Same as coverImage
+        backgroundImage: finalCoverImage, // Same as coverImage
+        carouselImages: processedCarouselImages // Add carousel images array
       };
 
       console.log('Saving profile with API payload:', JSON.stringify(apiPayload, null, 2));
@@ -2643,7 +2660,8 @@ const CheckoutPage = () => {
             ...profileData,
             userId: currentUserId,
             _id: profileId,
-            theme: templateId
+            theme: templateId,
+            carouselImages: profileData.carouselImages || [] // Include carousel images
           })
         });
         
