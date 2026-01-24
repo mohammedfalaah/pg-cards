@@ -337,7 +337,7 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
       return icons[platform?.toLowerCase()] || '🔗';
     };
 
-    // Helper to render carousel images - show all images in a grid
+    // Helper to render carousel images - auto-sliding for QR scan view
     const renderCarouselImages = (images, themeAccent) => {
       if (!images || images.length === 0) return null;
 
@@ -361,63 +361,96 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
             Gallery ({images.length})
           </h3>
           
-          {/* Grid layout for multiple images */}
+          {/* Auto-sliding carousel for QR scan view */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: images.length === 1 ? '1fr' : 
-                                images.length === 2 ? 'repeat(2, 1fr)' :
-                                images.length === 3 ? 'repeat(3, 1fr)' :
-                                'repeat(2, 1fr)',
-            gap: '8px',
+            position: 'relative',
+            width: '100%',
+            height: '200px',
             borderRadius: 12,
             overflow: 'hidden',
+            background: '#f0f0f0',
           }}>
-            {images.slice(0, 4).map((img, index) => (
-              <div
+            {images.map((img, index) => (
+              <img
                 key={index}
+                src={convertCloudinaryUrl(img)}
+                alt={`Gallery ${index + 1}`}
                 style={{
-                  position: 'relative',
-                  aspectRatio: images.length === 1 ? '16/9' : '1/1',
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                  background: '#f0f0f0',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 0,
+                  animation: `carouselSlide ${images.length * 3}s infinite`,
+                  animationDelay: `${index * 3}s`,
                 }}
-              >
-                <img
-                  src={convertCloudinaryUrl(img)}
-                  alt={`Gallery ${index + 1}`}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ))}
+            
+            {/* Carousel indicator dots */}
+            <div style={{
+              position: 'absolute',
+              bottom: '12px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: '6px',
+            }}>
+              {images.map((_, index) => (
+                <div
+                  key={index}
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.7)',
+                    animation: `carouselDot ${images.length * 3}s infinite`,
+                    animationDelay: `${index * 3}s`,
                   }}
                 />
-                
-                {/* Show "+X more" overlay on last image if there are more than 4 images */}
-                {index === 3 && images.length > 4 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.7)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}>
-                    +{images.length - 4} more
-                  </div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
+            
+            {/* Image counter */}
+            <div style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              background: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              padding: '4px 8px',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: 600,
+            }}>
+              {images.length} photos
+            </div>
           </div>
+          
+          <style>{`
+            @keyframes carouselSlide {
+              0%, 10% { opacity: 1; }
+              33.33%, 100% { opacity: 0; }
+            }
+            
+            @keyframes carouselDot {
+              0%, 10% { 
+                background: ${themeAccent}; 
+                transform: scale(1.2); 
+                box-shadow: 0 0 8px ${themeAccent}66;
+              }
+              33.33%, 100% { 
+                background: rgba(255,255,255,0.7); 
+                transform: scale(1);
+                box-shadow: none;
+              }
+            }
+          `}</style>
         </div>
       );
     };
