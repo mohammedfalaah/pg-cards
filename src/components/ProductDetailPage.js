@@ -13,6 +13,11 @@ const ProductDetailPage = ({ productId }) => {
   const [showLogin, setShowLogin] = useState(false);
   const [allImages, setAllImages] = useState([]); // Store all images for carousel
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     const urlProductId = productId || window.location.pathname.split('/').pop();
     fetchProductDetails(urlProductId);

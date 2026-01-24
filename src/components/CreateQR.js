@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import PGCardsLogo from './PGCardsLogo';
 import './CreateQR.css';
@@ -20,6 +20,11 @@ const CreateQR = () => {
   const qrRef = useRef(null);
   const fileInputRef = useRef(null);
   const [imageUrl, setImageUrl] = useState(null);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];

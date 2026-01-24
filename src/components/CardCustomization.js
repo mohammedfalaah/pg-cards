@@ -65,6 +65,11 @@ const premiumThemes = [
 ];
 
 const CardCustomization = () => {
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     const metaViewport = document.querySelector('meta[name="viewport"]');
     if (metaViewport) {
