@@ -50,7 +50,11 @@ const COUNTRY_CODES = [
 const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initialData, onFormDataReady, onFileSelected }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [uploadingImages, setUploadingImages] = useState({ profilePicture: false, coverImage: false });
+  const [uploadingImages, setUploadingImages] = useState({ 
+    profilePicture: false, 
+    coverImage: false, 
+    carousel: false 
+  });
   
   // Image cropper state
   const [cropperImage, setCropperImage] = useState(null);
@@ -79,7 +83,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         ...initialData,
       phoneNumbers,
       profilePicture: initialData.profilePicture || initialData.profileImage || '',
-      coverImage: initialData.coverImage || ''
+      coverImage: initialData.coverImage || '',
+      carouselImages: initialData.carouselImages || []
       };
     }
     
@@ -99,7 +104,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
       },
       socialMedia: [],
       profilePicture: '',
-      coverImage: ''
+      coverImage: '',
+      carouselImages: []
     };
   };
   
@@ -185,7 +191,8 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
         ...initialData,
         phoneNumbers,
         profilePicture: initialData.profilePicture || initialData.profileImage || '',
-        coverImage: initialData.coverImage || ''
+        coverImage: initialData.coverImage || '',
+        carouselImages: initialData.carouselImages || []
       };
       setFormData(updatedData);
       // Don't call onFormDataChange here - it causes infinite loop
@@ -309,6 +316,102 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
     setShowCropper(false);
     setCropperImage(null);
     setCropperField(null);
+  };
+
+  // Handle carousel images upload
+  const handleCarouselImageUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    console.log(`Uploading ${files.length} carousel images...`);
+    
+    setUploadingImages(prev => ({ ...prev, carousel: true }));
+    
+    // Create preview URLs immediately
+    const previewUrls = files.map(file => URL.createObjectURL(file));
+    
+    // Add preview URLs to form data immediately
+    setFormData(prevFormData => {
+      const currentCarousel = prevFormData.carouselImages || [];
+      const updated = { 
+        ...prevFormData, 
+        carouselImages: [...currentCarousel, ...previewUrls] 
+      };
+      if (onFormDataChange) onFormDataChange(updated);
+      if (onFormDataReady) onFormDataReady(updated);
+      return updated;
+    });
+
+    // Upload each file to Cloudinary
+    const uploadPromises = files.map(async (file, index) => {
+      try {
+        const hostedUrl = await uploadImageToServer(file, `carousel image ${index + 1}`);
+        return { index, hostedUrl, previewUrl: previewUrls[index] };
+      } catch (error) {
+        console.error(`Failed to upload carousel image ${index + 1}:`, error);
+        return { index, hostedUrl: null, previewUrl: previewUrls[index] };
+      }
+    });
+
+    try {
+      const results = await Promise.all(uploadPromises);
+      
+      // Replace preview URLs with hosted URLs where successful
+      setFormData(prevFormData => {
+        const currentCarousel = [...(prevFormData.carouselImages || [])];
+        
+        results.forEach(({ hostedUrl, previewUrl }) => {
+          const previewIndex = currentCarousel.indexOf(previewUrl);
+          if (previewIndex !== -1 && hostedUrl) {
+            // Replace preview URL with hosted URL
+            currentCarousel[previewIndex] = hostedUrl;
+            // Clean up the blob URL
+            URL.revokeObjectURL(previewUrl);
+          }
+        });
+        
+        const updated = { ...prevFormData, carouselImages: currentCarousel };
+        if (onFormDataChange) onFormDataChange(updated);
+        if (onFormDataReady) onFormDataReady(updated);
+        return updated;
+      });
+
+      const successCount = results.filter(r => r.hostedUrl).length;
+      const failCount = results.length - successCount;
+      
+      if (successCount > 0) {
+        toast.success(`${successCount} carousel image(s) uploaded successfully!`);
+      }
+      if (failCount > 0) {
+        toast.error(`${failCount} image(s) failed to upload. They will be retried during save.`);
+      }
+      
+    } catch (error) {
+      console.error('Carousel upload error:', error);
+      toast.error('Some images failed to upload. They will be retried during save.');
+    } finally {
+      setUploadingImages(prev => ({ ...prev, carousel: false }));
+    }
+  };
+
+  // Remove carousel image
+  const removeCarouselImage = (index) => {
+    setFormData(prevFormData => {
+      const currentCarousel = [...(prevFormData.carouselImages || [])];
+      const removedUrl = currentCarousel[index];
+      
+      // Clean up blob URL if it's a preview
+      if (removedUrl && removedUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(removedUrl);
+      }
+      
+      currentCarousel.splice(index, 1);
+      const updated = { ...prevFormData, carouselImages: currentCarousel };
+      
+      if (onFormDataChange) onFormDataChange(updated);
+      if (onFormDataReady) onFormDataReady(updated);
+      return updated;
+    });
   };
 
   const handlePhoneChange = (index, field, value) => {
@@ -664,6 +767,63 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
             )}
           </div>
 
+        </div>
+
+        {/* Carousel Images */}
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>🖼️ Carousel Images</h3>
+          <p style={styles.sectionDescription}>
+            Add multiple images to showcase your work, products, or company gallery
+          </p>
+          
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Upload Images</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleCarouselImageUpload}
+              style={styles.input}
+              disabled={uploadingImages.carousel}
+            />
+            <small style={styles.helpText}>
+              You can select multiple images at once. Recommended size: 1200x800px
+            </small>
+          </div>
+
+          {formData.carouselImages && formData.carouselImages.length > 0 && (
+            <div style={styles.carouselPreview}>
+              <h4 style={styles.previewTitle}>Carousel Images ({formData.carouselImages.length})</h4>
+              <div style={styles.carouselGrid}>
+                {formData.carouselImages.map((imageUrl, index) => (
+                  <div key={index} style={styles.carouselImageItem}>
+                    <img
+                      src={imageUrl}
+                      alt={`Carousel ${index + 1}`}
+                      style={styles.carouselImage}
+                      onError={(e) => (e.target.style.display = 'none')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeCarouselImage(index)}
+                      style={styles.carouselRemoveBtn}
+                      title="Remove image"
+                    >
+                      ✕
+                    </button>
+                    {imageUrl.startsWith('blob:') && (
+                      <div style={styles.carouselUploadStatus}>
+                        {uploadingImages.carousel ? 'Uploading...' : 'Pending'}
+                      </div>
+                    )}
+                    {imageUrl.startsWith('http') && (
+                      <div style={styles.carouselUploadSuccess}>✓</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Phone Numbers */}
@@ -4041,6 +4201,91 @@ const styles = {
   },
   errorText: {
     flex: 1,
+  },
+  // Carousel Images Styles
+  sectionDescription: {
+    fontSize: '14px',
+    color: '#666',
+    marginBottom: '16px',
+    fontStyle: 'italic',
+  },
+  helpText: {
+    fontSize: '12px',
+    color: '#999',
+    marginTop: '4px',
+    display: 'block',
+  },
+  carouselPreview: {
+    marginTop: '16px',
+  },
+  previewTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: '12px',
+  },
+  carouselGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+    gap: '12px',
+  },
+  carouselImageItem: {
+    position: 'relative',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    border: '1px solid #e0e0e0',
+    backgroundColor: '#f8f9fa',
+  },
+  carouselImage: {
+    width: '100%',
+    height: '80px',
+    objectFit: 'cover',
+    display: 'block',
+  },
+  carouselRemoveBtn: {
+    position: 'absolute',
+    top: '4px',
+    right: '4px',
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    border: 'none',
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    color: '#fff',
+    fontSize: '12px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s',
+    '&:hover': {
+      backgroundColor: '#ff3b30',
+      transform: 'scale(1.1)',
+    }
+  },
+  carouselUploadStatus: {
+    position: 'absolute',
+    bottom: '4px',
+    left: '4px',
+    backgroundColor: 'rgba(33, 150, 243, 0.9)',
+    color: '#fff',
+    fontSize: '10px',
+    padding: '2px 6px',
+    borderRadius: '4px',
+  },
+  carouselUploadSuccess: {
+    position: 'absolute',
+    bottom: '4px',
+    right: '4px',
+    width: '16px',
+    height: '16px',
+    borderRadius: '50%',
+    backgroundColor: '#4CAF50',
+    color: '#fff',
+    fontSize: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Template Selector Styles
   templateSelector: {
