@@ -141,7 +141,14 @@ function App() {
 
     checkRoute();
 
-    const handleNavigation = () => checkRoute();
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
+
+    const handleNavigation = () => {
+      checkRoute();
+      // Scroll to top on navigation
+      window.scrollTo(0, 0);
+    };
     window.addEventListener('popstate', handleNavigation);
     window.addEventListener('navigate', handleNavigation);
 
@@ -150,6 +157,11 @@ function App() {
       window.removeEventListener('navigate', handleNavigation);
     };
   }, [auth?.user, auth?.token]);
+
+  // Scroll to top whenever activeView changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeView]);
 
   useEffect(() => {
     if (auth?.user && auth?.token) {

@@ -21,6 +21,11 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   // Get token from prop or localStorage
   const token = propToken || localStorage.getItem('token') || localStorage.getItem('authToken');
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Product Modal States
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);

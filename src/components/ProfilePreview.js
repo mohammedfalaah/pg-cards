@@ -8,6 +8,13 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
   const [downloadingVCard, setDownloadingVCard] = useState(false);
   const [urlTheme, setUrlTheme] = useState(null);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    if (!embedded) {
+      window.scrollTo(0, 0);
+    }
+  }, [embedded]);
+
   // Extract theme from URL path (e.g., /epic/profileId, /modern/profileId, /standard/profileId)
   useEffect(() => {
     const path = window.location.pathname;
@@ -259,13 +266,17 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
     // Parse ALL social media links
     const socialMedia = (activeProfile?.socialMedia || []).filter(s => s.url);
 
+    // Parse carousel images
+    const carouselImages = (activeProfile?.carouselImages || []).filter(img => img && !img.startsWith('blob:'));
+
     console.log('ProfilePreview renderCard - Images:', {
       profilePicture: activeProfile?.profilePicture,
       profileImage: activeProfile?.profileImage,
       coverImage: activeProfile?.coverImage,
       backgroundImage: activeProfile?.backgroundImage,
       finalProfilePic: profilePic,
-      finalCover: cover
+      finalCover: cover,
+      carouselImages: carouselImages
     });
 
     // Helper to convert Cloudinary HEIC URLs to JPG format for browser compatibility
@@ -324,6 +335,99 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
         snapchat: '👻', pinterest: '📌', github: '💻', website: '🌐'
       };
       return icons[platform?.toLowerCase()] || '🔗';
+    };
+
+    // Helper to render carousel images with auto-sliding animation
+    const renderCarouselImages = (images, themeAccent) => {
+      if (!images || images.length === 0) return null;
+
+      return (
+        <div style={{
+          background: finalTheme === 'epic' ? '#111' : finalTheme === 'modern' ? 'rgba(255,255,255,0.15)' : '#fff',
+          backdropFilter: finalTheme === 'modern' ? 'blur(10px)' : 'none',
+          WebkitBackdropFilter: finalTheme === 'modern' ? 'blur(10px)' : 'none',
+          margin: '0 16px 12px',
+          padding: '16px',
+          borderRadius: 16,
+          border: finalTheme === 'modern' ? '1px solid rgba(255,255,255,0.2)' : finalTheme === 'epic' ? '1px solid #222' : '1px solid #e0e0e0',
+          boxShadow: finalTheme === 'standard' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+        }}>
+          <h3 style={{ 
+            fontSize: 16, 
+            fontWeight: 600, 
+            color: finalTheme === 'standard' ? '#000' : '#fff', 
+            margin: '0 0 12px' 
+          }}>
+            Gallery
+          </h3>
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            height: '200px',
+            borderRadius: 12,
+            overflow: 'hidden',
+            background: '#f0f0f0',
+          }}>
+            {images.map((img, index) => (
+              <img
+                key={index}
+                src={convertCloudinaryUrl(img)}
+                alt={`Gallery ${index + 1}`}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 0,
+                  animation: `carouselSlide ${images.length * 2}s infinite`,
+                  animationDelay: `${index * 2}s`,
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ))}
+            
+            {/* Carousel indicator dots */}
+            <div style={{
+              position: 'absolute',
+              bottom: '12px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: '6px',
+            }}>
+              {images.map((_, index) => (
+                <div
+                  key={index}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.7)',
+                    animation: `carouselDot ${images.length * 2}s infinite`,
+                    animationDelay: `${index * 2}s`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          
+          <style>{`
+            @keyframes carouselSlide {
+              0%, 8.33% { opacity: 1; }
+              16.66%, 100% { opacity: 0; }
+            }
+            
+            @keyframes carouselDot {
+              0%, 8.33% { background: ${themeAccent}; transform: scale(1.2); }
+              16.66%, 100% { background: rgba(255,255,255,0.7); transform: scale(1); }
+            }
+          `}</style>
+        </div>
+      );
     };
 
     // Render all contact details section - simple list
@@ -467,6 +571,9 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
             <h3 style={{ fontSize: 16, fontWeight: 600, color: '#fff', margin: '0 0 12px' }}>Contact Info</h3>
             {renderContactDetails('rgba(255,255,255,0.9)', '#fff')}
           </div>
+          
+          {/* Carousel Images - Glass Card */}
+          {renderCarouselImages(carouselImages, themeAccent)}
           
           {/* Social Links - Glass Card */}
           {socialMedia.length > 0 && (
@@ -642,6 +749,9 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
             {renderContactDetails('#ccc', themeAccent)}
           </div>
           
+          {/* Carousel Images Section */}
+          {renderCarouselImages(carouselImages, themeAccent)}
+          
           {/* Social Links Section */}
           {socialMedia.length > 0 && (
             <div style={{
@@ -810,6 +920,9 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
           <h3 style={{ fontSize: 16, fontWeight: 600, color: '#000', margin: '0 0 12px' }}>Contact Info</h3>
           {renderContactDetails('#333', themeAccent)}
         </div>
+        
+        {/* Carousel Images Section */}
+        {renderCarouselImages(carouselImages, themeAccent)}
         
         {/* Social Links Section */}
         {socialMedia.length > 0 && (

@@ -10,6 +10,11 @@ const Cart = () => {
   const token = localStorage.getItem('token') || localStorage.getItem('authToken');
   const userId = localStorage.getItem('userId');
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     fetchCart();
   }, []);

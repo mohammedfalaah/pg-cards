@@ -2188,6 +2188,9 @@ const CheckoutPage = () => {
   const [accentColor, setAccentColor] = useState(null); // Custom accent color for theme
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+    
     fetchCartItems();
     fetchAddresses();
     fetchUserProfile();

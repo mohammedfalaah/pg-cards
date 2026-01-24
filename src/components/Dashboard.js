@@ -25,6 +25,9 @@ const Dashboard = ({ user, token, onLogout }) => {
   const [insights, setInsights] = useState(fallbackInsights);
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+    
     const controller = new AbortController();
 
     const fetchInsights = async () => {
