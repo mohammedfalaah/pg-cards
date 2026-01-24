@@ -337,7 +337,7 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
       return icons[platform?.toLowerCase()] || '🔗';
     };
 
-    // Helper to render carousel images with auto-sliding animation
+    // Helper to render carousel images - show all images in a grid
     const renderCarouselImages = (images, themeAccent) => {
       if (!images || images.length === 0) return null;
 
@@ -358,74 +358,66 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
             color: finalTheme === 'standard' ? '#000' : '#fff', 
             margin: '0 0 12px' 
           }}>
-            Gallery
+            Gallery ({images.length})
           </h3>
+          
+          {/* Grid layout for multiple images */}
           <div style={{
-            position: 'relative',
-            width: '100%',
-            height: '200px',
+            display: 'grid',
+            gridTemplateColumns: images.length === 1 ? '1fr' : 
+                                images.length === 2 ? 'repeat(2, 1fr)' :
+                                images.length === 3 ? 'repeat(3, 1fr)' :
+                                'repeat(2, 1fr)',
+            gap: '8px',
             borderRadius: 12,
             overflow: 'hidden',
-            background: '#f0f0f0',
           }}>
-            {images.map((img, index) => (
-              <img
+            {images.slice(0, 4).map((img, index) => (
+              <div
                 key={index}
-                src={convertCloudinaryUrl(img)}
-                alt={`Gallery ${index + 1}`}
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  opacity: 0,
-                  animation: `carouselSlide ${images.length * 2}s infinite`,
-                  animationDelay: `${index * 2}s`,
+                  position: 'relative',
+                  aspectRatio: images.length === 1 ? '16/9' : '1/1',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  background: '#f0f0f0',
                 }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ))}
-            
-            {/* Carousel indicator dots */}
-            <div style={{
-              position: 'absolute',
-              bottom: '12px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: '6px',
-            }}>
-              {images.map((_, index) => (
-                <div
-                  key={index}
+              >
+                <img
+                  src={convertCloudinaryUrl(img)}
+                  alt={`Gallery ${index + 1}`}
                   style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.7)',
-                    animation: `carouselDot ${images.length * 2}s infinite`,
-                    animationDelay: `${index * 2}s`,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
                   }}
                 />
-              ))}
-            </div>
+                
+                {/* Show "+X more" overlay on last image if there are more than 4 images */}
+                {index === 3 && images.length > 4 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}>
+                    +{images.length - 4} more
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-          
-          <style>{`
-            @keyframes carouselSlide {
-              0%, 8.33% { opacity: 1; }
-              16.66%, 100% { opacity: 0; }
-            }
-            
-            @keyframes carouselDot {
-              0%, 8.33% { background: ${themeAccent}; transform: scale(1.2); }
-              16.66%, 100% { background: rgba(255,255,255,0.7); transform: scale(1); }
-            }
-          `}</style>
         </div>
       );
     };

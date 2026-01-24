@@ -1719,51 +1719,55 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
                 Gallery ({carouselImages.length})
               </div>
               <div style={{
-                position: 'relative',
-                width: '100%',
-                height: 60,
+                display: 'grid',
+                gridTemplateColumns: carouselImages.length === 1 ? '1fr' : 
+                                   carouselImages.length === 2 ? 'repeat(2, 1fr)' :
+                                   'repeat(2, 1fr)',
+                gap: '4px',
+                height: '60px',
                 borderRadius: 4,
                 overflow: 'hidden',
-                backgroundColor: '#f8f9fa'
               }}>
-                <div 
-                  style={{
-                    display: 'flex',
-                    width: `${carouselImages.length * 100}%`,
-                    height: '100%',
-                    animation: carouselImages.length > 1 ? 'slideCarousel 8s infinite' : 'none',
-                  }}
-                  className="carousel-slider"
-                >
-                  {carouselImages.map((img, idx) => (
+                {carouselImages.slice(0, 4).map((img, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'relative',
+                      borderRadius: 4,
+                      overflow: 'hidden',
+                      backgroundColor: '#f8f9fa'
+                    }}
+                  >
                     <img
-                      key={idx}
                       src={img}
                       alt={`Gallery ${idx + 1}`}
                       style={{
-                        width: `${100 / carouselImages.length}%`,
+                        width: '100%',
                         height: '100%',
                         objectFit: 'cover',
-                        flexShrink: 0,
                       }}
                       onError={(e) => e.target.style.display = 'none'}
                     />
-                  ))}
-                </div>
-                {carouselImages.length > 1 && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 4,
-                    right: 4,
-                    background: 'rgba(0,0,0,0.6)',
-                    color: '#fff',
-                    fontSize: 8,
-                    padding: '2px 4px',
-                    borderRadius: 2,
-                  }}>
-                    {carouselImages.length} photos
+                    {idx === 3 && carouselImages.length > 4 && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontSize: 8,
+                        fontWeight: 600,
+                      }}>
+                        +{carouselImages.length - 4}
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
             </div>
           )}
@@ -1846,51 +1850,55 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
                 Gallery ({carouselImages.length})
               </div>
               <div style={{
-                position: 'relative',
-                width: '100%',
-                height: 60,
+                display: 'grid',
+                gridTemplateColumns: carouselImages.length === 1 ? '1fr' : 
+                                   carouselImages.length === 2 ? 'repeat(2, 1fr)' :
+                                   'repeat(2, 1fr)',
+                gap: '4px',
+                height: '60px',
                 borderRadius: 6,
                 overflow: 'hidden',
-                backgroundColor: 'rgba(255,255,255,0.1)'
               }}>
-                <div 
-                  style={{
-                    display: 'flex',
-                    width: `${carouselImages.length * 100}%`,
-                    height: '100%',
-                    animation: carouselImages.length > 1 ? 'slideCarousel 8s infinite' : 'none',
-                  }}
-                  className="carousel-slider"
-                >
-                  {carouselImages.map((img, idx) => (
+                {carouselImages.slice(0, 4).map((img, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'relative',
+                      borderRadius: 4,
+                      overflow: 'hidden',
+                      backgroundColor: 'rgba(255,255,255,0.1)'
+                    }}
+                  >
                     <img
-                      key={idx}
                       src={img}
                       alt={`Gallery ${idx + 1}`}
                       style={{
-                        width: `${100 / carouselImages.length}%`,
+                        width: '100%',
                         height: '100%',
                         objectFit: 'cover',
-                        flexShrink: 0,
                       }}
                       onError={(e) => e.target.style.display = 'none'}
                     />
-                  ))}
-                </div>
-                {carouselImages.length > 1 && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 4,
-                    right: 4,
-                    background: 'rgba(0,0,0,0.7)',
-                    color: '#fff',
-                    fontSize: 8,
-                    padding: '2px 4px',
-                    borderRadius: 2,
-                  }}>
-                    {carouselImages.length} photos
+                    {idx === 3 && carouselImages.length > 4 && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontSize: 8,
+                        fontWeight: 600,
+                      }}>
+                        +{carouselImages.length - 4}
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
             </div>
           )}
@@ -1976,52 +1984,56 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
               Gallery ({carouselImages.length})
             </div>
             <div style={{
-              position: 'relative',
-              width: '100%',
-              height: 60,
+              display: 'grid',
+              gridTemplateColumns: carouselImages.length === 1 ? '1fr' : 
+                                 carouselImages.length === 2 ? 'repeat(2, 1fr)' :
+                                 'repeat(2, 1fr)',
+              gap: '4px',
+              height: '60px',
               borderRadius: 4,
               overflow: 'hidden',
-              backgroundColor: '#1a1a1a',
-              border: `1px solid ${themeAccent}33`
             }}>
-              <div 
-                style={{
-                  display: 'flex',
-                  width: `${carouselImages.length * 100}%`,
-                  height: '100%',
-                  animation: carouselImages.length > 1 ? 'slideCarousel 8s infinite' : 'none',
-                }}
-                className="carousel-slider"
-              >
-                {carouselImages.map((img, idx) => (
+              {carouselImages.slice(0, 4).map((img, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    borderRadius: 4,
+                    overflow: 'hidden',
+                    backgroundColor: '#1a1a1a',
+                    border: `1px solid ${themeAccent}33`
+                  }}
+                >
                   <img
-                    key={idx}
                     src={img}
                     alt={`Gallery ${idx + 1}`}
                     style={{
-                      width: `${100 / carouselImages.length}%`,
+                      width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      flexShrink: 0,
                     }}
                     onError={(e) => e.target.style.display = 'none'}
                   />
-                ))}
-              </div>
-              {carouselImages.length > 1 && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: 4,
-                  right: 4,
-                  background: 'rgba(0,0,0,0.8)',
-                  color: themeAccent,
-                  fontSize: 8,
-                  padding: '2px 4px',
-                  borderRadius: 2,
-                }}>
-                  {carouselImages.length} photos
+                  {idx === 3 && carouselImages.length > 4 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'rgba(0,0,0,0.8)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: themeAccent,
+                      fontSize: 8,
+                      fontWeight: 600,
+                    }}>
+                      +{carouselImages.length - 4}
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           </div>
         )}
@@ -3519,17 +3531,6 @@ const styles = {
   '@keyframes spin': {
     '0%': { transform: 'rotate(0deg)' },
     '100%': { transform: 'rotate(360deg)' }
-  },
-  '@keyframes slideCarousel': {
-    '0%': { transform: 'translateX(0%)' },
-    '20%': { transform: 'translateX(0%)' },
-    '25%': { transform: 'translateX(-100%)' },
-    '45%': { transform: 'translateX(-100%)' },
-    '50%': { transform: 'translateX(-200%)' },
-    '70%': { transform: 'translateX(-200%)' },
-    '75%': { transform: 'translateX(-300%)' },
-    '95%': { transform: 'translateX(-300%)' },
-    '100%': { transform: 'translateX(0%)' }
   },
   loadingText: {
     marginTop: '20px',
