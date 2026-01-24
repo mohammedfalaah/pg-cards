@@ -777,40 +777,87 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
           </p>
           
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Upload Images</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleCarouselImageUpload}
-              style={styles.input}
-              disabled={uploadingImages.carousel}
-            />
+            <label style={styles.label}>Upload Multiple Images</label>
+            <div style={styles.carouselUploadArea}>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleCarouselImageUpload}
+                style={styles.carouselFileInput}
+                disabled={uploadingImages.carousel}
+                id="carousel-upload"
+              />
+              <label htmlFor="carousel-upload" style={styles.carouselUploadLabel}>
+                <div style={styles.carouselUploadIcon}>📷</div>
+                <div style={styles.carouselUploadText}>
+                  {uploadingImages.carousel ? (
+                    <>
+                      <div style={styles.uploadingSpinner}></div>
+                      <span>Uploading images...</span>
+                    </>
+                  ) : (
+                    <>
+                      <strong>Click to select multiple images</strong>
+                      <br />
+                      <small>or drag and drop images here</small>
+                    </>
+                  )}
+                </div>
+              </label>
+            </div>
             <small style={styles.helpText}>
-              You can select multiple images at once. Recommended size: 1200x800px
+              • Select multiple images at once (Ctrl/Cmd + Click)
+              <br />
+              • Recommended size: 1200x800px
+              <br />
+              • Supported formats: JPG, PNG, WEBP
+              <br />
+              • Maximum 10 images
             </small>
           </div>
 
           {formData.carouselImages && formData.carouselImages.length > 0 && (
             <div style={styles.carouselPreview}>
-              <h4 style={styles.previewTitle}>Carousel Images ({formData.carouselImages.length})</h4>
+              <div style={styles.carouselPreviewHeader}>
+                <h4 style={styles.previewTitle}>Gallery Images ({formData.carouselImages.length}/10)</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Clear all carousel images
+                    setFormData(prev => {
+                      const updated = { ...prev, carouselImages: [] };
+                      if (onFormDataChange) onFormDataChange(updated);
+                      if (onFormDataReady) onFormDataReady(updated);
+                      return updated;
+                    });
+                  }}
+                  style={styles.clearAllBtn}
+                  title="Clear all images"
+                >
+                  🗑️ Clear All
+                </button>
+              </div>
               <div style={styles.carouselGrid}>
                 {formData.carouselImages.map((imageUrl, index) => (
                   <div key={index} style={styles.carouselImageItem}>
                     <img
                       src={imageUrl}
-                      alt={`Carousel ${index + 1}`}
+                      alt={`Gallery ${index + 1}`}
                       style={styles.carouselImage}
                       onError={(e) => (e.target.style.display = 'none')}
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeCarouselImage(index)}
-                      style={styles.carouselRemoveBtn}
-                      title="Remove image"
-                    >
-                      ✕
-                    </button>
+                    <div style={styles.carouselImageOverlay}>
+                      <span style={styles.carouselImageNumber}>{index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeCarouselImage(index)}
+                        style={styles.carouselRemoveBtn}
+                        title="Remove image"
+                      >
+                        ✕
+                      </button>
+                    </div>
                     {imageUrl.startsWith('blob:') && (
                       <div style={styles.carouselUploadStatus}>
                         {uploadingImages.carousel ? 'Uploading...' : 'Pending'}
@@ -821,6 +868,16 @@ const ProfileForm = ({ onProfileSaved, selectedTemplate, onFormDataChange, initi
                     )}
                   </div>
                 ))}
+                
+                {/* Add more images button */}
+                {formData.carouselImages.length < 10 && (
+                  <div style={styles.carouselAddMore}>
+                    <label htmlFor="carousel-upload" style={styles.carouselAddMoreLabel}>
+                      <div style={styles.carouselAddMoreIcon}>➕</div>
+                      <div style={styles.carouselAddMoreText}>Add More</div>
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1559,6 +1616,12 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
     const coverImage = convertCloudinaryUrl(rawCoverImage);
     const fullAddress = [address, emirates, country].filter(Boolean).join(', ');
 
+    // Process carousel images
+    const carouselImages = (profileData?.carouselImages || [])
+      .filter(img => img && img.startsWith('http'))
+      .map(convertCloudinaryUrl)
+      .slice(0, 3); // Show max 3 images in preview
+
     // Get theme accent color (use custom accentColor if set, otherwise default)
     const getThemeAccent = () => {
       if (accentColor) return accentColor;
@@ -1642,6 +1705,68 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             {email && <div style={{ marginBottom: 4, color: themeAccent }}>📧 {email}</div>}
             {fullAddress && <div style={{ color: '#666' }}>📍 {fullAddress}</div>}
           </div>
+
+          {/* Carousel Images */}
+          {carouselImages.length > 0 && (
+            <div style={{
+              background: '#fff',
+              margin: '0 8px 8px',
+              padding: '8px',
+              borderRadius: 6,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            }}>
+              <div style={{ fontSize: 10, color: '#666', marginBottom: 6, fontWeight: 600 }}>
+                Gallery ({carouselImages.length})
+              </div>
+              <div style={{
+                position: 'relative',
+                width: '100%',
+                height: 60,
+                borderRadius: 4,
+                overflow: 'hidden',
+                backgroundColor: '#f8f9fa'
+              }}>
+                <div 
+                  style={{
+                    display: 'flex',
+                    width: `${carouselImages.length * 100}%`,
+                    height: '100%',
+                    animation: carouselImages.length > 1 ? 'slideCarousel 8s infinite' : 'none',
+                  }}
+                  className="carousel-slider"
+                >
+                  {carouselImages.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`Gallery ${idx + 1}`}
+                      style={{
+                        width: `${100 / carouselImages.length}%`,
+                        height: '100%',
+                        objectFit: 'cover',
+                        flexShrink: 0,
+                      }}
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                  ))}
+                </div>
+                {carouselImages.length > 1 && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 4,
+                    right: 4,
+                    background: 'rgba(0,0,0,0.6)',
+                    color: '#fff',
+                    fontSize: 8,
+                    padding: '2px 4px',
+                    borderRadius: 2,
+                  }}>
+                    {carouselImages.length} photos
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       );
     }
@@ -1706,6 +1831,69 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
             {email && <div style={{ marginBottom: 4, color: '#fff' }}>📧 {email}</div>}
             {fullAddress && <div style={{ color: 'rgba(255,255,255,0.8)' }}>📍 {fullAddress}</div>}
           </div>
+
+          {/* Carousel Images */}
+          {carouselImages.length > 0 && (
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(10px)',
+              margin: '0 8px 8px',
+              padding: '8px',
+              borderRadius: 10,
+              border: '1px solid rgba(255,255,255,0.2)',
+            }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.9)', marginBottom: 6, fontWeight: 600 }}>
+                Gallery ({carouselImages.length})
+              </div>
+              <div style={{
+                position: 'relative',
+                width: '100%',
+                height: 60,
+                borderRadius: 6,
+                overflow: 'hidden',
+                backgroundColor: 'rgba(255,255,255,0.1)'
+              }}>
+                <div 
+                  style={{
+                    display: 'flex',
+                    width: `${carouselImages.length * 100}%`,
+                    height: '100%',
+                    animation: carouselImages.length > 1 ? 'slideCarousel 8s infinite' : 'none',
+                  }}
+                  className="carousel-slider"
+                >
+                  {carouselImages.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`Gallery ${idx + 1}`}
+                      style={{
+                        width: `${100 / carouselImages.length}%`,
+                        height: '100%',
+                        objectFit: 'cover',
+                        flexShrink: 0,
+                      }}
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
+                  ))}
+                </div>
+                {carouselImages.length > 1 && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 4,
+                    right: 4,
+                    background: 'rgba(0,0,0,0.7)',
+                    color: '#fff',
+                    fontSize: 8,
+                    padding: '2px 4px',
+                    borderRadius: 2,
+                  }}>
+                    {carouselImages.length} photos
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       );
     }
@@ -1774,6 +1962,69 @@ const TemplatePreviewSelector = ({ userProfile, selectedTemplate, onTemplateSele
           {email && <div style={{ marginBottom: 4, color: themeAccent }}>📧 {email}</div>}
           {fullAddress && <div style={{ color: '#888' }}>📍 {fullAddress}</div>}
         </div>
+
+        {/* Carousel Images */}
+        {carouselImages.length > 0 && (
+          <div style={{
+            background: '#111',
+            margin: '0 8px 8px',
+            padding: '8px',
+            borderRadius: 6,
+            border: '1px solid #222',
+          }}>
+            <div style={{ fontSize: 10, color: '#888', marginBottom: 6, fontWeight: 600 }}>
+              Gallery ({carouselImages.length})
+            </div>
+            <div style={{
+              position: 'relative',
+              width: '100%',
+              height: 60,
+              borderRadius: 4,
+              overflow: 'hidden',
+              backgroundColor: '#1a1a1a',
+              border: `1px solid ${themeAccent}33`
+            }}>
+              <div 
+                style={{
+                  display: 'flex',
+                  width: `${carouselImages.length * 100}%`,
+                  height: '100%',
+                  animation: carouselImages.length > 1 ? 'slideCarousel 8s infinite' : 'none',
+                }}
+                className="carousel-slider"
+              >
+                {carouselImages.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img}
+                    alt={`Gallery ${idx + 1}`}
+                    style={{
+                      width: `${100 / carouselImages.length}%`,
+                      height: '100%',
+                      objectFit: 'cover',
+                      flexShrink: 0,
+                    }}
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                ))}
+              </div>
+              {carouselImages.length > 1 && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 4,
+                  right: 4,
+                  background: 'rgba(0,0,0,0.8)',
+                  color: themeAccent,
+                  fontSize: 8,
+                  padding: '2px 4px',
+                  borderRadius: 2,
+                }}>
+                  {carouselImages.length} photos
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -3266,6 +3517,17 @@ const styles = {
     '0%': { transform: 'rotate(0deg)' },
     '100%': { transform: 'rotate(360deg)' }
   },
+  '@keyframes slideCarousel': {
+    '0%': { transform: 'translateX(0%)' },
+    '20%': { transform: 'translateX(0%)' },
+    '25%': { transform: 'translateX(-100%)' },
+    '45%': { transform: 'translateX(-100%)' },
+    '50%': { transform: 'translateX(-200%)' },
+    '70%': { transform: 'translateX(-200%)' },
+    '75%': { transform: 'translateX(-300%)' },
+    '95%': { transform: 'translateX(-300%)' },
+    '100%': { transform: 'translateX(0%)' }
+  },
   loadingText: {
     marginTop: '20px',
     color: '#666',
@@ -4304,6 +4566,130 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Enhanced Carousel Upload Styles
+  carouselUploadArea: {
+    position: 'relative',
+    marginBottom: '8px',
+  },
+  carouselFileInput: {
+    position: 'absolute',
+    opacity: 0,
+    width: '100%',
+    height: '100%',
+    cursor: 'pointer',
+  },
+  carouselUploadLabel: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '24px',
+    border: '2px dashed #d0d0d0',
+    borderRadius: '8px',
+    backgroundColor: '#fafafa',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    minHeight: '120px',
+    '&:hover': {
+      borderColor: '#ff6b35',
+      backgroundColor: '#fff5f2',
+    }
+  },
+  carouselUploadIcon: {
+    fontSize: '32px',
+    marginBottom: '8px',
+    opacity: 0.7,
+  },
+  carouselUploadText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: '14px',
+    lineHeight: '1.4',
+  },
+  uploadingSpinner: {
+    width: '20px',
+    height: '20px',
+    border: '2px solid #f3f3f3',
+    borderTop: '2px solid #ff6b35',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+    marginBottom: '8px',
+  },
+  carouselPreviewHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '12px',
+  },
+  clearAllBtn: {
+    padding: '6px 12px',
+    backgroundColor: '#ffebee',
+    color: '#c62828',
+    border: '1px solid #ffcdd2',
+    borderRadius: '4px',
+    fontSize: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    '&:hover': {
+      backgroundColor: '#ffcdd2',
+    }
+  },
+  carouselImageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.3)',
+    opacity: 0,
+    transition: 'opacity 0.3s',
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    padding: '4px',
+    '&:hover': {
+      opacity: 1,
+    }
+  },
+  carouselImageNumber: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    color: '#fff',
+    fontSize: '10px',
+    padding: '2px 6px',
+    borderRadius: '2px',
+    fontWeight: '600',
+  },
+  carouselAddMore: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '2px dashed #d0d0d0',
+    borderRadius: '8px',
+    backgroundColor: '#fafafa',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    minHeight: '80px',
+    '&:hover': {
+      borderColor: '#ff6b35',
+      backgroundColor: '#fff5f2',
+    }
+  },
+  carouselAddMoreLabel: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    cursor: 'pointer',
+  },
+  carouselAddMoreIcon: {
+    fontSize: '24px',
+    color: '#999',
+    marginBottom: '4px',
+  },
+  carouselAddMoreText: {
+    fontSize: '12px',
+    color: '#666',
+    fontWeight: '600',
   },
   // Template Selector Styles
   templateSelector: {

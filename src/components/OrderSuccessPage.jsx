@@ -332,6 +332,62 @@ const OrderSuccessPage = () => {
             📍 {address}
           </p>
         )}
+        
+        {/* Carousel Images */}
+        {profile?.carouselImages && profile.carouselImages.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <p style={{ ...commonText, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
+              Gallery ({profile.carouselImages.length})
+            </p>
+            <div style={{
+              position: 'relative',
+              width: '100%',
+              height: 80,
+              borderRadius: 8,
+              overflow: 'hidden',
+              backgroundColor: '#f8f9fa',
+              border: '1px solid #e0e0e0'
+            }}>
+              <div 
+                style={{
+                  display: 'flex',
+                  width: `${profile.carouselImages.length * 100}%`,
+                  height: '100%',
+                  animation: profile.carouselImages.length > 1 ? 'slideCarousel 8s infinite' : 'none',
+                }}
+              >
+                {profile.carouselImages.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img}
+                    alt={`Gallery ${idx + 1}`}
+                    style={{
+                      width: `${100 / profile.carouselImages.length}%`,
+                      height: '100%',
+                      objectFit: 'cover',
+                      flexShrink: 0,
+                    }}
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                ))}
+              </div>
+              {profile.carouselImages.length > 1 && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 4,
+                  right: 4,
+                  background: 'rgba(0,0,0,0.7)',
+                  color: '#fff',
+                  fontSize: 10,
+                  padding: '2px 6px',
+                  borderRadius: 3,
+                }}>
+                  {profile.carouselImages.length} photos
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -555,5 +611,25 @@ const styles = {
     textDecoration: 'none',
   },
 };
+
+// Add CSS animation for carousel
+const carouselStyle = document.createElement('style');
+carouselStyle.textContent = `
+  @keyframes slideCarousel {
+    0% { transform: translateX(0%); }
+    20% { transform: translateX(0%); }
+    25% { transform: translateX(-100%); }
+    45% { transform: translateX(-100%); }
+    50% { transform: translateX(-200%); }
+    70% { transform: translateX(-200%); }
+    75% { transform: translateX(-300%); }
+    95% { transform: translateX(-300%); }
+    100% { transform: translateX(0%); }
+  }
+`;
+if (!document.head.querySelector('style[data-carousel]')) {
+  carouselStyle.setAttribute('data-carousel', 'true');
+  document.head.appendChild(carouselStyle);
+}
 
 export default OrderSuccessPage;
