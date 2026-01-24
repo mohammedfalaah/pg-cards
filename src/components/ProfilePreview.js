@@ -71,6 +71,7 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
           console.log('ProfilePreview: profileImage field:', profileData.profileImage);
           console.log('ProfilePreview: coverImage field:', profileData.coverImage);
           console.log('ProfilePreview: backgroundImage field:', profileData.backgroundImage);
+          console.log('ProfilePreview: carouselImages field:', profileData.carouselImages);
           setProfile(profileData);
         } else {
           // Try alternative endpoint
@@ -276,7 +277,9 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
       backgroundImage: activeProfile?.backgroundImage,
       finalProfilePic: profilePic,
       finalCover: cover,
-      carouselImages: carouselImages
+      carouselImages: carouselImages,
+      carouselImagesLength: carouselImages.length,
+      rawCarouselImages: activeProfile?.carouselImages
     });
 
     // Helper to convert Cloudinary HEIC URLs to JPG format for browser compatibility
@@ -339,7 +342,45 @@ const ProfilePreview = ({ userId, profile: profileProp, themeOverride, accentCol
 
     // Helper to render carousel images - auto-sliding for QR scan view
     const renderCarouselImages = (images, themeAccent) => {
-      if (!images || images.length === 0) return null;
+      console.log('renderCarouselImages called with:', { images, imagesLength: images?.length, themeAccent });
+      
+      // For testing - always show carousel section with placeholder if no images
+      if (!images || images.length === 0) {
+        console.log('No carousel images to display - showing placeholder for testing');
+        return (
+          <div style={{
+            background: finalTheme === 'epic' ? '#111' : finalTheme === 'modern' ? 'rgba(255,255,255,0.15)' : '#fff',
+            backdropFilter: finalTheme === 'modern' ? 'blur(10px)' : 'none',
+            WebkitBackdropFilter: finalTheme === 'modern' ? 'blur(10px)' : 'none',
+            margin: '0 16px 12px',
+            padding: '16px',
+            borderRadius: 16,
+            border: finalTheme === 'modern' ? '1px solid rgba(255,255,255,0.2)' : finalTheme === 'epic' ? '1px solid #222' : '1px solid #e0e0e0',
+            boxShadow: finalTheme === 'standard' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+          }}>
+            <h3 style={{ 
+              fontSize: 16, 
+              fontWeight: 600, 
+              color: finalTheme === 'standard' ? '#000' : '#fff', 
+              margin: '0 0 12px' 
+            }}>
+              Gallery (No images uploaded)
+            </h3>
+            <div style={{
+              padding: '20px',
+              textAlign: 'center',
+              color: finalTheme === 'standard' ? '#666' : '#aaa',
+              fontSize: '14px',
+              border: `2px dashed ${finalTheme === 'epic' ? '#333' : finalTheme === 'modern' ? 'rgba(255,255,255,0.3)' : '#ddd'}`,
+              borderRadius: '8px',
+            }}>
+              No gallery images available
+            </div>
+          </div>
+        );
+      }
+
+      console.log('Rendering carousel with', images.length, 'images');
 
       return (
         <div style={{
