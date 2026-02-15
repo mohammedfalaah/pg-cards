@@ -49,8 +49,8 @@ const Footer = () => {
           <div className="footer-section">
             <h3>Contact</h3>
             <ul>
-              <li>Email: info@pgcards.com</li>
-              <li>Phone: +971 000 000 000</li>
+              <li>Email: sales@pgcards.com</li>
+              <li>Phone: +97 15210 417 35</li>
             </ul>
           </div>
         </div>

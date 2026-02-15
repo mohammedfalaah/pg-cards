@@ -65,6 +65,23 @@ const premiumThemes = [
 ];
 
 const CardCustomization = () => {
+  // Helper function to get social media icons
+  const getSocialIcon = (platform) => {
+    const icons = {
+      'Instagram': '📷',
+      'Facebook': '👤',
+      'Whatsapp': '💬',
+      'Linkedin': '💼',
+      'Twitter': '🐦',
+      'Youtube': '▶️',
+      'Skype': '📞',
+      'Snapchat': '👻',
+      'Tiktok': '🎵',
+      'Company Profile': '🏢'
+    };
+    return icons[platform] || '🔗';
+  };
+
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -93,27 +110,23 @@ const CardCustomization = () => {
   const [customUrlEnabled, setCustomUrlEnabled] = useState(false);
   const [customSlug, setCustomSlug] = useState('');
   const [personalInfo, setPersonalInfo] = useState({
-    name: 'John Doe',
-    designation: 'Software Engineer',
+    name: '',
+    designation: '',
     phone: '',
     email: '',
-    company: 'Tech Company Inc.',
-    address: '123 Business Street, City, Country',
+    company: '',
+    address: '',
     website: '',
     tagline: '',
-    about: 'Experienced software developer with passion for creating innovative solutions and leading technical teams.',
+    about: '',
     aboutCompany: '',
     ctaButton: '',
     logo: ''
   });
   const [socialForm, setSocialForm] = useState({ platform: '', link: '' });
-  const [socialLinks, setSocialLinks] = useState([
-    { platform: 'Linkedin', link: 'https://linkedin.com/in/johndoe' },
-    { platform: 'Instagram', link: 'https://instagram.com/johndoe' },
-    { platform: 'Twitter', link: 'https://twitter.com/johndoe' }
-  ]);
-  const [phoneNumbers, setPhoneNumbers] = useState(['+971 50 000 0000']);
-  const [emails, setEmails] = useState(['john.doe@company.com']);
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [phoneNumbers, setPhoneNumbers] = useState(['']);
+  const [emails, setEmails] = useState(['']);
   const [logoSize, setLogoSize] = useState(100);
   const [images, setImages] = useState({
     coverImage: '',
@@ -126,9 +139,9 @@ const CardCustomization = () => {
     companyLogo: true
   });
   const [contactDetails, setContactDetails] = useState([
-    { label: "Address", value: "123 Business Street" },
-    { label: "Emirates", value: "Dubai" },
-    { label: "Country", value: "United Arab Emirates" },
+    { label: "Address", value: "" },
+    { label: "Emirates", value: "" },
+    { label: "Country", value: "" },
   ]);
   const [location, setLocation] = useState({
     address: '123 Business Street, City, Country',
@@ -343,10 +356,14 @@ const CardCustomization = () => {
                   background: customColors.primary,
                   borderRadius: 20,
                   color: '#fff',
-                  fontSize: 12,
-                  fontWeight: 'bold'
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
                 }}>
-                  {social.platform}
+                  <span>{getSocialIcon(social.platform)}</span>
+                  <span style={{ fontSize: 12 }}>{social.platform}</span>
                 </div>
               ))}
             </div>
@@ -669,7 +686,7 @@ const CardCustomization = () => {
           <div style={styles.previewSocialIcons}>
             {socialLinks.map((social, i) => (
               <div key={i} style={{ ...styles.previewSocialIcon, borderColor: customColors.primary, color: customColors.primary }}>
-                {social.platform.substring(0, 2)}
+                {getSocialIcon(social.platform)}
               </div>
             ))}
           </div>
@@ -750,9 +767,9 @@ const CardCustomization = () => {
               color: customColors.primary,
               width: 35,
               height: 35,
-              fontSize: 10
+              fontSize: 16
             }}>
-              {social.platform.substring(0, 1)}
+              {getSocialIcon(social.platform)}
             </div>
           ))}
         </div>
@@ -866,10 +883,14 @@ const CardCustomization = () => {
                 borderRadius: 20,
                 border: `1px solid ${customColors.primary}30`,
                 color: customColors.primary,
-                fontSize: 10,
-                fontWeight: 'bold'
+                fontSize: 16,
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
               }}>
-                {social.platform}
+                <span>{getSocialIcon(social.platform)}</span>
+                <span style={{ fontSize: 10 }}>{social.platform}</span>
               </div>
             ))}
           </div>
@@ -978,10 +999,14 @@ const CardCustomization = () => {
               borderRadius: 15,
               border: `1px solid ${customColors.primary}50`,
               color: customColors.primary,
-              fontSize: 10,
-              fontWeight: 'bold'
+              fontSize: 16,
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
             }}>
-              {social.platform}
+              <span>{getSocialIcon(social.platform)}</span>
+              <span style={{ fontSize: 10 }}>{social.platform}</span>
             </div>
           ))}
         </div>
@@ -1209,7 +1234,7 @@ const CardCustomization = () => {
             <option value="">Select Platform</option>
             {socialPlatforms.map((platform) => (
               <option key={platform} value={platform}>
-                {platform}
+                {getSocialIcon(platform)} {platform}
               </option>
             ))}
           </select>
@@ -1227,11 +1252,34 @@ const CardCustomization = () => {
           <div style={styles.socialChips}>
             {socialLinks.map((item, idx) => (
               <div key={`${item.platform}-${idx}`} style={styles.socialChip}>
-                <span>{item.platform}</span>
-                <a href={item.link} target="_blank" rel="noreferrer">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 20 }}>{getSocialIcon(item.platform)}</span>
+                  <span style={{ fontWeight: 600 }}>{item.platform}</span>
+                </div>
+                <a href={item.link} target="_blank" rel="noreferrer" style={{ 
+                  color: '#0066ff', 
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  flex: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
                   {item.link}
                 </a>
-                <button onClick={() => handleRemoveSocial(idx)}>×</button>
+                <button 
+                  onClick={() => handleRemoveSocial(idx)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ff4444',
+                    fontSize: 20,
+                    cursor: 'pointer',
+                    padding: '0 8px'
+                  }}
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>
@@ -1695,12 +1743,12 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '10px 14px',
+    padding: '12px 14px',
     borderRadius: 12,
     background: 'rgba(255,255,255,0.03)',
     border: '1px solid rgba(255,255,255,0.08)',
     gap: 12,
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     wordBreak: 'break-all'
   },
   imageUploadSection: {

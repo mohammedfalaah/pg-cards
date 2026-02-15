@@ -532,7 +532,7 @@ const ProductDetailPage = ({ productId }) => {
         /* Main Container */
         .container {
         
-          background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+          background: linear-gradient(135deg, #1a1410 0%, #2d2416 50%, #1a1410 100%);
           
           position: relative;
           overflow: hidden;
@@ -549,8 +549,8 @@ const ProductDetailPage = ({ productId }) => {
             45deg,
             transparent,
             transparent 20px,
-            rgba(212, 175, 55, 0.02) 20px,
-            rgba(212, 175, 55, 0.02) 40px
+            rgba(212, 175, 55, 0.05) 20px,
+            rgba(212, 175, 55, 0.05) 40px
           );
           pointer-events: none;
         }
@@ -626,18 +626,19 @@ const ProductDetailPage = ({ productId }) => {
         .mainImageContainer {
           width: 100%;
           aspect-ratio: 1;
-          background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(10, 10, 10, 0.9) 100%);
+          background: linear-gradient(135deg, rgba(45, 36, 22, 0.6) 0%, rgba(26, 20, 16, 0.8) 100%);
           backdrop-filter: blur(20px);
           border-radius: 20px;
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(212, 175, 55, 0.2);
+          border: 1px solid rgba(212, 175, 55, 0.3);
           position: relative;
           box-shadow: 
             0 20px 60px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(212, 175, 55, 0.1) inset;
+            0 0 0 1px rgba(212, 175, 55, 0.2) inset,
+            0 0 40px rgba(212, 175, 55, 0.1);
           transition: all 0.5s ease;
         }
 
@@ -648,7 +649,7 @@ const ProductDetailPage = ({ productId }) => {
           left: 0;
           right: 0;
           bottom: 0;
-          background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.1) 0%, transparent 60%);
+          background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.15) 0%, transparent 60%);
           pointer-events: none;
         }
 
@@ -656,7 +657,8 @@ const ProductDetailPage = ({ productId }) => {
           transform: translateY(-5px);
           box-shadow: 
             0 30px 80px rgba(0, 0, 0, 0.6),
-            0 0 0 1px rgba(212, 175, 55, 0.3) inset;
+            0 0 0 1px rgba(212, 175, 55, 0.4) inset,
+            0 0 60px rgba(212, 175, 55, 0.2);
         }
 
         .mainImage {
@@ -682,12 +684,12 @@ const ProductDetailPage = ({ productId }) => {
         .thumbnail {
           width: 120px;
           height: 120px;
-          background: rgba(26, 26, 26, 0.8);
+          background: rgba(45, 36, 22, 0.5);
           backdrop-filter: blur(10px);
           border-radius: 12px;
           overflow: hidden;
           cursor: pointer;
-          border: 2px solid rgba(212, 175, 55, 0.1);
+          border: 2px solid rgba(212, 175, 55, 0.2);
           transition: all 0.3s ease;
           position: relative;
         }
@@ -699,14 +701,15 @@ const ProductDetailPage = ({ productId }) => {
           left: 0;
           right: 0;
           bottom: 0;
-          background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, transparent 100%);
           opacity: 0;
           transition: opacity 0.3s ease;
         }
 
         .thumbnail:hover {
-          border-color: rgba(212, 175, 55, 0.4);
+          border-color: rgba(212, 175, 55, 0.5);
           transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
         }
 
         .thumbnail:hover::before {
@@ -715,7 +718,8 @@ const ProductDetailPage = ({ productId }) => {
 
         .thumbnailActive {
           border-color: var(--gold);
-          box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+          background: rgba(45, 36, 22, 0.8);
         }
 
         .thumbnailImage {

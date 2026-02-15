@@ -100,7 +100,8 @@ const Hero = () => {
   }, []);
 
   const handleShopNow = () => {
-    console.log('Shop Now clicked');
+    window.history.pushState({}, '', '/shop');
+    window.dispatchEvent(new Event('popstate'));
   };
 
   return (

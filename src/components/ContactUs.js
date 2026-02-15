@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 
 const ContactUs = () => {
+  // Initialize EmailJS with your public key
+  useEffect(() => {
+    // Your actual public key from EmailJS dashboard
+    emailjs.init('TYPlzGqN0BSQ2-8UP');
+  }, []);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -9,22 +15,97 @@ const ContactUs = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
-  const handleSubmit = () => {
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', phone: '', message: '' });
-    }, 3000);
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError('Please enter your name');
+      return false;
+    }
+    if (!formData.email.trim()) {
+      setError('Please enter your email');
+      return false;
+    }
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    if (!formData.message.trim()) {
+      setError('Please enter a message');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // EmailJS configuration
+      const serviceId = 'service_kdjlhme';
+      const templateId = 'template_isbqzte';
+
+      // Prepare email parameters - match your EmailJS template variable names
+      const templateParams = {
+        from_name: formData.name,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || 'Not provided',
+        message: formData.message
+      };
+
+      console.log('Sending email...', templateParams);
+
+      // Send email using EmailJS (public key already initialized in useEffect)
+      const response = await emailjs.send(
+        serviceId,
+        templateId,
+        templateParams
+      );
+
+      console.log('Email sent successfully:', response);
+
+      if (response.status === 200) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({ name: '', email: '', phone: '', message: '' });
+        }, 5000);
+      } else {
+        setError('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('EmailJS Error:', error);
+      
+      // Better error messages
+      if (error.text) {
+        setError(`Error: ${error.text}`);
+      } else if (error.status === 412) {
+        setError('Configuration error. Please verify your EmailJS template variables match: from_name, from_email, phone, message, reply_to');
+      } else {
+        setError('Failed to send message. Please contact us directly at sales@pgcards.com');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,12 +128,19 @@ const ContactUs = () => {
               <div style={styles.successMessage}>
                 <div style={styles.successIcon}>✓</div>
                 <h3 style={styles.successTitle}>Message Sent!</h3>
-                <p style={styles.successText}>We'll get back to you soon.</p>
+                <p style={styles.successText}>Thank you for contacting us. We'll get back to you soon.</p>
               </div>
             ) : (
               <div style={styles.form}>
+                {error && (
+                  <div style={styles.errorMessage}>
+                    <span style={styles.errorIcon}>⚠️</span>
+                    <span>{error}</span>
+                  </div>
+                )}
+
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Name</label>
+                  <label style={styles.label}>Name *</label>
                   <input
                     type="text"
                     name="name"
@@ -60,11 +148,12 @@ const ContactUs = () => {
                     onChange={handleChange}
                     style={styles.input}
                     placeholder="Your name"
+                    disabled={loading}
                   />
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Email</label>
+                  <label style={styles.label}>Email *</label>
                   <input
                     type="email"
                     name="email"
@@ -72,6 +161,7 @@ const ContactUs = () => {
                     onChange={handleChange}
                     style={styles.input}
                     placeholder="your.email@example.com"
+                    disabled={loading}
                   />
                 </div>
 
@@ -84,11 +174,12 @@ const ContactUs = () => {
                     onChange={handleChange}
                     style={styles.input}
                     placeholder="+971 00 000 0000"
+                    disabled={loading}
                   />
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Message</label>
+                  <label style={styles.label}>Message *</label>
                   <textarea
                     name="message"
                     value={formData.message}
@@ -96,11 +187,20 @@ const ContactUs = () => {
                     rows="5"
                     style={{...styles.input, ...styles.textarea}}
                     placeholder="Tell us how we can help you..."
+                    disabled={loading}
                   />
                 </div>
 
-                <button onClick={handleSubmit} style={styles.submitButton}>
-                  Send Message
+                <button 
+                  onClick={handleSubmit} 
+                  style={{
+                    ...styles.submitButton,
+                    opacity: loading ? 0.6 : 1,
+                    cursor: loading ? 'not-allowed' : 'pointer'
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? 'Sending...' : 'Send Message'}
                 </button>
               </div>
             )}
@@ -128,8 +228,8 @@ const ContactUs = () => {
               </div>
               <div style={styles.infoContent}>
                 <h3 style={styles.infoTitle}>Email</h3>
-                <a href="mailto:info@pensgallery.com" style={styles.link}>
-                  info@pensgallery.com
+                <a href="mailto:sales@pgcards.com" style={styles.link}>
+                  sales@pgcards.com
                 </a>
               </div>
             </div>
@@ -147,7 +247,7 @@ const ContactUs = () => {
             </div>
 
             <a 
-              href="https://maps.app.goo.gl/ktRFX664SLHNRXAm9?g_st=iwb" 
+              href="https://maps.app.goo.gl/nxa3qhony6EyL7yA9?g_st=iwb" 
               target="_blank" 
               rel="noopener noreferrer"
               style={styles.mapButton}
@@ -162,7 +262,7 @@ const ContactUs = () => {
         <div style={styles.mapSection}>
           <div style={styles.mapContainer}>
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3607.3658!2d55.3918!3d25.3211!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjXCsDE5JzE2LjAiTiA1NcKwMjMnMzAuNSJF!5e0!3m2!1sen!2sae!4v1234567890"
+              src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3607.3658!2d55.437667!3d25.297861!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMjXCsDE3JzUyLjMiTiA1NcKwMjYnMTUuNiJF!5e0!3m2!1sen!2sae!4v1234567890"
               style={styles.map}
               allowFullScreen=""
               loading="lazy"
@@ -305,6 +405,20 @@ const styles = {
   successText: {
     fontSize: '16px',
     color: '#999',
+  },
+  errorMessage: {
+    backgroundColor: '#2a1515',
+    border: '1px solid #ff4444',
+    borderRadius: '8px',
+    padding: '12px 16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    color: '#ff6b6b',
+    fontSize: '14px',
+  },
+  errorIcon: {
+    fontSize: '18px',
   },
   infoCard: {
     backgroundColor: '#1a1a1a',

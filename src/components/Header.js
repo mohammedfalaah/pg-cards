@@ -114,17 +114,47 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       return;
     }
     
+    // Handle home navigation
+    if (targetId === '#home' || targetId === '/') {
+      window.history.pushState({}, '', '/');
+      window.dispatchEvent(new Event('popstate'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsMenuOpen(false);
+      return;
+    }
+
+    // Handle about navigation - check if we're on home page
+    if (targetId === '#about') {
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/') {
+        // Navigate to home first, then scroll to about
+        window.history.pushState({}, '', '/');
+        window.dispatchEvent(new Event('popstate'));
+        setTimeout(() => {
+          const target = document.querySelector('#about');
+          if (target) {
+            const headerOffset = 80;
+            const elementPosition = target.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+          }
+        }, 100);
+        setIsMenuOpen(false);
+        return;
+      }
+    }
+    
     // Handle blog navigation separately
     if (targetId === '#blog') {
       window.history.pushState({}, '', '/blog');
-      window.dispatchEvent(new Event('navigate'));
+      window.dispatchEvent(new Event('popstate'));
       setIsMenuOpen(false);
       return;
     }
 
     if (targetId === '#shop') {
       window.history.pushState({}, '', '/shop');
-      window.dispatchEvent(new Event('navigate'));
+      window.dispatchEvent(new Event('popstate'));
       setIsMenuOpen(false);
       return;
     }
@@ -132,14 +162,14 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
     // Handle create QR navigation separately
     if (targetId === '#create') {
       window.history.pushState({}, '', '/create-qrCode');
-      window.dispatchEvent(new Event('navigate'));
+      window.dispatchEvent(new Event('popstate'));
       setIsMenuOpen(false);
       return;
     }
 
     if (targetId === '#contact') {
       window.history.pushState({}, '', '/contact');
-      window.dispatchEvent(new Event('navigate'));
+      window.dispatchEvent(new Event('popstate'));
       setIsMenuOpen(false);
       return;
     }
@@ -160,12 +190,12 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
 
   const handleTryDemo = () => {
     window.history.pushState({}, '', '/customize');
-    window.dispatchEvent(new Event('navigate'));
+    window.dispatchEvent(new Event('popstate'));
   };
 
   const handleViewSite = () => {
     window.history.pushState({}, '', '/');
-    window.dispatchEvent(new Event('navigate'));
+    window.dispatchEvent(new Event('popstate'));
   };
 
   const handleLoginSuccess = (authData) => {
@@ -209,7 +239,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
 
     // Redirect to home
     window.history.pushState({}, '', '/');
-    window.dispatchEvent(new Event('navigate'));
+    window.dispatchEvent(new Event('popstate'));
   };
 
   return (
@@ -246,7 +276,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
                 className="cart-icon-btn"
                 onClick={() => {
                   window.history.pushState({}, '', '/cart');
-                  window.dispatchEvent(new Event('navigate'));
+                  window.dispatchEvent(new Event('popstate'));
                 }}
               >
                 🛒
@@ -283,7 +313,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             className="dropdown-item"
             onClick={() => {
               window.history.pushState({}, '', '/admin');
-              window.dispatchEvent(new Event('navigate'));
+              window.dispatchEvent(new Event('popstate'));
             }}
           >
             <span>⚙️</span> Admin Panel
@@ -293,7 +323,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             className="dropdown-item"
             onClick={() => {
               window.history.pushState({}, '', '/dashboard');
-              window.dispatchEvent(new Event('navigate'));
+              window.dispatchEvent(new Event('popstate'));
             }}
           >
             <span>📊</span> Dashboard
@@ -303,7 +333,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
           className="dropdown-item"
           onClick={() => {
             window.history.pushState({}, '', '/profile');
-            window.dispatchEvent(new Event('navigate'));
+            window.dispatchEvent(new Event('popstate'));
           }}
         >
           <span>👤</span> My Profile
@@ -312,7 +342,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
           className="dropdown-item"
           onClick={() => {
             window.history.pushState({}, '', '/orders');
-            window.dispatchEvent(new Event('navigate'));
+            window.dispatchEvent(new Event('popstate'));
           }}
         >
           <span>📦</span> Orders
