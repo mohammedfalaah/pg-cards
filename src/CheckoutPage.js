@@ -2572,20 +2572,49 @@ const CheckoutPage = () => {
 
   try {
     const userId = getUserId();
-    const amount = Math.round(calculateTotal() * 100);
-
-    // Assuming you want to process only the first item in cart
-    // Or you need to adjust the API to accept cart items array
+    
+    // Get the first cart item
     const firstCartItem = cartItems[0];
     
-          // Based on Postman screenshot, the API expects specific fields
-          const paymentResponse = await axios.post('https://pg-cards.vercel.app/payment/createPayment', {
-            amount: amount,
-            userId: userId,
-            productId: firstCartItem.product?._id,
-            variantId: firstCartItem.product?.variants?.[0]?._id,
-            isTrial: trialSelected ? true : false, // flag to inform backend about 3-day trial
-          });
+    // Validate cart item has required data
+    if (!firstCartItem?.product?._id) {
+      toast.error('Invalid product in cart');
+      return false;
+    }
+    
+    if (!firstCartItem?.product?.variants?.[0]?._id) {
+      toast.error('Invalid product variant');
+      return false;
+    }
+    
+    // Calculate amount - ensure it's the actual product price, not divided
+    const totalAmount = calculateTotal();
+    console.log('Total amount before conversion:', totalAmount);
+    
+    // Amount should be in smallest currency unit (fils for AED)
+    // If total is 150 AED, send 15000 (150 * 100)
+    const amount = Math.round(totalAmount * 100);
+    console.log('Amount to send to API:', amount);
+    
+    // Validate amount is reasonable
+    if (amount < 100) { // Less than 1 AED
+      console.error('Amount too small:', amount, 'from total:', totalAmount);
+      toast.error('Invalid cart total. Please refresh and try again.');
+      return false;
+    }
+    
+    const paymentData = {
+      amount: amount,
+      userId: userId,
+      productId: firstCartItem.product._id,
+      variantId: firstCartItem.product.variants[0]._id,
+      isTrial: trialSelected ? true : false,
+    };
+    
+    console.log('Creating payment with data:', paymentData);
+    
+    // Based on Postman screenshot, the API expects specific fields
+    const paymentResponse = await axios.post('https://pg-cards.vercel.app/payment/createPayment', paymentData);
 
     console.log('Payment intent response:', paymentResponse.data);
 
@@ -2604,7 +2633,8 @@ const CheckoutPage = () => {
     return false;
   } catch (error) {
     console.error('Error creating payment intent:', error.response?.data || error);
-    toast.error(error.response?.data?.message || 'Failed to initialize payment. Please try again.');
+    const errorMsg = error.response?.data?.message || error.response?.data?.msg || 'Failed to initialize payment. Please try again.';
+    toast.error(errorMsg);
     return false;
   } finally {
     setProcessingPayment(false);

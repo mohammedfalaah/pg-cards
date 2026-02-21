@@ -239,6 +239,20 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
 
   // Upload image to Cloudinary
   const uploadToCloudinary = async (file) => {
+    // File size validation - Cloudinary free tier limit is 10MB
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    
+    if (!file) {
+      toast.error('No file selected');
+      return null;
+    }
+    
+    if (file.size > MAX_FILE_SIZE) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`File size too large (${fileSizeMB}MB). Maximum allowed is 10MB. Please compress your image and try again.`);
+      return null;
+    }
+    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', 'pgcards_unsigned');
@@ -253,7 +267,18 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       return response.data.secure_url;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      
+      // Handle specific Cloudinary errors
+      if (error.response?.data?.error?.message) {
+        const errorMsg = error.response.data.error.message;
+        if (errorMsg.includes('File size too large')) {
+          toast.error('File size exceeds Cloudinary limit. Please use an image under 10MB.');
+        } else {
+          toast.error(`Upload failed: ${errorMsg}`);
+        }
+      } else {
+        toast.error('Failed to upload image. Please try again.');
+      }
       return null;
     } finally {
       setUploadingImage(false);
