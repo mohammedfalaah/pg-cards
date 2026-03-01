@@ -22,8 +22,12 @@ const CLOUDINARY_UPLOAD_PRESET =
   process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'pgcards_unsigned';
 const CLOUDINARY_FOLDER = process.env.REACT_APP_CLOUDINARY_FOLDER || 'pgcards';
 
-// Initialize Stripe. pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPR
-const stripePromise = loadStripe('pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPR');
+// Initialize Stripe with environment variable or fallback
+const STRIPE_PUBLISHABLE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 
+  'pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPRv';
+
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 // Template Options - Only 3 distinct designs
 const TEMPLATE_OPTIONS = [
@@ -2337,19 +2341,52 @@ const CheckoutPage = () => {
     }
   };
 
-  const removeItem = async (itemId) => {
+  const removeItem = async (itemId, productId) => {
+    if (!itemId) {
+      toast.error('Invalid item ID');
+      return;
+    }
+
     try {
       const userId = getUserId();
-      await axios.post('https://pg-cards.vercel.app/cart/removeItem', {
-        userId,
-        itemId
-      });
       
-      setCartItems(cartItems.filter(item => item._id !== itemId));
+      if (!userId) {
+        toast.error('User not logged in');
+        return;
+      }
+
+      console.log('Removing item:', { userId, itemId, productId });
+      
+      // Try with both itemId and productId to match API expectations
+      const payload = {
+        userId,
+        productId,
+      };
+      
+      // Add productId if available
+      if (productId) {
+        payload.productId = productId;
+      }
+      
+      console.log('Remove item payload:', payload);
+      
+      const response = await axios.post('https://pg-cards.vercel.app/cart/removeItem', payload);
+      
+      console.log('Remove item response:', response.data);
+      
+      // Update local state immediately for better UX
+      setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
+      
       toast.success('Item removed from cart');
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('Failed to remove item');
+      console.error('Error details:', error.response?.data);
+      
+      // Even if API fails, remove from local state
+      setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
+      
+      const errorMsg = error.response?.data?.message || error.response?.data?.msg || 'Failed to remove item';
+      toast.error(errorMsg);
     }
   };
 
@@ -2686,9 +2723,15 @@ const CheckoutPage = () => {
       return;
     }
     
-    // Save profile with theme before proceeding to payment
-    await saveProfileWithTheme();
-    await createPaymentIntent();
+    try {
+      // Save profile with theme before proceeding to payment
+      await saveProfileWithTheme();
+      await createPaymentIntent();
+    } catch (error) {
+      console.error('Error in handleProceedToPayment:', error);
+      // Error is already shown by saveProfileWithTheme or createPaymentIntent
+      // Just log it here and don't proceed to payment
+    }
   };
 
   const handleStartTrial = async () => {
@@ -2878,20 +2921,17 @@ const CheckoutPage = () => {
 
       console.log('Saving profile with API payload:', JSON.stringify(apiPayload, null, 2));
 
-      const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(apiPayload)
-      });
+      const response = await axios.post(
+        'https://pg-cards.vercel.app/userProfile/saveUserProfile',
+        apiPayload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to save profile');
-      }
-
-      const result = await response.json();
+      const result = response.data;
       console.log('Profile saved successfully:', result);
 
       // Store the profile ID and theme
@@ -2917,7 +2957,31 @@ const CheckoutPage = () => {
       toast.success('Profile saved successfully!');
     } catch (err) {
       console.error('Error saving profile:', err);
-      toast.error(err.message || 'Failed to save profile. Please try again.');
+      console.error('Error details:', err.response?.data || err.message);
+      
+      // Better error messages
+      let errorMessage = 'Failed to save profile. Please try again.';
+      
+      if (err.response?.data?.msg) {
+        errorMessage = err.response.data.msg;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Check for specific errors
+      if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (err.response?.status === 400) {
+        errorMessage = 'Invalid profile data. Please check all required fields.';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      toast.error(errorMessage);
       throw err; // Re-throw to prevent payment if profile save fails
     }
   };
@@ -3239,8 +3303,28 @@ const CheckoutPage = () => {
                       
                       <button 
                         style={styles.removeBtn} 
-                        onClick={() => removeItem(item._id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const productId = item.product?._id || product?._id;
+                          console.log('Remove button clicked!');
+                          console.log('Item ID:', item._id);
+                          console.log('Product ID:', productId);
+                          console.log('Full item:', item);
+                          removeItem(item._id, productId);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#ff4444';
+                          e.target.style.color = '#fff';
+                          e.target.style.borderColor = '#ff4444';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = '#fff';
+                          e.target.style.color = '#666';
+                          e.target.style.borderColor = '#ddd';
+                        }}
                         type="button"
+                        title="Remove item"
                       >
                         ×
                       </button>
@@ -4052,19 +4136,23 @@ const styles = {
   },
   removeBtn: {
     position: 'absolute',
-    top: '0',
-    right: '0',
-    width: '24px',
-    height: '24px',
-    border: 'none',
-    backgroundColor: 'transparent',
-    fontSize: '24px',
+    top: '8px',
+    right: '8px',
+    width: '28px',
+    height: '28px',
+    border: '1px solid #ddd',
+    backgroundColor: '#fff',
+    borderRadius: '50%',
+    fontSize: '20px',
     cursor: 'pointer',
-    color: '#999',
-    transition: 'color 0.3s',
-    '&:hover': {
-      color: '#ff6b35',
-    }
+    color: '#666',
+    transition: 'all 0.3s',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    lineHeight: '1',
+    padding: 0,
   },
   deliveryInfo: {
     padding: '12px',
