@@ -86,6 +86,18 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
     if (currentUser) {
       fetchCartCount();
     }
+
+    // Listen for cart update events
+    const handleCartUpdate = () => {
+      console.log('Cart update event received in Header');
+      fetchCartCount();
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
   }, [currentUser]);
 
   useEffect(() => {

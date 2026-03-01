@@ -2377,6 +2377,10 @@ const CheckoutPage = () => {
       // Update local state immediately for better UX
       setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
       
+      // Dispatch custom event to update cart count in header
+      window.dispatchEvent(new Event('cartUpdated'));
+      console.log('Cart update event dispatched after removal');
+      
       toast.success('Item removed from cart');
     } catch (error) {
       console.error('Error removing item:', error);
@@ -2384,6 +2388,9 @@ const CheckoutPage = () => {
       
       // Even if API fails, remove from local state
       setCartItems(prevItems => prevItems.filter(item => item._id !== itemId));
+      
+      // Still dispatch the event to update header
+      window.dispatchEvent(new Event('cartUpdated'));
       
       const errorMsg = error.response?.data?.message || error.response?.data?.msg || 'Failed to remove item';
       toast.error(errorMsg);

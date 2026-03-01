@@ -106,6 +106,10 @@ const ProductDetailPage = ({ productId }) => {
 
       if (response.status === 200 || response.data.code === 200) {
         toast.success("Added to cart successfully!");
+        
+        // Dispatch custom event to update cart count in header
+        window.dispatchEvent(new Event('cartUpdated'));
+        console.log('Cart update event dispatched');
       }
     } catch (error) {
       console.error("Cart error:", error);
