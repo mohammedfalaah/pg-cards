@@ -195,6 +195,194 @@ const ContactUs = () => {
       <div style={styles.footer}>
         <div style={styles.footerLine}></div>
       </div>
+
+      {/* Responsive Styles */}
+      <style>{`
+        @media (max-width: 968px) {
+          .contact-hero-title {
+            font-size: 36px !important;
+          }
+          
+          .contact-grid {
+            grid-template-columns: 1fr !important;
+            gap: 30px !important;
+          }
+          
+          .contact-map-container {
+            height: 300px !important;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .contact-hero {
+            padding: 60px 16px 40px !important;
+          }
+          
+          .contact-hero-title {
+            font-size: 32px !important;
+            margin: 25px 0 12px 0 !important;
+          }
+          
+          .contact-hero-subtitle {
+            font-size: 16px !important;
+          }
+          
+          .contact-content {
+            padding: 40px 16px !important;
+          }
+          
+          .contact-form-section {
+            padding: 24px !important;
+          }
+          
+          .contact-section-title {
+            font-size: 20px !important;
+            margin-bottom: 20px !important;
+          }
+          
+          .contact-info-card {
+            padding: 20px !important;
+            gap: 12px !important;
+          }
+          
+          .contact-icon-wrapper {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          
+          .contact-icon {
+            font-size: 20px !important;
+          }
+          
+          .contact-map-button {
+            padding: 14px 20px !important;
+            font-size: 15px !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .contact-hero {
+            padding: 50px 12px 30px !important;
+          }
+          
+          .contact-hero-title {
+            font-size: 28px !important;
+            margin: 20px 0 10px 0 !important;
+          }
+          
+          .contact-hero-subtitle {
+            font-size: 14px !important;
+          }
+          
+          .contact-content {
+            padding: 30px 12px !important;
+          }
+          
+          .contact-grid {
+            gap: 24px !important;
+            margin-bottom: 40px !important;
+          }
+          
+          .contact-form-section {
+            padding: 20px !important;
+            border-radius: 12px !important;
+          }
+          
+          .contact-section-title {
+            font-size: 18px !important;
+            margin-bottom: 16px !important;
+          }
+          
+          .contact-form-group {
+            gap: 6px !important;
+          }
+          
+          .contact-label {
+            font-size: 13px !important;
+          }
+          
+          .contact-input {
+            padding: 10px 14px !important;
+            font-size: 15px !important;
+          }
+          
+          .contact-submit-button {
+            padding: 12px 24px !important;
+            font-size: 15px !important;
+          }
+          
+          .contact-info-card {
+            padding: 16px !important;
+            gap: 10px !important;
+            border-radius: 10px !important;
+          }
+          
+          .contact-icon-wrapper {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+          }
+          
+          .contact-icon {
+            font-size: 18px !important;
+          }
+          
+          .contact-info-title {
+            font-size: 15px !important;
+          }
+          
+          .contact-info-text {
+            font-size: 13px !important;
+          }
+          
+          .contact-link {
+            font-size: 13px !important;
+          }
+          
+          .contact-map-button {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            gap: 10px !important;
+          }
+          
+          .contact-map-icon {
+            font-size: 18px !important;
+          }
+          
+          .contact-map-section {
+            border-radius: 12px !important;
+          }
+          
+          .contact-map-container {
+            height: 250px !important;
+          }
+          
+          .contact-success-message {
+            padding: 30px 16px !important;
+          }
+          
+          .contact-success-icon {
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 28px !important;
+            margin: 0 auto 16px !important;
+          }
+          
+          .contact-success-title {
+            font-size: 20px !important;
+          }
+          
+          .contact-success-text {
+            font-size: 14px !important;
+          }
+          
+          .contact-error-message {
+            padding: 10px 14px !important;
+            gap: 10px !important;
+            font-size: 13px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
@@ -211,6 +399,7 @@ const styles = {
     padding: '80px 20px 60px',
     textAlign: 'center',
     borderBottom: '1px solid #222',
+    className: 'contact-hero',
   },
   heroContent: {
     maxWidth: '800px',
@@ -224,28 +413,33 @@ const styles = {
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
+    className: 'contact-hero-title',
   },
   heroSubtitle: {
     fontSize: '18px',
     color: '#999',
     margin: 0,
+    className: 'contact-hero-subtitle',
   },
   content: {
     maxWidth: '1200px',
     margin: '0 auto',
     padding: '60px 20px',
+    className: 'contact-content',
   },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '40px',
     marginBottom: '60px',
+    className: 'contact-grid',
   },
   formSection: {
     backgroundColor: '#1a1a1a',
     borderRadius: '16px',
     padding: '32px',
     border: '1px solid #222',
+    className: 'contact-form-section',
   },
   infoSection: {
     display: 'flex',
@@ -257,6 +451,7 @@ const styles = {
     fontWeight: '600',
     marginBottom: '24px',
     color: '#fff',
+    className: 'contact-section-title',
   },
   form: {
     display: 'flex',
@@ -267,11 +462,13 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+    className: 'contact-form-group',
   },
   label: {
     fontSize: '14px',
     fontWeight: '500',
     color: '#ccc',
+    className: 'contact-label',
   },
   input: {
     padding: '12px 16px',
@@ -282,6 +479,7 @@ const styles = {
     color: '#fff',
     outline: 'none',
     transition: 'border-color 0.3s',
+    className: 'contact-input',
   },
   textarea: {
     resize: 'vertical',
@@ -298,10 +496,12 @@ const styles = {
     cursor: 'pointer',
     transition: 'transform 0.2s, box-shadow 0.2s',
     marginTop: '8px',
+    className: 'contact-submit-button',
   },
   successMessage: {
     textAlign: 'center',
     padding: '40px 20px',
+    className: 'contact-success-message',
   },
   successIcon: {
     width: '60px',
@@ -314,15 +514,18 @@ const styles = {
     justifyContent: 'center',
     fontSize: '32px',
     margin: '0 auto 20px',
+    className: 'contact-success-icon',
   },
   successTitle: {
     fontSize: '24px',
     fontWeight: '600',
     marginBottom: '8px',
+    className: 'contact-success-title',
   },
   successText: {
     fontSize: '16px',
     color: '#999',
+    className: 'contact-success-text',
   },
   errorMessage: {
     backgroundColor: '#2a1515',
@@ -334,6 +537,7 @@ const styles = {
     gap: '12px',
     color: '#ff6b6b',
     fontSize: '14px',
+    className: 'contact-error-message',
   },
   errorIcon: {
     fontSize: '18px',
@@ -346,6 +550,7 @@ const styles = {
     gap: '16px',
     border: '1px solid #222',
     transition: 'border-color 0.3s',
+    className: 'contact-info-card',
   },
   iconWrapper: {
     width: '48px',
@@ -356,9 +561,11 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+    className: 'contact-icon-wrapper',
   },
   icon: {
     fontSize: '24px',
+    className: 'contact-icon',
   },
   infoContent: {
     flex: 1,
@@ -368,18 +575,21 @@ const styles = {
     fontWeight: '600',
     marginBottom: '8px',
     color: '#fff',
+    className: 'contact-info-title',
   },
   infoText: {
     fontSize: '14px',
     color: '#999',
     margin: '4px 0',
     lineHeight: '1.5',
+    className: 'contact-info-text',
   },
   link: {
     fontSize: '14px',
     color: '#fff',
     textDecoration: 'none',
     transition: 'color 0.3s',
+    className: 'contact-link',
   },
   mapButton: {
     display: 'flex',
@@ -396,19 +606,23 @@ const styles = {
     fontWeight: '500',
     transition: 'border-color 0.3s, background-color 0.3s',
     cursor: 'pointer',
+    className: 'contact-map-button',
   },
   mapIcon: {
     fontSize: '20px',
+    className: 'contact-map-icon',
   },
   mapSection: {
     borderRadius: '16px',
     overflow: 'hidden',
     border: '1px solid #222',
+    className: 'contact-map-section',
   },
   mapContainer: {
     position: 'relative',
     width: '100%',
     height: '400px',
+    className: 'contact-map-container',
   },
   map: {
     width: '100%',

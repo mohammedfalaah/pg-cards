@@ -536,7 +536,6 @@ const ProductDetailPage = ({ productId }) => {
         /* Main Container */
         .container {
         
-          background: linear-gradient(135deg, #1a1410 0%, #2d2416 50%, #1a1410 100%);
           
           position: relative;
           overflow: hidden;
@@ -1243,18 +1242,120 @@ const ProductDetailPage = ({ productId }) => {
           letter-spacing: -0.5px;
         }
 
+        /* Product Badges */
+        .productBadges {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        .badge {
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .categoryBadge {
+          background: rgba(212, 175, 55, 0.15);
+          color: var(--gold);
+          border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .materialBadge {
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--text-gray);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Image Navigation Buttons */
+        .imageNavButton {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 50px;
+          height: 50px;
+          background: rgba(212, 175, 55, 0.9);
+          backdrop-filter: blur(10px);
+          border: none;
+          border-radius: 50%;
+          color: var(--bg-dark);
+          font-size: 28px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .imageNavButton:hover {
+          background: var(--gold-light);
+          transform: translateY(-50%) scale(1.1);
+          box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+        }
+
+        .prevButton {
+          left: 20px;
+        }
+
+        .nextButton {
+          right: 20px;
+        }
+
+        /* Image Counter */
+        .imageCounter {
+          position: absolute;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 8px 16px;
+          background: rgba(10, 10, 10, 0.9);
+          backdrop-filter: blur(10px);
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--gold);
+          border: 1px solid rgba(212, 175, 55, 0.3);
+          z-index: 10;
+        }
+
+        /* Total Price in Quantity Section */
+        .totalPrice {
+          margin-left: auto;
+          font-size: 20px;
+          font-weight: 800;
+          color: var(--gold);
+          letter-spacing: 0.5px;
+        }
+
   
 
         /* Responsive Design */
+        @media (max-width: 1200px) {
+          .productContainer {
+            gap: 60px;
+            padding: 50px 30px;
+          }
+        }
+
         @media (max-width: 968px) {
           .productContainer {
             grid-template-columns: 1fr;
-            gap: 50px;
+            gap: 40px;
             padding: 40px 20px;
           }
           
           .productTitle {
             font-size: 36px;
+          }
+          
+          .currentPrice {
+            font-size: 42px;
           }
           
           .infoBoxes {
@@ -1264,38 +1365,38 @@ const ProductDetailPage = ({ productId }) => {
           .detailsGrid {
             grid-template-columns: 1fr;
           }
+          
+          .variantsGrid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          }
+          
+          .quantitySection {
+            flex-wrap: wrap;
+          }
+          
+          .totalPrice {
+            width: 100%;
+            text-align: center;
+            margin-left: 0;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+          }
         }
 
         @media (max-width: 768px) {
-          .productTitle {
-            font-size: 32px;
-          }
-          
-          .currentPrice {
-            font-size: 40px;
-          }
-          
-          .actionButtons {
-            grid-template-columns: 1fr;
-          }
-          
-          .variantsGrid {
-            grid-template-columns: 1fr;
-          }
-          
-          .thumbnailGallery {
-            justify-content: center;
-          }
-        }
-
-        @media (max-width: 480px) {
           .breadcrumbs {
             padding: 16px 20px;
-            font-size: 12px;
+            font-size: 13px;
+          }
+          
+          .breadcrumbSeparator {
+            margin: 0 8px;
           }
           
           .productContainer {
             padding: 30px 16px;
+            gap: 30px;
           }
           
           .productTitle {
@@ -1307,20 +1408,413 @@ const ProductDetailPage = ({ productId }) => {
           }
           
           .originalPrice {
-            font-size: 22px;
+            font-size: 24px;
+          }
+          
+          .discountBadge {
+            padding: 6px 12px;
+            font-size: 12px;
+          }
+          
+          .description {
+            font-size: 15px;
+            line-height: 1.6;
+          }
+          
+          .actionButtons {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          
+          .addToCartBtn,
+          .buyNowBtn {
+            padding: 16px 32px;
+            font-size: 15px;
+          }
+          
+          .variantsGrid {
+            grid-template-columns: 1fr;
+          }
+          
+          .thumbnailGallery {
+            justify-content: flex-start;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            padding-bottom: 8px;
+          }
+          
+          .thumbnail {
+            flex-shrink: 0;
           }
           
           .mainImageContainer {
             border-radius: 16px;
           }
           
+          .imageNavButton {
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+          }
+          
+          .prevButton {
+            left: 12px;
+          }
+          
+          .nextButton {
+            right: 12px;
+          }
+          
+          .imageCounter {
+            bottom: 12px;
+            padding: 6px 12px;
+            font-size: 12px;
+          }
+          
+          .detailsGrid {
+            gap: 16px;
+            padding: 20px;
+          }
+          
+          .detailLabel {
+            font-size: 11px;
+          }
+          
+          .detailValue {
+            font-size: 16px;
+          }
+          
+          .variantTitle,
+          .featuresTitle {
+            font-size: 18px;
+          }
+          
+          .quantitySection {
+            padding: 20px;
+            gap: 16px;
+          }
+          
+          .quantityLabel {
+            font-size: 15px;
+          }
+          
+          .quantityButton {
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+          }
+          
+          .quantityValue {
+            width: 60px;
+            height: 44px;
+            font-size: 16px;
+          }
+          
+          .featuresSection {
+            padding: 20px;
+          }
+          
+          .featureItem {
+            font-size: 15px;
+          }
+          
+          .infoBox {
+            padding: 16px;
+            gap: 12px;
+          }
+          
+          .infoBoxIcon {
+            font-size: 24px;
+          }
+          
+          .infoBoxTitle {
+            font-size: 14px;
+          }
+          
+          .infoBoxText {
+            font-size: 12px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .breadcrumbs {
+            padding: 12px 16px;
+            font-size: 12px;
+          }
+          
+          .breadcrumbLink,
+          .breadcrumbActive {
+            display: inline-block;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+          }
+          
+          .productContainer {
+            padding: 24px 12px;
+            gap: 24px;
+          }
+          
+          .productTitle {
+            font-size: 24px;
+            letter-spacing: -0.5px;
+          }
+          
+          .productBadges {
+            gap: 8px;
+          }
+          
+          .badge {
+            padding: 6px 12px;
+            font-size: 11px;
+          }
+          
+          .priceSection {
+            gap: 12px;
+            padding-bottom: 20px;
+          }
+          
+          .currentPrice {
+            font-size: 32px;
+          }
+          
+          .originalPrice {
+            font-size: 20px;
+          }
+          
+          .discountBadge {
+            padding: 6px 10px;
+            font-size: 11px;
+          }
+          
+          .description {
+            font-size: 14px;
+            line-height: 1.6;
+          }
+          
+          .mainImageContainer {
+            border-radius: 12px;
+          }
+          
+          .mainImage {
+            padding: 20px;
+          }
+          
           .thumbnail {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+          }
+          
+          .thumbnailGallery {
+            gap: 12px;
+          }
+          
+          .imageNavButton {
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+          }
+          
+          .prevButton {
+            left: 8px;
+          }
+          
+          .nextButton {
+            right: 8px;
+          }
+          
+          .imageCounter {
+            bottom: 8px;
+            padding: 4px 10px;
+            font-size: 11px;
+          }
+          
+          .detailsGrid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 16px;
+          }
+          
+          .detailLabel {
+            font-size: 10px;
+          }
+          
+          .detailValue {
+            font-size: 15px;
+          }
+          
+          .variantSection {
+            padding-top: 20px;
+          }
+          
+          .variantTitle {
+            font-size: 16px;
+            margin-bottom: 16px;
+          }
+          
+          .variantCard {
+            padding: 16px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          
+          .variantPrice {
+            font-size: 16px;
+            align-self: flex-end;
+          }
+          
+          .colorCircle {
+            width: 28px;
+            height: 28px;
+          }
+          
+          .variantColorName {
+            font-size: 14px;
+          }
+          
+          .variantFinish {
+            font-size: 11px;
+          }
+          
+          .quantitySection {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 16px;
+            gap: 12px;
+          }
+          
+          .quantityLabel {
+            font-size: 14px;
+            text-align: center;
+          }
+          
+          .quantityControls {
+            align-self: center;
+          }
+          
+          .quantityButton {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+          }
+          
+          .quantityValue {
+            width: 50px;
+            height: 40px;
+            font-size: 15px;
+          }
+          
+          .totalPrice {
+            font-size: 18px;
+            text-align: center;
+            margin-top: 8px;
+            padding-top: 8px;
+          }
+          
+          .actionButtons {
+            gap: 10px;
+          }
+          
+          .addToCartBtn,
+          .buyNowBtn {
+            padding: 14px 24px;
+            font-size: 14px;
+            border-radius: 10px;
+          }
+          
+          .featuresSection {
+            padding: 16px;
+          }
+          
+          .featuresTitle {
+            font-size: 16px;
+            margin-bottom: 16px;
+          }
+          
+          .featuresList {
+            gap: 12px;
+          }
+          
+          .featureItem {
+            font-size: 14px;
+            gap: 10px;
+          }
+          
+          .checkIcon {
+            font-size: 18px;
+          }
+          
+          .infoBoxes {
+            gap: 12px;
+            padding-top: 20px;
+          }
+          
+          .infoBox {
+            padding: 14px;
+            gap: 10px;
+          }
+          
+          .infoBoxIcon {
+            font-size: 22px;
+          }
+          
+          .infoBoxTitle {
+            font-size: 13px;
+          }
+          
+          .infoBoxText {
+            font-size: 11px;
           }
           
           .modal {
-            padding: 40px 30px;
+            padding: 30px 20px;
+            max-width: 90%;
+            border-radius: 16px;
+          }
+          
+          .modalTitle {
+            font-size: 24px;
+          }
+          
+          .closeButton {
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+            top: 16px;
+            right: 16px;
+          }
+        }
+        
+        @media (max-width: 360px) {
+          .productTitle {
+            font-size: 22px;
+          }
+          
+          .currentPrice {
+            font-size: 28px;
+          }
+          
+          .originalPrice {
+            font-size: 18px;
+          }
+          
+          .thumbnail {
+            width: 70px;
+            height: 70px;
+          }
+          
+          .actionButtons {
+            gap: 8px;
+          }
+          
+          .addToCartBtn,
+          .buyNowBtn {
+            padding: 12px 20px;
+            font-size: 13px;
           }
         }
       `}</style>
