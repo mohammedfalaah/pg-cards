@@ -141,7 +141,7 @@ const handleProductClick = (product) => {
         {sidebarOpen && (
           <div 
             style={styles.sidebarOverlay} 
-            className="sidebar-overlay"
+            className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -151,7 +151,7 @@ const handleProductClick = (product) => {
             ...styles.sidebar,
             ...(sidebarOpen ? styles.sidebarOpen : {})
           }}
-          className="sidebar"
+          className={`sidebar ${sidebarOpen ? 'active' : ''}`}
         >
           <button
             style={styles.sidebarCloseBtn}
@@ -161,7 +161,16 @@ const handleProductClick = (product) => {
             ×
           </button>
 
-          <h3 style={styles.sidebarTitle}>FILTER BY</h3>
+          <div style={styles.filterHeader}>
+            <h3 style={styles.sidebarTitle}>FILTER BY</h3>
+            <button
+              style={styles.filterCloseIcon}
+              className="filter-close-icon"
+              onClick={() => setSidebarOpen(false)}
+            >
+              ×
+            </button>
+          </div>
           
           <div style={styles.filterGroup}>
             <h4 style={styles.filterLabel}>Product Type</h4>
@@ -280,6 +289,15 @@ const handleProductClick = (product) => {
               </div>
             </div>
           </div>
+
+          {/* Apply Filters Button for Mobile */}
+          <button
+            style={styles.applyFiltersBtn}
+            className="apply-filters-btn"
+            onClick={() => setSidebarOpen(false)}
+          >
+            Apply Filters
+          </button>
         </div>
 
         <div style={styles.productsSection}>
@@ -436,21 +454,24 @@ const styles = {
   filterToggleBtn: {
     display: 'none',
     alignItems: 'center',
-    gap: '8px',
-    padding: '12px 24px',
+    gap: '10px',
+    padding: '14px 28px',
     backgroundColor: '#000',
     color: '#fff',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '14px',
-    fontWeight: '600',
+    border: '2px solid #000',
+    borderRadius: '8px',
+    fontSize: '15px',
+    fontWeight: '700',
     cursor: 'pointer',
-    margin: '20px 20px 0',
+    margin: '20px auto 0',
     maxWidth: '1400px',
     width: 'calc(100% - 40px)',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
   },
   filterIcon: {
-    fontSize: '18px',
+    fontSize: '20px',
+    fontWeight: 'bold',
   },
   sidebarOverlay: {
     display: 'none',
@@ -459,8 +480,9 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 998,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    zIndex: 1001,
+    backdropFilter: 'blur(2px)',
   },
   mainContent: {
     display: 'flex',
@@ -487,29 +509,76 @@ const styles = {
   sidebarCloseBtn: {
     display: 'none',
     position: 'absolute',
-    top: '16px',
-    right: '16px',
-    width: '32px',
-    height: '32px',
+    top: '20px',
+    right: '20px',
+    width: '40px',
+    height: '40px',
     borderRadius: '50%',
     backgroundColor: '#000',
     color: '#fff',
     border: 'none',
-    fontSize: '24px',
+    fontSize: '28px',
+    lineHeight: '1',
     cursor: 'pointer',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
   },
   sidebarTitle: {
     fontSize: '16px',
     fontWeight: '700',
-    marginBottom: '24px',
     color: '#000',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
+    margin: 0,
+  },
+  filterHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '24px',
     paddingBottom: '16px',
     borderBottom: '1px solid #e0e0e0',
+  },
+  filterCloseIcon: {
+    display: 'none',
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    backgroundColor: '#000',
+    color: '#fff',
+    border: 'none',
+    fontSize: '28px',
+    lineHeight: '1',
+    cursor: 'pointer',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease',
+    fontWeight: '300',
+    flexShrink: 0,
+  },
+  applyFiltersBtn: {
+    display: 'none',
+    width: 'calc(100% - 8px)',
+    padding: '16px 24px',
+    backgroundColor: '#8B5CF6',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '10px',
+    fontSize: '16px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    marginTop: '32px',
+    marginBottom: '16px',
+    transition: 'all 0.3s ease',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)',
+    position: 'sticky',
+    bottom: '16px',
+    zIndex: 10,
   },
   filterGroup: {
     marginBottom: '28px',
@@ -857,34 +926,180 @@ styleSheet.textContent = `
   input[type="radio"]:checked {
     accent-color: #8B5CF6;
   }
+  
   @media (max-width: 968px) {
-    .main-content {
+    .filter-toggle-btn {
+      display: flex !important;
+    }
+    
+    .filter-close-icon {
+      display: flex !important;
+      background-color: #000 !important;
+      color: #fff !important;
+    }
+    
+    .filter-close-icon:hover {
+      background-color: #333 !important;
+      transform: scale(1.1) !important;
+    }
+    
+    .filter-close-icon:active {
+      transform: scale(0.95) !important;
+      background-color: #555 !important;
+    }
+    
+    .apply-filters-btn {
+      display: block !important;
+      position: sticky !important;
+      bottom: 16px !important;
+      background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%) !important;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5) !important;
+    }
+    
+    .apply-filters-btn:hover {
+      background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6) !important;
+    }
+    
+    .apply-filters-btn:active {
+      transform: translateY(0) !important;
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4) !important;
+    }
+    
+    .sidebar-overlay {
+      display: block !important;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .sidebar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 85% !important;
+      max-width: 320px !important;
+      height: 100vh !important;
+      overflow-y: auto !important;
+      z-index: 1002 !important;
+      transform: translateX(-100%) !important;
+      border-right: none !important;
+      box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3) !important;
+      padding-top: 24px !important;
+      padding-bottom: 80px !important;
+      display: flex !important;
       flex-direction: column !important;
     }
-    .sidebar {
-      width: 100% !important;
-      position: relative !important;
-      top: 0 !important;
-      border-right: none !important;
-      border-bottom: 1px solid #e0e0e0 !important;
+    
+    .sidebar.active {
+      transform: translateX(0) !important;
     }
+    
+    .sidebar-close-btn {
+      display: none !important;
+    }
+    
+    .main-content {
+      flex-direction: column !important;
+      padding-top: 10px !important;
+    }
+    
     .products-grid {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
     }
   }
+  
   @media (max-width: 768px) {
     .breadcrumbs {
       padding: 12px 20px !important;
+      font-size: 13px !important;
     }
+    
+    .filter-toggle-btn {
+      margin: 15px auto 0 !important;
+      padding: 12px 24px !important;
+      font-size: 14px !important;
+    }
+    
+    .sidebar {
+      width: 90% !important;
+      max-width: 300px !important;
+    }
+    
     .main-content {
-      padding: 20px 15px !important;
+      padding: 15px 15px 30px !important;
     }
+    
     .products-grid {
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
       gap: 15px !important;
     }
+    
     .product-image-container {
       height: 200px !important;
+    }
+    
+    .product-title {
+      font-size: 14px !important;
+    }
+    
+    .product-price {
+      font-size: 16px !important;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .filter-toggle-btn {
+      margin: 12px auto 0 !important;
+      padding: 10px 20px !important;
+      font-size: 13px !important;
+      width: calc(100% - 24px) !important;
+    }
+    
+    .sidebar {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 60px 20px 20px !important;
+    }
+    
+    .sidebar-close-btn {
+      top: 15px !important;
+      right: 15px !important;
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 24px !important;
+    }
+    
+    .breadcrumbs {
+      padding: 10px 15px !important;
+      font-size: 12px !important;
+    }
+    
+    .main-content {
+      padding: 10px 12px 20px !important;
+    }
+    
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+      gap: 12px !important;
+    }
+    
+    .product-image-container {
+      height: 180px !important;
+    }
+    
+    .product-title {
+      font-size: 13px !important;
+    }
+    
+    .product-price {
+      font-size: 15px !important;
     }
   }
 `;
