@@ -80,7 +80,7 @@ const Footer = () => {
             <h3>Products</h3>
             <ul>
               <li><a href="/shop" onClick={(e) => handleLinkClick(e, '/shop')}>NFC Business Cards</a></li>
-              <li><a href="/create-qrCode" onClick={(e) => handleLinkClick(e, '/create-qrCode')}>QR Code Solutions</a></li>
+              {/* <li><a href="/create-qrCode" onClick={(e) => handleLinkClick(e, '/create-qrCode')}>QR Code Solutions</a></li> */}
               <li><a href="/shop" onClick={(e) => handleLinkClick(e, '/shop')}>Digital Cards</a></li>
             </ul>
           </div>
