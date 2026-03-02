@@ -109,11 +109,11 @@ const Hero = () => {
       <div className="container">
         <div className="hero-content">
           <div className="hero-text">
-            <div className="feature-badge">
+            <div style={{marginTop:'50px'}} className="feature-badge">
               <svg className="lightning-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
               </svg>
-              <span style={{marginTop:'10px'}}>Best NFC & QR Solutions</span>
+              <span >Best NFC & QR Solutions</span>
             </div>
             
             <h5 className="hero-title">Fast,Simple&Easy
