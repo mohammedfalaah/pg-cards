@@ -11,6 +11,15 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   const [qrData, setQrData] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [userSearch, setUserSearch] = useState('');
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userEditForm, setUserEditForm] = useState({
+    fullName: '',
+    companyDesignation: '',
+    companyName: '',
+    theme: 'standard',
+    isPurchase: false
+  });
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalOrders: 0,
@@ -76,13 +85,18 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     try {
       setLoading(true);
       
+      let fetchedUsers = [];
+      let fetchedProducts = [];
+      let fetchedOrders = [];
+
       // Fetch products first (most important)
       try {
         const productsRes = await axios.post(
           'https://pg-cards.vercel.app/card/getProducts',
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
-        setProducts(productsRes.data.products || productsRes.data.data || productsRes.data || []);
+        fetchedProducts = productsRes.data.products || productsRes.data.data || productsRes.data || [];
+        setProducts(fetchedProducts);
       } catch (e) {
         console.log('Products fetch error:', e);
         setProducts([]);
@@ -95,8 +109,8 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
           {},
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
-        const usersList = usersRes.data.data?.list || usersRes.data.data || [];
-        setUsers(usersList);
+        fetchedUsers = usersRes.data.data?.list || usersRes.data.data || [];
+        setUsers(fetchedUsers);
       } catch (e) {
         console.log('Users fetch error:', e);
         setUsers([]);
@@ -108,18 +122,21 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
           'https://pg-cards.vercel.app/admin/orders',
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
-        setOrders(ordersRes.data.orders || ordersRes.data.data || ordersRes.data || []);
+        fetchedOrders = ordersRes.data.orders || ordersRes.data.data || ordersRes.data || [];
+        setOrders(fetchedOrders);
       } catch (e) {
         console.log('Orders fetch error:', e);
         setOrders([]);
       }
 
-      // Calculate stats
+      // Calculate stats with fetched data
+      const totalRevenue = fetchedOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+      
       setStats({
-        totalUsers: users.length || 0,
-        totalOrders: orders.length || 0,
-        totalRevenue: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
-        activeProducts: products.length || 0
+        totalUsers: fetchedUsers.length || 0,
+        totalOrders: fetchedOrders.length || 0,
+        totalRevenue: totalRevenue,
+        activeProducts: fetchedProducts.length || 0
       });
 
     } catch (error) {
@@ -167,6 +184,79 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error('Failed to delete user');
+    }
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+    try {
+      const response = await axios.post(
+        'https://pg-cards.vercel.app/userProfile/deleteUserProfile',
+        { userId: userId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.code === 200) {
+        setUsers(users.filter(user => user._id !== userId));
+        toast.success('User deleted successfully');
+      } else {
+        toast.error(response.data.message || 'Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete user');
+    }
+  };
+
+  // Handle edit user - open modal with user data
+  const handleEditUser = (profile) => {
+    setEditingUser(profile);
+    setUserEditForm({
+      fullName: profile.fullName || '',
+      companyDesignation: profile.companyDesignation || '',
+      companyName: profile.companyName || '',
+      theme: profile.theme || 'standard',
+      isPurchase: profile.isPurchase || false
+    });
+    setShowEditUserModal(true);
+  };
+
+  // Save edited user
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+
+    try {
+      const response = await axios.post(
+        'https://pg-cards.vercel.app/userProfile/updateUserProfile',
+        {
+          userId: editingUser.userId || editingUser.user?._id || editingUser._id,
+          fullName: userEditForm.fullName,
+          companyDesignation: userEditForm.companyDesignation,
+          companyName: userEditForm.companyName,
+          theme: userEditForm.theme,
+          isPurchase: userEditForm.isPurchase
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.code === 200) {
+        // Update the user in the list
+        setUsers(users.map(user => 
+          user._id === editingUser._id 
+            ? { ...user, ...userEditForm }
+            : user
+        ));
+        toast.success('User updated successfully');
+        setShowEditUserModal(false);
+        setEditingUser(null);
+      } else {
+        toast.error(response.data.message || 'Failed to update user');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error(error.response?.data?.message || 'Failed to update user');
     }
   };
 
@@ -692,7 +782,7 @@ const handleSideViewUpload = async (index, field, file) => {
                     <th>Theme</th>
                     <th>Status</th>
                     <th>Joined</th>
-                   
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -737,7 +827,24 @@ const handleSideViewUpload = async (index, field, file) => {
                           : 'N/A'
                         }
                       </td>
-                    
+                      <td>
+                        <div className="actionButtons">
+                          <button 
+                            className="actionBtn editBtn"
+                            onClick={() => handleEditUser(profile)}
+                            title="Edit User"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            className="actionBtn deleteBtn"
+                            onClick={() => handleDeleteUser(profile.userId || profile.user?._id || profile._id)}
+                            title="Delete User"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1124,6 +1231,86 @@ const handleSideViewUpload = async (index, field, file) => {
                 </button>
                 <button className="saveBtn" onClick={handleSaveProduct}>
                   {editingProduct ? 'Update Product' : 'Create Product'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit User Modal */}
+        {showEditUserModal && (
+          <div className="modalOverlay" onClick={() => setShowEditUserModal(false)}>
+            <div className="userEditModal" onClick={(e) => e.stopPropagation()}>
+              <div className="modalHeader">
+                <h2>✏️ Edit User Profile</h2>
+                <button className="closeModalBtn" onClick={() => setShowEditUserModal(false)}>✕</button>
+              </div>
+              
+              <div className="modalBody">
+                <div className="formSection">
+                  <div className="formGroup">
+                    <label>Full Name</label>
+                    <input
+                      type="text"
+                      value={userEditForm.fullName}
+                      onChange={(e) => setUserEditForm({ ...userEditForm, fullName: e.target.value })}
+                      placeholder="Enter full name"
+                    />
+                  </div>
+
+                  <div className="formGroup">
+                    <label>Company Designation</label>
+                    <input
+                      type="text"
+                      value={userEditForm.companyDesignation}
+                      onChange={(e) => setUserEditForm({ ...userEditForm, companyDesignation: e.target.value })}
+                      placeholder="e.g., Senior Developer"
+                    />
+                  </div>
+
+                  <div className="formGroup">
+                    <label>Company Name</label>
+                    <input
+                      type="text"
+                      value={userEditForm.companyName}
+                      onChange={(e) => setUserEditForm({ ...userEditForm, companyName: e.target.value })}
+                      placeholder="Enter company name"
+                    />
+                  </div>
+
+                  <div className="formRow">
+                    <div className="formGroup">
+                      <label>Theme</label>
+                      <select
+                        value={userEditForm.theme}
+                        onChange={(e) => setUserEditForm({ ...userEditForm, theme: e.target.value })}
+                      >
+                        <option value="standard">Standard</option>
+                        <option value="modern">Modern</option>
+                        <option value="epic">Epic</option>
+                      </select>
+                    </div>
+
+                    <div className="formGroup">
+                      <label>Purchase Status</label>
+                      <select
+                        value={userEditForm.isPurchase}
+                        onChange={(e) => setUserEditForm({ ...userEditForm, isPurchase: e.target.value === 'true' })}
+                      >
+                        <option value="false">Trial</option>
+                        <option value="true">Purchased</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modalFooter">
+                <button className="cancelBtn" onClick={() => setShowEditUserModal(false)}>
+                  Cancel
+                </button>
+                <button className="saveBtn" onClick={handleSaveUser}>
+                  Save Changes
                 </button>
               </div>
             </div>
@@ -1609,6 +1796,16 @@ const handleSideViewUpload = async (index, field, file) => {
           transform: scale(1.1);
         }
 
+        .editBtn {
+          background: rgba(0, 122, 255, 0.1);
+          color: #007aff;
+        }
+
+        .editBtn:hover {
+          background: rgba(0, 122, 255, 0.2);
+          transform: scale(1.1);
+        }
+
         .deleteBtn {
           background: rgba(255, 59, 48, 0.1);
           color: #ff3b30;
@@ -1939,6 +2136,18 @@ const handleSideViewUpload = async (index, field, file) => {
           border-radius: 16px;
           width: 100%;
           max-width: 700px;
+          max-height: 90vh;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .userEditModal {
+          background: #1a1a1a;
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          border-radius: 16px;
+          width: 100%;
+          max-width: 600px;
           max-height: 90vh;
           overflow: hidden;
           display: flex;

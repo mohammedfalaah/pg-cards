@@ -269,9 +269,9 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
               <li><a href="#shop" onClick={(e) => handleSmoothScroll(e, '#shop')}>Shop</a></li>
               <li><a href="#blog" onClick={(e) => handleSmoothScroll(e, '#blog')}>Blog</a></li>
               <li><a href="#contact" onClick={(e) => handleSmoothScroll(e, '#contact')}>Contact Us</a></li>
-              {currentUser && (
+              {/* {currentUser && (
                 <li><a href="#dashboard" onClick={(e) => handleSmoothScroll(e, '#dashboard')}>Dashboard</a></li>
-              )}
+              )} */}
             </ul>
           )}
           

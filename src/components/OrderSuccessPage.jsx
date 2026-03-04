@@ -1,5 +1,11 @@
 // OrderSuccessPage.js - Order Confirmation Page
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+// Cloudinary config - same as used in CheckoutPage
+const CLOUDINARY_CLOUD_NAME = 'dhcwgdobf';
+const CLOUDINARY_UPLOAD_PRESET = 'pgcards_unsigned';
+const CLOUDINARY_FOLDER = 'qr-codes';
 
 const OrderSuccessPage = () => {
   const [orderDetails, setOrderDetails] = useState(null);
@@ -68,7 +74,7 @@ const OrderSuccessPage = () => {
     fetchProfile();
   }, []);
 
-  // Load QR code
+  // Load QR code and upload to Cloudinary
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     if (!userId) {
@@ -115,6 +121,9 @@ const OrderSuccessPage = () => {
           setQrImage(qrApiUrl);
           
           console.log('OrderSuccessPage: QR URL set to:', forcedRedirect);
+
+          // Upload QR to Cloudinary and save to profile
+          await uploadQrToCloudinary(qrApiUrl, userId, profileId);
         }
       } catch (e) {
         console.error('Error loading QR:', e);
@@ -125,6 +134,72 @@ const OrderSuccessPage = () => {
 
     fetchQr();
   }, []);
+
+  // Function to upload QR code to Cloudinary (same method as profile/carousel images)
+  const uploadQrToCloudinary = async (qrUrl, userId, profileId) => {
+    try {
+      console.log('Starting QR upload to Cloudinary...');
+      
+      // Fetch the QR image as a blob
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      
+      // Create FormData for Cloudinary upload
+      const formData = new FormData();
+      formData.append('file', blob);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', CLOUDINARY_FOLDER);
+      
+      // Upload to Cloudinary using axios (same as profile/carousel images)
+      const cloudinaryResponse = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+      
+      const uploadedUrl = cloudinaryResponse.data?.secure_url || cloudinaryResponse.data?.url;
+      
+      if (uploadedUrl) {
+        console.log('QR uploaded to Cloudinary:', uploadedUrl);
+        
+        // Save the Cloudinary URL to user profile
+        await saveQrToProfile(userId, profileId, uploadedUrl);
+      } else {
+        console.error('No URL returned from Cloudinary');
+      }
+    } catch (error) {
+      console.error('Error uploading QR to Cloudinary:', error?.response?.data || error);
+    }
+  };
+
+  // Function to save QR URL to user profile
+  const saveQrToProfile = async (userId, profileId, qrImageUrl) => {
+    try {
+      console.log('Saving QR URL to profile...');
+      
+      const response = await fetch('https://pg-cards.vercel.app/userProfile/saveUserProfile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          _id: profileId,
+          qrImage: qrImageUrl, // Pass the Cloudinary URL as qrImage
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.code === 200) {
+        console.log('QR URL saved to profile successfully');
+      } else {
+        console.error('Failed to save QR URL to profile:', result.message);
+      }
+    } catch (error) {
+      console.error('Error saving QR URL to profile:', error);
+    }
+  };
 
   // Helper to convert Cloudinary HEIC URLs to web-friendly format
   // eslint-disable-next-line no-unused-vars
