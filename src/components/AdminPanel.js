@@ -210,6 +210,29 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
     }
   };
 
+  // Handle download QR code
+  const handleDownloadQR = async (profile) => {
+    try {
+      // Check if qrImage exists in profile
+      if (profile.qrImage) {
+        // Download from Cloudinary URL
+        const link = document.createElement('a');
+        link.href = profile.qrImage;
+        link.download = `${profile.fullName || 'user'}-qr-code.png`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('QR Code download started');
+      } else {
+        toast.error('QR Code not found for this user');
+      }
+    } catch (error) {
+      console.error('Error downloading QR:', error);
+      toast.error('Failed to download QR code');
+    }
+  };
+
   // Handle edit user - open modal with user data
   const handleEditUser = (profile) => {
     setEditingUser(profile);
@@ -835,6 +858,13 @@ const handleSideViewUpload = async (index, field, file) => {
                             title="Edit User"
                           >
                             ✏️
+                          </button>
+                          <button 
+                            className="actionBtn qrBtn"
+                            onClick={() => handleDownloadQR(profile)}
+                            title="Download QR Code"
+                          >
+                            📥
                           </button>
                           <button 
                             className="actionBtn deleteBtn"
@@ -1784,6 +1814,16 @@ const handleSideViewUpload = async (index, field, file) => {
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        .qrBtn {
+          background: rgba(0, 122, 255, 0.1);
+          color: #007aff;
+        }
+
+        .qrBtn:hover {
+          background: rgba(0, 122, 255, 0.2);
+          transform: scale(1.1);
         }
 
         .qrBtn {
