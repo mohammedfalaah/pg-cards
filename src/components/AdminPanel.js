@@ -679,7 +679,7 @@ const handleSideViewUpload = async (index, field, file) => {
           className={`adminNavBtn ${activeTab === 'products' ? 'active' : ''}`}
           onClick={() => setActiveTab('products')}
         >
-          🛍️ Products
+          Products
         </button>
         <button 
           className={`adminNavBtn ${activeTab === 'orders' ? 'active' : ''}`}

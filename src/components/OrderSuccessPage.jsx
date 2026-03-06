@@ -76,55 +76,40 @@ const OrderSuccessPage = () => {
 
   // Load QR code and upload to Cloudinary
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
+    const profileId = localStorage.getItem('userProfileId');
+    if (!profileId) {
       setQrLoading(false);
       return;
     }
 
     const fetchQr = async () => {
       try {
-        console.log('OrderSuccessPage: Starting QR fetch with userId:', userId);
+        console.log('OrderSuccessPage: Starting QR generation with profileId:', profileId);
         
-        const res = await fetch('https://pg-cards.vercel.app/userProfile/getUser', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId }),
-        });
-        const result = await res.json();
-        if (result?.code === 200 && result.data) {
-          // Get profile ID
-          const storedProfileId = localStorage.getItem('userProfileId');
-          const profileId = result.data.profileId || storedProfileId || result.data._id || userId;
-          
-          // Get theme
-          const localTheme = localStorage.getItem('selectedCardTemplate');
-          let theme =
-            (result.data.theme || localTheme || '').toString().toLowerCase().trim();
-          if (theme === 'epi') theme = 'epic';
-          const validThemes = ['standard', 'modern', 'epic'];
-          if (!validThemes.includes(theme)) theme = 'standard';
-          setSelectedTheme(theme);
+        // Get userId and theme from localStorage
+        const userId = localStorage.getItem('userId');
+        const localTheme = localStorage.getItem('selectedCardTemplate');
+        let theme = (localTheme || 'standard').toString().toLowerCase().trim();
+        if (theme === 'epi') theme = 'epic';
+        const validThemes = ['standard', 'modern', 'epic'];
+        if (!validThemes.includes(theme)) theme = 'standard';
+        setSelectedTheme(theme);
 
-          // ALWAYS use production URL - pg-cards-seven.vercel.app
-          const productionOrigin = 'https://pgcards.com';
+        // ALWAYS use production URL
+        const productionOrigin = 'https://pgcards.com';
 
-          // Always build a themed route with profileId
-          const targetId = profileId || userId;
-          const forcedRedirect = `${productionOrigin}/${theme}/${targetId}`;
+        // Build themed route with profileId
+        const forcedRedirect = `${productionOrigin}/${theme}/${profileId}`;
+        setRedirectUrl(forcedRedirect);
+        
+        // Generate QR code client-side with correct themed URL
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(forcedRedirect)}`;
+        setQrImage(qrApiUrl);
+        
+        console.log('OrderSuccessPage: QR URL set to:', forcedRedirect);
 
-          setRedirectUrl(forcedRedirect);
-          
-          // ALWAYS generate QR code client-side with correct themed URL
-          // Don't use backend QR as it may have old/wrong URL format
-          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(forcedRedirect)}`;
-          setQrImage(qrApiUrl);
-          
-          console.log('OrderSuccessPage: QR URL set to:', forcedRedirect);
-
-          // Upload QR to Cloudinary and save to profile
-          await uploadQrToCloudinary(qrApiUrl, userId, profileId);
-        }
+        // Upload QR to Cloudinary and save to profile
+        await uploadQrToCloudinary(qrApiUrl, userId, profileId);
       } catch (e) {
         console.error('Error loading QR:', e);
       } finally {
@@ -184,7 +169,7 @@ const OrderSuccessPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: userId,
-          _id: profileId,
+          profileId: profileId,
           qrImage: qrImageUrl, // Pass the Cloudinary URL as qrImage
         }),
       });
@@ -193,11 +178,67 @@ const OrderSuccessPage = () => {
       
       if (response.ok && result.code === 200) {
         console.log('QR URL saved to profile successfully');
+        
+        // Get the profile ID from response data
+        const savedProfileId = result.data;
+        
+       console.log('Saved profile ID from response:', savedProfileId);
+        
+        // Store the profileId in localStorage for future use
+        if (savedProfileId) {
+          localStorage.setItem('userProfileId', savedProfileId);
+          
+          // Fetch the updated user profile using the returned ID
+          await fetchUpdatedProfile(savedProfileId);
+        }
       } else {
         console.error('Failed to save QR URL to profile:', result.message);
       }
     } catch (error) {
       console.error('Error saving QR URL to profile:', error);
+    }
+  };
+
+  // Function to fetch updated profile after saving
+  const fetchUpdatedProfile = async (newProfileId) => {
+    try {
+      console.log('Fetching updated profile with NEW ID:', newProfileId);
+      
+      const response = await fetch(
+        `https://pg-cards.vercel.app/userProfile/getUserProfile/${newProfileId}`
+      );
+      
+      const result = await response.json();
+      
+      if (response.ok && result.code === 200 && result.data) {
+        console.log('Updated profile fetched successfully:', result.data);
+        setProfile(result.data);
+        
+        // Update theme if needed
+        const derivedTheme = (result.data.theme || result.data.selectedTemplate || 'standard')
+          .toString()
+          .toLowerCase()
+          .trim()
+          .replace(/^epi$/, 'epic');
+        setSelectedTheme(['standard', 'modern', 'epic'].includes(derivedTheme) ? derivedTheme : 'standard');
+        
+        // IMPORTANT: Update the redirect URL and QR code with the NEW profileId
+        const productionOrigin = 'https://pgcards.com';
+        const theme = derivedTheme;
+        const updatedRedirectUrl = `${productionOrigin}/${theme}/${newProfileId}`;
+        setRedirectUrl(updatedRedirectUrl);
+        
+        // Regenerate QR code with the NEW profileId
+        const newQrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(updatedRedirectUrl)}`;
+        setQrImage(newQrApiUrl);
+        
+        console.log('Updated redirect URL with NEW profileId:', updatedRedirectUrl);
+        console.log('Updated QR code with NEW profileId');
+      } else {
+        console.error('Failed to fetch updated profile:', result.message);
+      }
+    } catch (error) {
+      console.error('Error fetching updated profile:', error);
     }
   };
 
@@ -536,12 +577,12 @@ const OrderSuccessPage = () => {
               </p>
             )}
 
-            {profile && (
+            {/* {profile && (
               <div style={{ marginTop: 24 }}>
                 <h4 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>Preview ({selectedTheme})</h4>
                 {renderProfilePreview(selectedTheme)}
               </div>
-            )}
+            )} */}
           </div>
         )}
 

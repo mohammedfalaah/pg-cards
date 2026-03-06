@@ -2944,7 +2944,7 @@ const CheckoutPage = () => {
       // Store the profile ID and theme
       // Store the profile ID and theme
       try {
-        const profileId = result?.data?._id || result?.data?.id;
+        const profileId = result?.data;
         if (profileId) {
           localStorage.setItem('userProfileId', profileId);
         }
@@ -2952,6 +2952,7 @@ const CheckoutPage = () => {
         if (selectedTemplate) {
           localStorage.setItem('selectedCardTemplate', selectedTemplate);
         }
+        console.log(profileId)
       } catch (e) {
         console.warn('Unable to cache profile id or theme', e);
       }

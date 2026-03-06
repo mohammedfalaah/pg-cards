@@ -298,7 +298,8 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             
            {currentUser ? (
   <>
-    {/* {!isDashboard && (
+    {/*
+    {!isDashboard && (
       <button
         className="btn-primary"
         onClick={() => {
@@ -309,7 +310,8 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
       >
         My Account
       </button>
-    )} */}
+    )}
+     */}
     <div className="profile-section">
       <div className="profile-icon-wrapper" title={currentUser.name || currentUser.email}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
