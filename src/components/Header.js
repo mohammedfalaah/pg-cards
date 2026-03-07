@@ -258,7 +258,11 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
     <header className={`header ${scrolled ? 'scrolled' : ''} ${isDashboard ? 'dashboard' : ''}`}>
       <div className="container">
         <nav className="navbar">
-          <div className="logo-section">
+          <div className="logo-section" onClick={() => {
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new Event('popstate'));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }} style={{ cursor: 'pointer' }}>
             <PGCardsLogo size={logoSize} />
           </div>
           
@@ -269,17 +273,19 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
               <li><a href="#shop" onClick={(e) => handleSmoothScroll(e, '#shop')}>Shop</a></li>
               <li><a href="#blog" onClick={(e) => handleSmoothScroll(e, '#blog')}>Blog</a></li>
               <li><a href="#contact" onClick={(e) => handleSmoothScroll(e, '#contact')}>Contact Us</a></li>
-              {/* {currentUser && (
-                <li><a href="#dashboard" onClick={(e) => handleSmoothScroll(e, '#dashboard')}>Dashboard</a></li>
-              )} */}
+              <li className="mobile-only">
+                <button className="btn-secondary mobile-demo-btn" onClick={handleTryDemo}>
+                  Try Demo Card
+                </button>
+              </li>
             </ul>
           )}
           
-          <div style={{display:'contents'}} className="header-actions">
+          <div className="header-actions">
             {isDashboard ? (
               <button className="btn-secondary" onClick={handleViewSite}>View Website</button>
             ) : (
-              <button style={{textWrap:'nowrap'}} className="btn-secondary" onClick={handleTryDemo}>Try Demo Card</button>
+              <button className="btn-secondary desktop-only" onClick={handleTryDemo}>Try Demo Card</button>
             )}
 
             {/* Cart Icon */}
@@ -298,20 +304,6 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             
            {currentUser ? (
   <>
-    {/*
-    {!isDashboard && (
-      <button
-        className="btn-primary"
-        onClick={() => {
-          const isAdmin = checkIsAdmin();
-          window.history.pushState({}, '', isAdmin ? '/admin' : '/dashboard');
-          window.dispatchEvent(new Event('navigate'));
-        }}
-      >
-        My Account
-      </button>
-    )}
-     */}
     <div className="profile-section">
       <div className="profile-icon-wrapper" title={currentUser.name || currentUser.email}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -359,7 +351,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
             window.dispatchEvent(new Event('popstate'));
           }}
         >
-          <span>📦</span> Orders
+          <span>�</span> Orders
         </button>
         <hr style={{ border: '1px solid rgba(212, 175, 55, 0.2)', margin: '12px 0' }} />
         <button className="logout-btn" onClick={handleLogoutClick}>
@@ -373,19 +365,20 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
     Login
   </button>
 )}
+
+            {/* Mobile Menu Toggle */}
+            {!isDashboard && (
+              <button 
+                className={`mobile-menu-toggle ${isMenuOpen ? 'active' : ''}`}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                <span></span>
+                <span></span>
+                <span></span>
+              </button>
+            )}
           </div>
-          
-          {!isDashboard && (
-            <button 
-              className={`mobile-menu-toggle ${isMenuOpen ? 'active' : ''}`}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-          )}
         </nav>
       </div>
       
