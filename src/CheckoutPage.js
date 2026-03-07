@@ -25,7 +25,8 @@ const CLOUDINARY_FOLDER = process.env.REACT_APP_CLOUDINARY_FOLDER || 'pgcards';
 // Initialize Stripe with environment variable or fallback
 const STRIPE_PUBLISHABLE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 
-  'pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPRv';
+  // 'pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPRv';
+  'pk_live_51SYlQeCt0GZs5TLdITlz9Ax028B562d5HcwrDhvaCGZVOPO2UetaK5LU74XP4RaUG7t6aAAluFMLyjPMan4aeqoI00Unk50gPR';
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
