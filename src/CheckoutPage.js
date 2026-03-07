@@ -2199,6 +2199,17 @@ const CheckoutPage = () => {
   const [trialSelected, setTrialSelected] = useState(false); // 3-day trial opt-in
   const [profileSaved, setProfileSaved] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    fullName: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    pincode: '',
+    country: 'United Arab Emirates'
+  });
+  const [deliveryAddressSaved, setDeliveryAddressSaved] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [liveFormData, setLiveFormData] = useState(null); // For real-time preview updates
   const [pendingFiles, setPendingFiles] = useState({ profilePicture: null, coverImage: null }); // Store file references for upload
@@ -2924,7 +2935,18 @@ const CheckoutPage = () => {
         profileImage: finalProfilePicture, // Some APIs expect this field name
         coverImage: finalCoverImage,
         backgroundImage: finalCoverImage, // Same as coverImage
-        carouselImages: processedCarouselImages // Add carousel images array
+        carouselImages: processedCarouselImages, // Add carousel images array
+        // Add delivery address if saved
+        deliveryAddress: deliveryAddressSaved ? {
+          fullName: deliveryAddress.fullName,
+          phone: deliveryAddress.phone,
+          addressLine1: deliveryAddress.addressLine1,
+          addressLine2: deliveryAddress.addressLine2,
+          city: deliveryAddress.city,
+          state: deliveryAddress.state,
+          pincode: deliveryAddress.pincode,
+          country: deliveryAddress.country
+        } : undefined
       };
 
       console.log('Saving profile with API payload:', JSON.stringify(apiPayload, null, 2));
@@ -3112,6 +3134,173 @@ const CheckoutPage = () => {
               </div>
             )}
 
+            {/* Step 3: Delivery Address */}
+            {profileSaved && selectedTemplate && (
+              <div style={styles.section} className="checkout-section">
+                <div style={styles.stepHeader} className="checkout-step-header">
+                  <div style={styles.stepNumber} className="checkout-step-number">3</div>
+                  <h2 style={styles.stepTitle} className="checkout-step-title">Delivery Address</h2>
+                  {deliveryAddressSaved && <span style={styles.checkmark}>✓</span>}
+                </div>
+                <div style={styles.addressContent} className="checkout-address-content">
+                  {!deliveryAddressSaved ? (
+                    <div style={{ padding: '20px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="checkout-form-grid">
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={styles.label}>Full Name *</label>
+                          <input
+                            type="text"
+                            value={deliveryAddress.fullName}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, fullName: e.target.value})}
+                            style={styles.input}
+                            placeholder="Enter full name"
+                            required
+                          />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={styles.label}>Phone Number *</label>
+                          <input
+                            type="tel"
+                            value={deliveryAddress.phone}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, phone: e.target.value})}
+                            style={styles.input}
+                            placeholder="+971 XX XXX XXXX"
+                            required
+                          />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={styles.label}>Address Line 1 *</label>
+                          <input
+                            type="text"
+                            value={deliveryAddress.addressLine1}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, addressLine1: e.target.value})}
+                            style={styles.input}
+                            placeholder="Street address, P.O. box"
+                            required
+                          />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={styles.label}>Address Line 2</label>
+                          <input
+                            type="text"
+                            value={deliveryAddress.addressLine2}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, addressLine2: e.target.value})}
+                            style={styles.input}
+                            placeholder="Apartment, suite, unit, building, floor, etc."
+                          />
+                        </div>
+                        <div>
+                          <label style={styles.label}>City *</label>
+                          <input
+                            type="text"
+                            value={deliveryAddress.city}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, city: e.target.value})}
+                            style={styles.input}
+                            placeholder="City"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label style={styles.label}>State/Emirate *</label>
+                          <input
+                            type="text"
+                            value={deliveryAddress.state}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, state: e.target.value})}
+                            style={styles.input}
+                            placeholder="State/Emirate"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label style={styles.label}>Pincode/ZIP *</label>
+                          <input
+                            type="text"
+                            value={deliveryAddress.pincode}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, pincode: e.target.value})}
+                            style={styles.input}
+                            placeholder="Pincode"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label style={styles.label}>Country *</label>
+                          <select
+                            value={deliveryAddress.country}
+                            onChange={(e) => setDeliveryAddress({...deliveryAddress, country: e.target.value})}
+                            style={styles.input}
+                            required
+                          >
+                            <option value="United Arab Emirates">United Arab Emirates</option>
+                            <option value="Saudi Arabia">Saudi Arabia</option>
+                            <option value="Qatar">Qatar</option>
+                            <option value="Kuwait">Kuwait</option>
+                            <option value="Bahrain">Bahrain</option>
+                            <option value="Oman">Oman</option>
+                            <option value="India">India</option>
+                            <option value="Pakistan">Pakistan</option>
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                          </select>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (!deliveryAddress.fullName || !deliveryAddress.phone || 
+                              !deliveryAddress.addressLine1 || !deliveryAddress.city || 
+                              !deliveryAddress.state || !deliveryAddress.pincode) {
+                            toast.error('Please fill all required fields');
+                            return;
+                          }
+                          setDeliveryAddressSaved(true);
+                          toast.success('Delivery address saved');
+                        }}
+                        style={{
+                          ...styles.saveAddressBtn,
+                          marginTop: '20px',
+                          width: '100%'
+                        }}
+                      >
+                        Save Delivery Address
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '20px' }}>
+                      <div style={styles.savedAddressCard}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                          <div>
+                            <div style={{ fontWeight: '600', fontSize: '16px', marginBottom: '8px',color:'black' }}>
+                              {deliveryAddress.fullName}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '14px', lineHeight: '1.6' }}>
+                              {deliveryAddress.phone}<br/>
+                              {deliveryAddress.addressLine1}<br/>
+                              {deliveryAddress.addressLine2 && <>{deliveryAddress.addressLine2}<br/></>}
+                              {deliveryAddress.city}, {deliveryAddress.state} - {deliveryAddress.pincode}<br/>
+                              {deliveryAddress.country}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setDeliveryAddressSaved(false)}
+                            style={{
+                              background: 'transparent',
+                              border: '1px solid #ff6b35',
+                              color: '#ff6b35',
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '14px'
+                            }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Step 2: Delivery Address - Commented out */}
             {/* <div style={styles.section}>
               <div style={styles.stepHeader}>
@@ -3170,7 +3359,7 @@ const CheckoutPage = () => {
               </div>
             </div> */}
 
-            {/* Step 3: Payment */}
+            {/* Step 4: Payment */}
             {!showPaymentForm ? (
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <button 
@@ -3179,11 +3368,12 @@ const CheckoutPage = () => {
                     ...styles.proceedBtn,
                     ...(processingPayment 
                       || !selectedTemplate
+                      || !deliveryAddressSaved
                       || (!liveFormData && !userProfile) ? styles.proceedBtnDisabled : {})
                   }} 
                   onClick={handleProceedToPayment}
                   disabled={processingPayment || cartItems.length === 0 || 
-                    (!liveFormData && !userProfile) || !selectedTemplate}
+                    (!liveFormData && !userProfile) || !selectedTemplate || !deliveryAddressSaved}
                 >
                   {processingPayment ? (
                     <>
@@ -3193,6 +3383,7 @@ const CheckoutPage = () => {
                   ) :  
                     (!liveFormData && !userProfile) ? 'Complete Profile Information' :
                     !selectedTemplate ? 'Choose Your Preview' :
+                    !deliveryAddressSaved ? 'Add Delivery Address' :
                     'Proceed to Payment'}
                 </button>
 
@@ -3827,6 +4018,23 @@ const styles = {
     fontSize: '14px',
     color: '#666',
     marginTop: '8px',
+  },
+  savedAddressCard: {
+    padding: '20px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+    border: '2px solid #d4af37',
+  },
+  saveAddressBtn: {
+    padding: '14px 24px',
+    backgroundColor: '#ff6b35',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
   },
   addNewAddressBtn: {
     width: '100%',
