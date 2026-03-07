@@ -44,35 +44,83 @@ const Cart = () => {
     }
   };
 
-  const updateQuantity = async (productId, newQuantity) => {
-    if (newQuantity < 1) return;
+  const updateQuantity = async (itemId, change) => {
+    // Find the product ID from the item
+    const item = cart.items.find(i => i._id === itemId);
+    if (!item || !item.productId?._id) {
+      toast.error('Invalid item');
+      return;
+    }
+
+    // Don't allow going below 1
+    if (item.quantity + change < 1) return;
 
     try {
       await axios.post(
         'https://pg-cards.vercel.app/cart/updateQuantity',
-        { userId, productId, quantity: newQuantity },
+        { 
+          userId, 
+          productId: item.productId._id, 
+          quantity: change  // Pass the change (+1 or -1)
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchCart();
+      
+      // Optimistically update the UI
+      const newQuantity = item.quantity + change;
+      setCart(prevCart => ({
+        ...prevCart,
+        items: prevCart.items.map(cartItem => 
+          cartItem._id === itemId 
+            ? { ...cartItem, quantity: newQuantity }
+            : cartItem
+        ),
+        totalAmount: prevCart.items.reduce((total, cartItem) => {
+          const qty = cartItem._id === itemId ? newQuantity : cartItem.quantity;
+          return total + (cartItem.price * qty);
+        }, 0)
+      }));
+      
+      // Fetch fresh data from server
+      await fetchCart();
+      
+      // Dispatch cart update event
+      window.dispatchEvent(new Event('cartUpdated'));
+      
       toast.success('Cart updated');
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Failed to update cart');
+      toast.error(error.response?.data?.message || 'Failed to update cart');
+      // Revert on error
+      fetchCart();
     }
   };
 
-  const removeItem = async (productId) => {
+  const removeItem = async (itemId) => {
+    // Find the product ID from the item
+    const item = cart.items.find(i => i._id === itemId);
+    if (!item || !item.productId?._id) {
+      toast.error('Invalid item');
+      return;
+    }
+
     try {
       await axios.post(
         'https://pg-cards.vercel.app/cart/removeItem',
-        { userId, productId },
+        { userId, productId: item.productId._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchCart();
+      
+      // Fetch fresh cart data
+      await fetchCart();
+      
+      // Dispatch cart update event
+      window.dispatchEvent(new Event('cartUpdated'));
+      
       toast.success('Item removed from cart');
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('Failed to remove item');
+      toast.error(error.response?.data?.message || 'Failed to remove item');
     }
   };
 
@@ -151,14 +199,15 @@ const Cart = () => {
               <div className="item-quantity">
                 <button 
                   className="qty-btn"
-                  onClick={() => updateQuantity(item.productId?._id, item.quantity - 1)}
+                  onClick={() => updateQuantity(item._id, -1)}
+                  disabled={item.quantity <= 1}
                 >
                   −
                 </button>
                 <span className="qty-value">{item.quantity}</span>
                 <button 
                   className="qty-btn"
-                  onClick={() => updateQuantity(item.productId?._id, item.quantity + 1)}
+                  onClick={() => updateQuantity(item._id, 1)}
                 >
                   +
                 </button>
@@ -171,7 +220,8 @@ const Cart = () => {
 
               <button 
                 className="remove-btn"
-                onClick={() => removeItem(item.productId?._id)}
+                onClick={() => removeItem(item._id)}
+                title="Remove item"
               >
                 🗑️
               </button>
