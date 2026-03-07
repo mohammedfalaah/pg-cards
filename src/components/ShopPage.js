@@ -302,7 +302,7 @@ const handleProductClick = (product) => {
 
         <div style={styles.productsSection}>
           <h2 style={styles.productsTitle}>
-            ALL PRODUCTS (Showing {filteredProducts.length} Products of {products.length} Products)
+            ALL PRODUCTS 
           </h2>
           
           <div style={styles.productsGrid} className="products-grid">
