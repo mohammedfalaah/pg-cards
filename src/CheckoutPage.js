@@ -16,7 +16,7 @@ import ProfilePreview from './components/ProfilePreview';
 import ImageCropper from './components/ImageCropper';
 
 // Cloudinary config (unsigned upload). Keep secrets out of frontend.
-const CLOUDINARY_CLOUD_NAME = 'dhcwgdobf';
+const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dhcwgdobf';
 // Fallback to known unsigned preset so uploads work without env vars
 const CLOUDINARY_UPLOAD_PRESET =
   process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'pgcards_unsigned';
