@@ -344,7 +344,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
         >
           <span>👤</span> My Profile
         </button>
-        <button 
+        {/* <button 
           className="dropdown-item"
           onClick={() => {
             window.history.pushState({}, '', '/orders');
@@ -352,7 +352,7 @@ const Header = ({ user, onLoginSuccess, onLogout, isDashboard = false }) => {
           }}
         >
           <span>�</span> Orders
-        </button>
+        </button> */}
         <hr style={{ border: '1px solid rgba(212, 175, 55, 0.2)', margin: '12px 0' }} />
         <button className="logout-btn" onClick={handleLogoutClick}>
           <span>🚪</span> Logout

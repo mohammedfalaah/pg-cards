@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { getUserId } from './Utils';
 
 const ShopPage = () => {
   const [products, setProducts] = useState([]);
@@ -8,6 +11,7 @@ const ShopPage = () => {
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [maxPrice, setMaxPrice] = useState(100000);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     // Scroll to top when component mounts
@@ -50,6 +54,50 @@ const ShopPage = () => {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddToCart = async (product, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    const userId = getUserId();
+
+    if (!userId) {
+      toast.error('Please login to add items to cart');
+      // You can add login modal here if needed
+      return;
+    }
+
+    if (!product || !product.variants || product.variants.length === 0) {
+      toast.error('Product variant not available');
+      return;
+    }
+
+    // Use the first variant by default
+    const defaultVariant = product.variants[0];
+
+    try {
+      const response = await axios.post(
+        "https://pg-cards.vercel.app/cart/addToCart",
+        {
+          userId,
+          productId: product._id,
+          variantId: defaultVariant._id,
+          quantity: 1
+        }
+      );
+
+      if (response.status === 200 || response.data.code === 200) {
+        toast.success("Added to cart successfully!");
+        
+        // Dispatch custom event to update cart count in header
+        window.dispatchEvent(new Event('cartUpdated'));
+      }
+    } catch (error) {
+      console.error("Cart error:", error);
+      toast.error(error.response?.data?.msg || "Failed to add to cart");
     }
   };
 
@@ -375,16 +423,25 @@ const handleProductClick = (product) => {
                       )}
                     </div>
 
-                    <button
-                      style={styles.viewDetailsButton}
-                      className="view-details-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleProductClick(product);
-                      }}
-                    >
-                      View Details
-                    </button>
+                    <div style={styles.cardActions}>
+                      <button
+                        style={styles.addToCartButton}
+                        className="add-to-cart-btn"
+                        onClick={(e) => handleAddToCart(product, e)}
+                      >
+                         Add to Cart
+                      </button>
+                      <button
+                        style={styles.viewDetailsButton}
+                        className="view-details-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProductClick(product);
+                        }}
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -797,9 +854,28 @@ const styles = {
     color: '#000',
     lineHeight: '1.2',
   },
+  cardActions: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: 'auto',
+  },
+  addToCartButton: {
+    flex: 1,
+    padding: '10px 16px',
+    fontSize: '13px',
+    fontWeight: '600',
+    backgroundColor: '#D4AF37',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
   viewDetailsButton: {
-    width: '100%',
-    padding: '10px 20px',
+    flex: 1,
+    padding: '10px 16px',
     fontSize: '13px',
     fontWeight: '600',
     backgroundColor: '#000',
@@ -807,10 +883,9 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
-    transition: 'background-color 0.2s, transform 0.1s',
+    transition: 'all 0.2s',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
-    marginTop: 'auto',
   },
   emptyState: {
     textAlign: 'center',
@@ -836,6 +911,14 @@ styleSheet.textContent = `
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: #ccc;
+  }
+  .add-to-cart-btn:hover {
+    background-color: #E5C866 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+  }
+  .add-to-cart-btn:active {
+    transform: translateY(0);
   }
   .view-details-btn:hover {
     background-color: #333 !important;
