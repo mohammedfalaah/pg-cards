@@ -158,8 +158,8 @@ const ContactUs = () => {
               </div>
               <div style={styles.infoContent}>
                 <h3 style={styles.infoTitle}>Phone</h3>
-                <a href="tel:+97100000000" style={styles.link}>
-                  +971 00 000 0000
+                <a href="tel:+97165796957" style={styles.link}>
+                  +971 6 579 6957
                 </a>
               </div>
             </div>

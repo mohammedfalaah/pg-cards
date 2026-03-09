@@ -199,8 +199,8 @@ const ProductDetailPage = ({ productId }) => {
   const discount = calculateDiscount(originalPrice, currentPrice);
 
   return (
-    <div className="container">
-      <div style={{marginBottom:'10px'}} className="breadcrumbs">
+    <div style={{backgroundColor:'#ffffff'}} className="container">
+      <div className="breadcrumbs">
         <span className="breadcrumbLink" onClick={() => navigateTo('/')}>Home</span>
         <span className="breadcrumbSeparator">/</span>
         <span className="breadcrumbLink" onClick={() => navigateTo('/shop')}>Shop</span>
@@ -451,10 +451,11 @@ const ProductDetailPage = ({ productId }) => {
         :root {
           --gold: #d4af37;
           --gold-light: #f0d97a;
-          --bg-dark: #0a0a0a;
-          --text-white: #ffffff;
-          --text-gray: #a0a0a0;
-          --bg-card: #1a1a1a;
+          --bg-light: #ffffff;
+          --bg-card: #f8f9fa;
+          --text-dark: #1a1a1a;
+          --text-gray: #666666;
+          --border-color: #e0e0e0;
         }
 
         /* Loading State */
@@ -464,13 +465,13 @@ const ProductDetailPage = ({ productId }) => {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+          background: #f5f5f5;
         }
 
         .loader {
           width: 60px;
           height: 60px;
-          border: 3px solid rgba(212, 175, 55, 0.1);
+          border: 3px solid rgba(212, 175, 55, 0.2);
           border-top: 3px solid var(--gold);
           border-radius: 50%;
           animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
@@ -497,14 +498,14 @@ const ProductDetailPage = ({ productId }) => {
           align-items: center;
           justify-content: center;
           padding: 20px;
-          background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+          background: #f5f5f5;
         }
 
         .errorTitle {
           font-size: 36px;
           font-weight: 800;
           margin-bottom: 16px;
-          color: var(--text-white);
+          color: var(--text-dark);
         }
 
         .errorText {
@@ -518,7 +519,7 @@ const ProductDetailPage = ({ productId }) => {
           font-size: 15px;
           font-weight: 700;
           background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-          color: var(--bg-dark);
+          color: #ffffff;
           border: none;
           border-radius: 8px;
           cursor: pointer;
@@ -561,9 +562,9 @@ const ProductDetailPage = ({ productId }) => {
         /* Breadcrumbs */
         .breadcrumbs {
           padding: 20px 40px;
-          background: rgba(26, 26, 26, 0.8);
+          background: #f8f9fa;
           backdrop-filter: blur(10px);
-          border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+          border-bottom: 1px solid var(--border-color);
           font-size: 14px;
           max-width: 1400px;
           margin: 0 auto;
@@ -599,7 +600,7 @@ const ProductDetailPage = ({ productId }) => {
 
         .breadcrumbSeparator {
           margin: 0 12px;
-          color: rgba(212, 175, 55, 0.3);
+          color: rgba(212, 175, 55, 0.5);
         }
 
         .breadcrumbActive {
@@ -629,19 +630,18 @@ const ProductDetailPage = ({ productId }) => {
         .mainImageContainer {
           width: 100%;
           aspect-ratio: 1;
-          background: linear-gradient(135deg, rgba(45, 36, 22, 0.6) 0%, rgba(26, 20, 16, 0.8) 100%);
+          background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
           backdrop-filter: blur(20px);
           border-radius: 20px;
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(212, 175, 55, 0.3);
+          border: 1px solid var(--border-color);
           position: relative;
           box-shadow: 
-            0 20px 60px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(212, 175, 55, 0.2) inset,
-            0 0 40px rgba(212, 175, 55, 0.1);
+            0 20px 60px rgba(0, 0, 0, 0.1),
+            0 0 0 1px rgba(212, 175, 55, 0.1) inset;
           transition: all 0.5s ease;
         }
 
@@ -652,16 +652,15 @@ const ProductDetailPage = ({ productId }) => {
           left: 0;
           right: 0;
           bottom: 0;
-          background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.15) 0%, transparent 60%);
+          background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
           pointer-events: none;
         }
 
         .mainImageContainer:hover {
           transform: translateY(-5px);
           box-shadow: 
-            0 30px 80px rgba(0, 0, 0, 0.6),
-            0 0 0 1px rgba(212, 175, 55, 0.4) inset,
-            0 0 60px rgba(212, 175, 55, 0.2);
+            0 30px 80px rgba(0, 0, 0, 0.15),
+            0 0 0 1px rgba(212, 175, 55, 0.2) inset;
         }
 
         .mainImage {
@@ -741,14 +740,10 @@ const ProductDetailPage = ({ productId }) => {
         .productTitle {
           font-size: 42px;
           font-weight: 900;
-          color: var(--text-white);
+          color: var(--text-dark);
           line-height: 1.2;
           letter-spacing: -1px;
           margin-bottom: 0;
-          background: linear-gradient(135deg, #ffffff 0%, var(--gold) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
         }
 
         /* Price Section */
@@ -811,10 +806,10 @@ const ProductDetailPage = ({ productId }) => {
           grid-template-columns: 1fr 1fr;
           gap: 24px;
           padding: 24px;
-          background: rgba(26, 26, 26, 0.5);
+          background: #f8f9fa;
           backdrop-filter: blur(10px);
           border-radius: 12px;
-          border: 1px solid rgba(212, 175, 55, 0.1);
+          border: 1px solid var(--border-color);
         }
 
         .detailItem {
@@ -848,7 +843,7 @@ const ProductDetailPage = ({ productId }) => {
           font-size: 20px;
           font-weight: 700;
           margin-bottom: 20px;
-          color: var(--text-white);
+          color: var(--text-dark);
           letter-spacing: 0.5px;
         }
 
@@ -860,9 +855,9 @@ const ProductDetailPage = ({ productId }) => {
 
         .variantCard {
           padding: 20px;
-          background: rgba(26, 26, 26, 0.5);
+          background: #f8f9fa;
           backdrop-filter: blur(10px);
-          border: 2px solid rgba(212, 175, 55, 0.1);
+          border: 2px solid var(--border-color);
           border-radius: 12px;
           cursor: pointer;
           transition: all 0.3s ease;
@@ -889,14 +884,14 @@ const ProductDetailPage = ({ productId }) => {
         }
 
         .variantCard:hover {
-          border-color: rgba(212, 175, 55, 0.4);
+          border-color: rgba(212, 175, 55, 0.6);
           transform: translateY(-4px);
           box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
         }
 
         .variantCardActive {
           border-color: var(--gold);
-          background: rgba(212, 175, 55, 0.1);
+          background: rgba(212, 175, 55, 0.05);
           box-shadow: 0 8px 30px rgba(212, 175, 55, 0.3);
         }
 
@@ -918,7 +913,7 @@ const ProductDetailPage = ({ productId }) => {
         .variantColorName {
           font-size: 15px;
           font-weight: 700;
-          color: var(--text-white);
+          color: var(--text-dark);
         }
 
         .variantFinish {
@@ -936,17 +931,17 @@ const ProductDetailPage = ({ productId }) => {
         /* Features */
         .featuresSection {
           padding: 24px;
-          background: rgba(26, 26, 26, 0.5);
+          background: #f8f9fa;
           backdrop-filter: blur(10px);
           border-radius: 12px;
-          border: 1px solid rgba(212, 175, 55, 0.1);
+          border: 1px solid var(--border-color);
         }
 
         .featuresTitle {
           font-size: 20px;
           font-weight: 700;
           margin-bottom: 20px;
-          color: var(--text-white);
+          color: var(--text-dark);
           letter-spacing: 0.5px;
         }
 
@@ -970,7 +965,7 @@ const ProductDetailPage = ({ productId }) => {
         }
 
         .featureItem:hover {
-          color: var(--text-white);
+          color: var(--text-dark);
           transform: translateX(5px);
         }
 
@@ -988,16 +983,16 @@ const ProductDetailPage = ({ productId }) => {
           align-items: center;
           gap: 20px;
           padding: 24px;
-          background: rgba(26, 26, 26, 0.5);
+          background: #f8f9fa;
           backdrop-filter: blur(10px);
           border-radius: 12px;
-          border: 1px solid rgba(212, 175, 55, 0.1);
+          border: 1px solid var(--border-color);
         }
 
         .quantityLabel {
           font-size: 17px;
           font-weight: 700;
-          color: var(--text-white);
+          color: var(--text-dark);
           letter-spacing: 0.5px;
         }
 
@@ -1008,13 +1003,13 @@ const ProductDetailPage = ({ productId }) => {
           border: 2px solid rgba(212, 175, 55, 0.3);
           border-radius: 8px;
           overflow: hidden;
-          background: rgba(10, 10, 10, 0.5);
+          background: #ffffff;
         }
 
         .quantityButton {
           width: 48px;
           height: 48px;
-          background: rgba(26, 26, 26, 0.8);
+          background: #ffffff;
           border: none;
           font-size: 24px;
           font-weight: 700;
@@ -1024,7 +1019,7 @@ const ProductDetailPage = ({ productId }) => {
         }
 
         .quantityButton:hover {
-          background: rgba(212, 175, 55, 0.2);
+          background: rgba(212, 175, 55, 0.1);
           color: var(--gold-light);
         }
 
@@ -1038,8 +1033,8 @@ const ProductDetailPage = ({ productId }) => {
           font-weight: 700;
           border-left: 2px solid rgba(212, 175, 55, 0.3);
           border-right: 2px solid rgba(212, 175, 55, 0.3);
-          color: var(--text-white);
-          background: rgba(10, 10, 10, 0.5);
+          color: var(--text-dark);
+          background: #ffffff;
         }
 
         /* Action Buttons */
