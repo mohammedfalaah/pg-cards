@@ -199,7 +199,7 @@ const ProductDetailPage = ({ productId }) => {
   const discount = calculateDiscount(originalPrice, currentPrice);
 
   return (
-    <div style={{backgroundColor:'#ffffff'}} className="container">
+    <div className="container">
       <div className="breadcrumbs">
         <span className="breadcrumbLink" onClick={() => navigateTo('/')}>Home</span>
         <span className="breadcrumbSeparator">/</span>
@@ -740,7 +740,6 @@ const ProductDetailPage = ({ productId }) => {
         .productTitle {
           font-size: 42px;
           font-weight: 900;
-          color: var(--text-dark);
           line-height: 1.2;
           letter-spacing: -1px;
           margin-bottom: 0;
@@ -795,7 +794,6 @@ const ProductDetailPage = ({ productId }) => {
 
         .description {
           font-size: 17px;
-          color: var(--text-gray);
           line-height: 1.8;
           font-weight: 400;
         }
@@ -843,7 +841,6 @@ const ProductDetailPage = ({ productId }) => {
           font-size: 20px;
           font-weight: 700;
           margin-bottom: 20px;
-          color: var(--text-dark);
           letter-spacing: 0.5px;
         }
 
@@ -891,7 +888,6 @@ const ProductDetailPage = ({ productId }) => {
 
         .variantCardActive {
           border-color: var(--gold);
-          background: rgba(212, 175, 55, 0.05);
           box-shadow: 0 8px 30px rgba(212, 175, 55, 0.3);
         }
 
