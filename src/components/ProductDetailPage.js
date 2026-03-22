@@ -93,6 +93,12 @@ const ProductDetailPage = ({ productId }) => {
       return;
     }
 
+    // Check stock status
+    if (!(product.StockIn || product.stock)) {
+      toast.error('This product is currently out of stock');
+      return;
+    }
+
     try {
       const response = await axios.post(
         "https://pg-cards.vercel.app/cart/addToCart",
@@ -122,6 +128,12 @@ const ProductDetailPage = ({ productId }) => {
     
     if (!userId) {
       setShowLogin(true);
+      return;
+    }
+
+    // Check stock status before proceeding
+    if (!(product.StockIn || product.stock)) {
+      toast.error('This product is currently out of stock');
       return;
     }
 
@@ -284,6 +296,10 @@ const ProductDetailPage = ({ productId }) => {
             {product.material && (
               <span className="badge materialBadge">{product.material}</span>
             )}
+            {/* Stock Status Badge */}
+            <span className={`badge stockBadge ${(product.StockIn || product.stock) ? 'inStock' : 'outOfStock'}`}>
+              {(product.StockIn || product.stock) ? '✅ In Stock' : '❌ Out of Stock'}
+            </span>
           </div>
 
           <div className="priceSection">
@@ -384,16 +400,16 @@ const ProductDetailPage = ({ productId }) => {
             <button
               className="addToCartBtn"
               onClick={handleAddToCart}
-              disabled={!selectedVariant}
+              disabled={!selectedVariant || !(product.StockIn || product.stock)}
             >
-              <span>Add to Cart</span>
+              <span>{(product.StockIn || product.stock) ? 'Add to Cart' : 'Out of Stock'}</span>
             </button>
             <button
               className="buyNowBtn"
               onClick={handleBuyNow}
-              disabled={!selectedVariant}
+              disabled={!selectedVariant || !(product.StockIn || product.stock)}
             >
-              Buy Now
+              {(product.StockIn || product.stock) ? 'Buy Now' : 'Out of Stock'}
             </button>
           </div>
 
@@ -1256,9 +1272,27 @@ const ProductDetailPage = ({ productId }) => {
         }
 
         .materialBadge {
-          background: rgba(255, 255, 255, 0.05);
-          color: var(--text-gray);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: var(--bg-card);
+          color: var(--text-light);
+          border: 1px solid var(--border-color);
+        }
+
+        .stockBadge {
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .stockBadge.inStock {
+          background: rgba(52, 199, 89, 0.2);
+          color: #34c759;
+          border: 1px solid rgba(52, 199, 89, 0.3);
+        }
+
+        .stockBadge.outOfStock {
+          background: rgba(255, 59, 48, 0.2);
+          color: #ff3b30;
+          border: 1px solid rgba(255, 59, 48, 0.3);
         }
 
         /* Image Navigation Buttons */

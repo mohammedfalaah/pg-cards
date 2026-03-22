@@ -378,6 +378,12 @@ const handleProductClick = (product) => {
                         e.target.src = 'https://via.placeholder.com/400x250?text=Product+Image';
                       }}
                     />
+                    {/* Stock Status Badge */}
+                    {!(product.StockIn || product.stock) && (
+                      <div style={styles.outOfStockBadge}>
+                        ❌ Out of Stock
+                      </div>
+                    )}
                   </div>
                   
                   <div style={styles.productContent}>
@@ -385,6 +391,13 @@ const handleProductClick = (product) => {
                     <p style={styles.productDescription}>
                       {firstVariant?.color || 'Standard'} - {firstVariant?.finish || 'Standard'}
                     </p>
+                    
+                    {/* Stock Status Text */}
+                    {!(product.StockIn || product.stock) && (
+                      <div style={styles.stockStatus}>
+                        <span style={styles.outOfStockText}>⚠️ Currently Out of Stock</span>
+                      </div>
+                    )}
                     
                     {uniqueColors.length > 0 && (
                       <div style={styles.colorSwatches}>
@@ -425,11 +438,22 @@ const handleProductClick = (product) => {
 
                     <div style={styles.cardActions}>
                       <button
-                        style={styles.addToCartButton}
+                        style={{
+                          ...styles.addToCartButton,
+                          ...(!(product.StockIn || product.stock) ? styles.disabledButton : {})
+                        }}
                         className="add-to-cart-btn"
-                        onClick={(e) => handleAddToCart(product, e)}
+                        onClick={(e) => {
+                          if (!(product.StockIn || product.stock)) {
+                            e.stopPropagation();
+                            toast.error('This product is currently out of stock');
+                            return;
+                          }
+                          handleAddToCart(product, e);
+                        }}
+                        disabled={!(product.StockIn || product.stock)}
                       >
-                         Add to Cart
+                        {(product.StockIn || product.stock) ? 'Add to Cart' : 'Out of Stock'}
                       </button>
                       <button
                         style={styles.viewDetailsButton}
@@ -899,6 +923,43 @@ const styles = {
     fontSize: '18px',
     color: '#666',
   },
+  // Stock Management Styles
+  outOfStockBadge: {
+    position: 'absolute',
+    top: '8px',
+    right: '8px',
+    padding: '6px 12px',
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    color: '#fff',
+    fontSize: '11px',
+    fontWeight: '700',
+    borderRadius: '4px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    zIndex: 2,
+    boxShadow: '0 2px 8px rgba(255, 59, 48, 0.3)',
+  },
+  stockStatus: {
+    marginBottom: '8px',
+    padding: '8px 12px',
+    backgroundColor: '#fff3cd',
+    border: '1px solid #ffeaa7',
+    borderRadius: '4px',
+  },
+  outOfStockText: {
+    fontSize: '12px',
+    color: '#856404',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  disabledButton: {
+    backgroundColor: '#e0e0e0',
+    color: '#999',
+    cursor: 'not-allowed',
+    opacity: 0.6,
+  },
 };
 
 const styleSheet = document.createElement('style');
@@ -916,6 +977,15 @@ styleSheet.textContent = `
     background-color: #E5C866 !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+  }
+  .add-to-cart-btn:disabled,
+  .add-to-cart-btn:disabled:hover {
+    background-color: #e0e0e0 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 0.6 !important;
   }
   .add-to-cart-btn:active {
     transform: translateY(0);
