@@ -56,6 +56,9 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
   currency: 'AED',
   material: '',
   features: [''],
+  stock: true, // Add stock field
+  stockInRightInView: '', // Add stock in right view field
+  leftInView: '', // Add left in view field
   variants: [{
     color: '',
     frontImage: '',
@@ -321,7 +324,10 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       currency: 'AED',
       material: '',
       features: [''],
-      variants: [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
+      stock: true,
+      stockInRightInView: '',
+      leftInView: '',
+      variants: [{ color: '', frontImage: '', backImage: '', leftSideView: '', rightSideView: '', additionalImages: [], price: '', finish: 'Glossy' }]
     });
     setEditingProduct(null);
   };
@@ -343,9 +349,17 @@ const AdminPanel = ({ user, token: propToken, onLogout }) => {
       currency: product.currency || 'AED',
       material: product.material || '',
       features: product.features?.length > 0 ? product.features : [''],
+      stock: product.stock !== undefined ? product.stock : true,
+      stockInRightInView: product.stockInRightInView || '',
+      leftInView: product.leftInView || '',
       variants: product.variants?.length > 0 
-        ? product.variants.map(v => ({ ...v, additionalImages: v.additionalImages || [] }))
-        : [{ color: '', frontImage: '', backImage: '', additionalImages: [], price: '', finish: 'Glossy' }]
+        ? product.variants.map(v => ({ 
+            ...v, 
+            additionalImages: v.additionalImages || [],
+            leftSideView: v.leftSideView || '',
+            rightSideView: v.rightSideView || ''
+          }))
+        : [{ color: '', frontImage: '', backImage: '', leftSideView: '', rightSideView: '', additionalImages: [], price: '', finish: 'Glossy' }]
     });
     setShowProductModal(true);
   };
@@ -590,10 +604,15 @@ const handleSaveProduct = async () => {
     currency: productForm.currency || "AED",
     material: productForm.material,
     features: cleanFeatures,
+    stock: productForm.stock,
+    stockInRightInView: productForm.stockInRightInView,
+    leftInView: productForm.leftInView,
     variants: cleanVariants
   };
 
   try {
+    let productId;
+    
     if (editingProduct) {
       // Update existing product
       const response = await axios.post(
@@ -605,6 +624,7 @@ const handleSaveProduct = async () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      productId = editingProduct._id;
       setProducts(products.map(p => 
         p._id === editingProduct._id ? response.data.data || { ...p, ...productData } : p
       ));
@@ -618,8 +638,29 @@ const handleSaveProduct = async () => {
       );
       
       const newProduct = response.data.data;
+      productId = newProduct._id;
       setProducts([...products, newProduct]);
       toast.success('Product created successfully');
+    }
+
+    // Update stock status using the stock API
+    if (productId) {
+      try {
+        await axios.post(
+          'https://pg-cards.vercel.app/card/stockUpdate',
+          {
+            id: productId,
+            stockIn: productForm.stock,
+            stockInRightInView: productForm.stockInRightInView,
+            leftInView: productForm.leftInView
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Stock status updated successfully');
+      } catch (stockError) {
+        console.error('Error updating stock:', stockError);
+        toast.error('Product saved but stock update failed');
+      }
     }
     
     setShowProductModal(false);
@@ -631,7 +672,7 @@ const handleSaveProduct = async () => {
   }
 };
 
-// Add side view upload handlers
+  // Add side view upload handlers
 const handleSideViewUpload = async (index, field, file) => {
   const imageUrl = await uploadToCloudinary(file);
   if (imageUrl) {
@@ -641,6 +682,30 @@ const handleSideViewUpload = async (index, field, file) => {
     toast.success('Side view image uploaded successfully');
   }
 };
+
+  // Toggle stock status for a product
+  const toggleProductStock = async (productId, currentStock) => {
+    try {
+      await axios.post(
+        'https://pg-cards.vercel.app/card/stockUpdate',
+        {
+          id: productId,
+          stockIn: !currentStock
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update the product in the local state
+      setProducts(products.map(p => 
+        p._id === productId ? { ...p, stock: !currentStock } : p
+      ));
+      
+      toast.success(`Product ${!currentStock ? 'marked as in stock' : 'marked as out of stock'}`);
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      toast.error('Failed to update stock status');
+    }
+  };
   // Delete Product
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
@@ -912,6 +977,10 @@ const handleSideViewUpload = async (index, field, file) => {
                       src={product.variants?.[0]?.frontImage || product.image || 'https://via.placeholder.com/150'} 
                       alt={product.title}
                     />
+                    {/* Stock Status Badge */}
+                    <div className={`stockBadge ${product.StockIn || product.stock ? 'inStock' : 'outOfStock'}`}>
+                      {product.StockIn || product.stock ? '✅ In Stock' : '❌ Out of Stock'}
+                    </div>
                   </div>
                   <div className="productInfo">
                     <h3 className="productTitle">{product.title}</h3>
@@ -922,7 +991,21 @@ const handleSideViewUpload = async (index, field, file) => {
                     {product.variants?.length > 0 && (
                       <p className="productVariants">{product.variants.length} variant(s)</p>
                     )}
+                    {/* Stock Information */}
+                    {product.stockInRightInView && (
+                      <p className="stockInfo">📦 {product.stockInRightInView}</p>
+                    )}
+                    {product.leftInView && (
+                      <p className="stockWarning">⚠️ {product.leftInView}</p>
+                    )}
                     <div className="productActions">
+                      <button 
+                        className={`stockToggleBtn ${product.stock ? 'inStock' : 'outOfStock'}`}
+                        onClick={() => toggleProductStock(product._id, product.stock)}
+                        title={product.stock ? 'Mark as Out of Stock' : 'Mark as In Stock'}
+                      >
+                        {product.stock ? '📦' : '❌'}
+                      </button>
                        <button className="editBtn" onClick={() => openEditProductModal(product)}>✏️ Edit</button> 
                       <button className="deleteBtn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>
                     </div>
@@ -1020,6 +1103,44 @@ const handleSideViewUpload = async (index, field, file) => {
                       >
                         <option value="AED">AED</option>
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Stock Management Section */}
+                  <div className="formSection">
+                    <h3 className="sectionLabel">Stock Management</h3>
+                    
+                    <div className="formRow">
+                      <div className="formGroup">
+                        <label>Stock Status</label>
+                        <select
+                          value={productForm.stock}
+                          onChange={(e) => setProductForm({ ...productForm, stock: e.target.value === 'true' })}
+                        >
+                          <option value="true">✅ In Stock</option>
+                          <option value="false">❌ Out of Stock</option>
+                        </select>
+                      </div>
+
+                      <div className="formGroup">
+                        <label>Stock in Right View</label>
+                        <input
+                          type="text"
+                          value={productForm.stockInRightInView}
+                          onChange={(e) => setProductForm({ ...productForm, stockInRightInView: e.target.value })}
+                          placeholder="e.g., 50 units available"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="formGroup">
+                      <label>Left in View</label>
+                      <input
+                        type="text"
+                        value={productForm.leftInView}
+                        onChange={(e) => setProductForm({ ...productForm, leftInView: e.target.value })}
+                        placeholder="e.g., Only 5 left in stock"
+                      />
                     </div>
                   </div>
                 </div>
@@ -2533,6 +2654,94 @@ const handleSideViewUpload = async (index, field, file) => {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+
+        /* Stock Management Styles */
+        .stockBadge {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 10px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .stockBadge.inStock {
+          background: rgba(52, 199, 89, 0.2);
+          color: #34c759;
+          border: 1px solid rgba(52, 199, 89, 0.3);
+        }
+
+        .stockBadge.outOfStock {
+          background: rgba(255, 59, 48, 0.2);
+          color: #ff3b30;
+          border: 1px solid rgba(255, 59, 48, 0.3);
+        }
+
+        .stockInfo {
+          font-size: 12px;
+          color: #34c759;
+          margin: 4px 0;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .stockWarning {
+          font-size: 12px;
+          color: #ff9500;
+          margin: 4px 0;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-weight: 600;
+        }
+
+        /* Form Section Styling */
+        .formSection h3.sectionLabel {
+          color: #d4af37;
+          font-size: 16px;
+          font-weight: 700;
+          margin-bottom: 16px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        /* Stock Toggle Button */
+        .stockToggleBtn {
+          padding: 8px 12px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          margin-right: 8px;
+        }
+
+        .stockToggleBtn.inStock {
+          background: rgba(52, 199, 89, 0.2);
+          color: #34c759;
+          border: 1px solid rgba(52, 199, 89, 0.3);
+        }
+
+        .stockToggleBtn.inStock:hover {
+          background: rgba(52, 199, 89, 0.3);
+          transform: translateY(-2px);
+        }
+
+        .stockToggleBtn.outOfStock {
+          background: rgba(255, 59, 48, 0.2);
+          color: #ff3b30;
+          border: 1px solid rgba(255, 59, 48, 0.3);
+        }
+
+        .stockToggleBtn.outOfStock:hover {
+          background: rgba(255, 59, 48, 0.3);
+          transform: translateY(-2px);
         }
 
         /* Responsive Design */
