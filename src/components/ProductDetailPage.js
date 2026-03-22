@@ -293,9 +293,9 @@ const ProductDetailPage = ({ productId }) => {
           {/* Category and Material Badges */}
           <div className="productBadges">
             <span className="badge categoryBadge">{product.category}</span>
-            {product.material && (
+            {/* {product.material && (
               <span className="badge materialBadge">{product.material}</span>
-            )}
+            )} */}
             {/* Stock Status Badge */}
             <span className={`badge stockBadge ${(product.StockIn || product.stock) ? 'inStock' : 'outOfStock'}`}>
               {(product.StockIn || product.stock) ? '✅ In Stock' : '❌ Out of Stock'}
